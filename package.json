@@ -5,13 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "run-p type-check \"build-only {@}\" --",
+    "build": "vite build",
+    "build-with-types": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --build --force"
   },
   "dependencies": {
-    "aws-amplify": "^6.6.6",
+    "aws-amplify": "^6.15.1",
     "vue": "^3.4.21"
   },
   "devDependencies": {
@@ -21,8 +22,8 @@
     "@types/node": "^20.12.5",
     "@vitejs/plugin-vue": "^5.0.4",
     "@vue/tsconfig": "^0.5.1",
-    "aws-cdk": "^2.137.0",
-    "aws-cdk-lib": "^2.137.0",
+    "aws-cdk": "2.152.0",
+    "aws-cdk-lib": "2.152.0",
     "constructs": "^10.3.0",
     "esbuild": "^0.20.2",
     "npm-run-all2": "^6.1.2",

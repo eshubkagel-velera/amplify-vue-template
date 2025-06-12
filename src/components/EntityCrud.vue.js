@@ -1,0 +1,361 @@
+/// <reference types=".vue-global-types/vue_3.5_false.d.ts" />
+import { ref, onMounted, defineProps } from 'vue';
+import { generateClient } from 'aws-amplify/api';
+const { defineSlots, defineEmits, defineExpose, defineModel, defineOptions, withDefaults, } = await import('vue');
+const client = generateClient();
+const props = defineProps({
+    entityName: {
+        type: String,
+        required: true
+    },
+    displayFields: {
+        type: Array,
+        required: true
+    },
+    formFields: {
+        type: Array,
+        required: true
+    },
+    idField: {
+        type: String,
+        required: true
+    },
+    listQuery: {
+        type: String,
+        required: true
+    },
+    createMutation: {
+        type: String,
+        required: true
+    },
+    updateMutation: {
+        type: String,
+        required: true
+    },
+    deleteMutation: {
+        type: String,
+        required: true
+    }
+});
+const entities = ref([]);
+const formData = ref({});
+const showCreateForm = ref(false);
+const showEditForm = ref(false);
+const showDeleteConfirm = ref(false);
+const entityToDelete = ref(null);
+const getEntityId = (entity) => {
+    return entity[props.idField];
+};
+const loadEntities = async () => {
+    try {
+        const response = await client.graphql({
+            query: props.listQuery
+        });
+        const listName = `list${props.entityName}S`;
+        entities.value = response.data[listName].items;
+    }
+    catch (error) {
+        console.error(`Error loading ${props.entityName}:`, error);
+    }
+};
+const editEntity = (entity) => {
+    formData.value = { ...entity };
+    showEditForm.value = true;
+    showCreateForm.value = false;
+};
+const confirmDelete = (entity) => {
+    entityToDelete.value = entity;
+    showDeleteConfirm.value = true;
+};
+const deleteEntity = async () => {
+    try {
+        const input = { [props.idField]: getEntityId(entityToDelete.value) };
+        await client.graphql({
+            query: props.deleteMutation,
+            variables: { input }
+        });
+        showDeleteConfirm.value = false;
+        entityToDelete.value = null;
+        await loadEntities();
+    }
+    catch (error) {
+        console.error(`Error deleting ${props.entityName}:`, error);
+    }
+};
+const submitForm = async () => {
+    try {
+        if (showEditForm.value) {
+            await client.graphql({
+                query: props.updateMutation,
+                variables: { input: formData.value }
+            });
+        }
+        else {
+            await client.graphql({
+                query: props.createMutation,
+                variables: { input: formData.value }
+            });
+        }
+        cancelForm();
+        await loadEntities();
+    }
+    catch (error) {
+        console.error(`Error saving ${props.entityName}:`, error);
+    }
+};
+const cancelForm = () => {
+    formData.value = {};
+    showCreateForm.value = false;
+    showEditForm.value = false;
+};
+onMounted(() => {
+    loadEntities();
+});
+const __VLS_fnComponent = (await import('vue')).defineComponent({
+    props: {
+        entityName: {
+            type: String,
+            required: true
+        },
+        displayFields: {
+            type: Array,
+            required: true
+        },
+        formFields: {
+            type: Array,
+            required: true
+        },
+        idField: {
+            type: String,
+            required: true
+        },
+        listQuery: {
+            type: String,
+            required: true
+        },
+        createMutation: {
+            type: String,
+            required: true
+        },
+        updateMutation: {
+            type: String,
+            required: true
+        },
+        deleteMutation: {
+            type: String,
+            required: true
+        }
+    },
+});
+;
+let __VLS_functionalComponentProps;
+function __VLS_template() {
+    const __VLS_ctx = {};
+    const __VLS_localComponents = {
+        ...{},
+        ...{},
+        ...__VLS_ctx,
+    };
+    let __VLS_components;
+    const __VLS_localDirectives = {
+        ...{},
+        ...__VLS_ctx,
+    };
+    let __VLS_directives;
+    let __VLS_styleScopedClasses;
+    // CSS variable injection 
+    // CSS variable injection end 
+    let __VLS_resolvedLocalAndGlobalComponents;
+    __VLS_elementAsFunction(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({ ...{ class: ("entity-crud") }, });
+    __VLS_elementAsFunction(__VLS_intrinsicElements.h2, __VLS_intrinsicElements.h2)({});
+    (__VLS_ctx.entityName);
+    __VLS_elementAsFunction(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({ ...{ class: ("entity-list") }, });
+    __VLS_elementAsFunction(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({ ...{ onClick: (__VLS_ctx.loadEntities) }, ...{ class: ("btn") }, });
+    __VLS_elementAsFunction(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({ ...{ onClick: (...[$event]) => {
+                __VLS_ctx.showCreateForm = true;
+            } }, ...{ class: ("btn btn-primary") }, });
+    if (__VLS_ctx.entities.length > 0) {
+        __VLS_elementAsFunction(__VLS_intrinsicElements.table, __VLS_intrinsicElements.table)({});
+        __VLS_elementAsFunction(__VLS_intrinsicElements.thead, __VLS_intrinsicElements.thead)({});
+        __VLS_elementAsFunction(__VLS_intrinsicElements.tr, __VLS_intrinsicElements.tr)({});
+        for (const [field] of __VLS_getVForSourceType((__VLS_ctx.displayFields))) {
+            __VLS_elementAsFunction(__VLS_intrinsicElements.th, __VLS_intrinsicElements.th)({ key: ((field)), });
+            (field);
+        }
+        __VLS_elementAsFunction(__VLS_intrinsicElements.th, __VLS_intrinsicElements.th)({});
+        __VLS_elementAsFunction(__VLS_intrinsicElements.tbody, __VLS_intrinsicElements.tbody)({});
+        for (const [entity] of __VLS_getVForSourceType((__VLS_ctx.entities))) {
+            __VLS_elementAsFunction(__VLS_intrinsicElements.tr, __VLS_intrinsicElements.tr)({ key: ((__VLS_ctx.getEntityId(entity))), });
+            for (const [field] of __VLS_getVForSourceType((__VLS_ctx.displayFields))) {
+                __VLS_elementAsFunction(__VLS_intrinsicElements.td, __VLS_intrinsicElements.td)({ key: ((field)), });
+                (entity[field]);
+            }
+            __VLS_elementAsFunction(__VLS_intrinsicElements.td, __VLS_intrinsicElements.td)({});
+            __VLS_elementAsFunction(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({ ...{ onClick: (...[$event]) => {
+                        if (!((__VLS_ctx.entities.length > 0)))
+                            return;
+                        __VLS_ctx.editEntity(entity);
+                    } }, ...{ class: ("btn btn-sm") }, });
+            __VLS_elementAsFunction(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({ ...{ onClick: (...[$event]) => {
+                        if (!((__VLS_ctx.entities.length > 0)))
+                            return;
+                        __VLS_ctx.confirmDelete(entity);
+                    } }, ...{ class: ("btn btn-sm btn-danger") }, });
+        }
+    }
+    else {
+        __VLS_elementAsFunction(__VLS_intrinsicElements.p, __VLS_intrinsicElements.p)({});
+        (__VLS_ctx.entityName);
+    }
+    if (__VLS_ctx.showCreateForm || __VLS_ctx.showEditForm) {
+        __VLS_elementAsFunction(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({ ...{ class: ("entity-form") }, });
+        __VLS_elementAsFunction(__VLS_intrinsicElements.h3, __VLS_intrinsicElements.h3)({});
+        (__VLS_ctx.showEditForm ? 'Edit' : 'Create');
+        (__VLS_ctx.entityName);
+        __VLS_elementAsFunction(__VLS_intrinsicElements.form, __VLS_intrinsicElements.form)({ ...{ onSubmit: (__VLS_ctx.submitForm) }, });
+        for (const [field] of __VLS_getVForSourceType((__VLS_ctx.formFields))) {
+            __VLS_elementAsFunction(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({ key: ((field.name)), ...{ class: ("form-group") }, });
+            __VLS_elementAsFunction(__VLS_intrinsicElements.label, __VLS_intrinsicElements.label)({ for: ((field.name)), });
+            (field.name);
+            __VLS_elementAsFunction(__VLS_intrinsicElements.input)({ id: ((field.name)), type: ((field.type)), required: ((field.required)), disabled: ((field.disabled)), });
+            (__VLS_ctx.formData[field.name]);
+        }
+        __VLS_elementAsFunction(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({ ...{ class: ("form-actions") }, });
+        __VLS_elementAsFunction(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({ type: ("submit"), ...{ class: ("btn btn-primary") }, });
+        (__VLS_ctx.showEditForm ? 'Update' : 'Create');
+        __VLS_elementAsFunction(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({ ...{ onClick: (__VLS_ctx.cancelForm) }, type: ("button"), ...{ class: ("btn") }, });
+    }
+    if (__VLS_ctx.showDeleteConfirm) {
+        __VLS_elementAsFunction(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({ ...{ class: ("delete-confirm") }, });
+        __VLS_elementAsFunction(__VLS_intrinsicElements.p, __VLS_intrinsicElements.p)({});
+        (__VLS_ctx.entityName);
+        __VLS_elementAsFunction(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({ ...{ onClick: (__VLS_ctx.deleteEntity) }, ...{ class: ("btn btn-danger") }, });
+        __VLS_elementAsFunction(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({ ...{ onClick: (...[$event]) => {
+                    if (!((__VLS_ctx.showDeleteConfirm)))
+                        return;
+                    __VLS_ctx.showDeleteConfirm = false;
+                } }, ...{ class: ("btn") }, });
+    }
+    __VLS_styleScopedClasses['entity-crud'];
+    __VLS_styleScopedClasses['entity-list'];
+    __VLS_styleScopedClasses['btn'];
+    __VLS_styleScopedClasses['btn'];
+    __VLS_styleScopedClasses['btn-primary'];
+    __VLS_styleScopedClasses['btn'];
+    __VLS_styleScopedClasses['btn-sm'];
+    __VLS_styleScopedClasses['btn'];
+    __VLS_styleScopedClasses['btn-sm'];
+    __VLS_styleScopedClasses['btn-danger'];
+    __VLS_styleScopedClasses['entity-form'];
+    __VLS_styleScopedClasses['form-group'];
+    __VLS_styleScopedClasses['form-actions'];
+    __VLS_styleScopedClasses['btn'];
+    __VLS_styleScopedClasses['btn-primary'];
+    __VLS_styleScopedClasses['btn'];
+    __VLS_styleScopedClasses['delete-confirm'];
+    __VLS_styleScopedClasses['btn'];
+    __VLS_styleScopedClasses['btn-danger'];
+    __VLS_styleScopedClasses['btn'];
+    var __VLS_slots;
+    var __VLS_inheritedAttrs;
+    const __VLS_refs = {};
+    var $refs;
+    return {
+        slots: __VLS_slots,
+        refs: $refs,
+        attrs: {},
+    };
+}
+;
+const __VLS_self = (await import('vue')).defineComponent({
+    setup() {
+        return {
+            entities: entities,
+            formData: formData,
+            showCreateForm: showCreateForm,
+            showEditForm: showEditForm,
+            showDeleteConfirm: showDeleteConfirm,
+            getEntityId: getEntityId,
+            loadEntities: loadEntities,
+            editEntity: editEntity,
+            confirmDelete: confirmDelete,
+            deleteEntity: deleteEntity,
+            submitForm: submitForm,
+            cancelForm: cancelForm,
+        };
+    },
+    props: {
+        entityName: {
+            type: String,
+            required: true
+        },
+        displayFields: {
+            type: Array,
+            required: true
+        },
+        formFields: {
+            type: Array,
+            required: true
+        },
+        idField: {
+            type: String,
+            required: true
+        },
+        listQuery: {
+            type: String,
+            required: true
+        },
+        createMutation: {
+            type: String,
+            required: true
+        },
+        updateMutation: {
+            type: String,
+            required: true
+        },
+        deleteMutation: {
+            type: String,
+            required: true
+        }
+    },
+});
+export default (await import('vue')).defineComponent({
+    setup() {
+        return {};
+    },
+    props: {
+        entityName: {
+            type: String,
+            required: true
+        },
+        displayFields: {
+            type: Array,
+            required: true
+        },
+        formFields: {
+            type: Array,
+            required: true
+        },
+        idField: {
+            type: String,
+            required: true
+        },
+        listQuery: {
+            type: String,
+            required: true
+        },
+        createMutation: {
+            type: String,
+            required: true
+        },
+        updateMutation: {
+            type: String,
+            required: true
+        },
+        deleteMutation: {
+            type: String,
+            required: true
+        }
+    },
+});
+;

@@ -1,0 +1,348 @@
+{
+  "data": {
+    "__schema": {
+      "queryType": {
+        "name": "Query",
+        "fields": [
+          {
+            "name": "getLOAN_APP"
+          },
+          {
+            "name": "listLOAN_APPS"
+          },
+          {
+            "name": "getLOAN_APP_EXECS"
+          },
+          {
+            "name": "listLOAN_APP_EXECS"
+          },
+          {
+            "name": "getLOAN_APP_STEP_STATUS"
+          },
+          {
+            "name": "listLOAN_APP_STEP_STATUSES"
+          },
+          {
+            "name": "getNEW_MEMBER_TOKEN"
+          },
+          {
+            "name": "listNEW_MEMBER_TOKENS"
+          },
+          {
+            "name": "getORIGIN_PRODUCT"
+          },
+          {
+            "name": "listORIGIN_PRODUCTS"
+          },
+          {
+            "name": "getREDIRECT_URL"
+          },
+          {
+            "name": "listREDIRECT_URLS"
+          },
+          {
+            "name": "getSERVICE"
+          },
+          {
+            "name": "listSERVICES"
+          },
+          {
+            "name": "getSERVICE_EXPR_MAPPING"
+          },
+          {
+            "name": "listSERVICE_EXPR_MAPPINGS"
+          },
+          {
+            "name": "getSERVICE_PARAM"
+          },
+          {
+            "name": "listSERVICE_PARAMS"
+          },
+          {
+            "name": "getSERVICE_PARAM_MAPPING"
+          },
+          {
+            "name": "listSERVICE_PARAM_MAPPINGS"
+          },
+          {
+            "name": "getSERVICE_PROVIDER"
+          },
+          {
+            "name": "listSERVICE_PROVIDERS"
+          },
+          {
+            "name": "getSTEP_SERVICE_MAPPING"
+          },
+          {
+            "name": "listSTEP_SERVICE_MAPPINGS"
+          },
+          {
+            "name": "getSTEP_TYPE"
+          },
+          {
+            "name": "listSTEP_TYPES"
+          },
+          {
+            "name": "listOrigin_products"
+          },
+          {
+            "name": "listRedirect_urls"
+          },
+          {
+            "name": "listService_param_mappings"
+          },
+          {
+            "name": "listService_params"
+          },
+          {
+            "name": "listServices"
+          }
+        ]
+      },
+      "mutationType": {
+        "name": "Mutation",
+        "fields": [
+          {
+            "name": "createLOAN_APP"
+          },
+          {
+            "name": "updateLOAN_APP"
+          },
+          {
+            "name": "deleteLOAN_APP"
+          },
+          {
+            "name": "createLOAN_APP_EXECS"
+          },
+          {
+            "name": "updateLOAN_APP_EXECS"
+          },
+          {
+            "name": "deleteLOAN_APP_EXECS"
+          },
+          {
+            "name": "createLOAN_APP_STEP_STATUS"
+          },
+          {
+            "name": "updateLOAN_APP_STEP_STATUS"
+          },
+          {
+            "name": "deleteLOAN_APP_STEP_STATUS"
+          },
+          {
+            "name": "createNEW_MEMBER_TOKEN"
+          },
+          {
+            "name": "updateNEW_MEMBER_TOKEN"
+          },
+          {
+            "name": "deleteNEW_MEMBER_TOKEN"
+          },
+          {
+            "name": "createORIGIN_PRODUCT"
+          },
+          {
+            "name": "updateORIGIN_PRODUCT"
+          },
+          {
+            "name": "deleteORIGIN_PRODUCT"
+          },
+          {
+            "name": "createREDIRECT_URL"
+          },
+          {
+            "name": "updateREDIRECT_URL"
+          },
+          {
+            "name": "deleteREDIRECT_URL"
+          },
+          {
+            "name": "createSERVICE"
+          },
+          {
+            "name": "updateSERVICE"
+          },
+          {
+            "name": "deleteSERVICE"
+          },
+          {
+            "name": "createSERVICE_EXPR_MAPPING"
+          },
+          {
+            "name": "updateSERVICE_EXPR_MAPPING"
+          },
+          {
+            "name": "deleteSERVICE_EXPR_MAPPING"
+          },
+          {
+            "name": "createSERVICE_PARAM"
+          },
+          {
+            "name": "updateSERVICE_PARAM"
+          },
+          {
+            "name": "deleteSERVICE_PARAM"
+          },
+          {
+            "name": "createSERVICE_PARAM_MAPPING"
+          },
+          {
+            "name": "updateSERVICE_PARAM_MAPPING"
+          },
+          {
+            "name": "deleteSERVICE_PARAM_MAPPING"
+          },
+          {
+            "name": "createSERVICE_PROVIDER"
+          },
+          {
+            "name": "updateSERVICE_PROVIDER"
+          },
+          {
+            "name": "deleteSERVICE_PROVIDER"
+          },
+          {
+            "name": "createSTEP_SERVICE_MAPPING"
+          },
+          {
+            "name": "updateSTEP_SERVICE_MAPPING"
+          },
+          {
+            "name": "deleteSTEP_SERVICE_MAPPING"
+          },
+          {
+            "name": "createSTEP_TYPE"
+          },
+          {
+            "name": "updateSTEP_TYPE"
+          },
+          {
+            "name": "deleteSTEP_TYPE"
+          }
+        ]
+      },
+      "subscriptionType": {
+        "name": "Subscription",
+        "fields": [
+          {
+            "name": "onCreateLOAN_APP"
+          },
+          {
+            "name": "onUpdateLOAN_APP"
+          },
+          {
+            "name": "onDeleteLOAN_APP"
+          },
+          {
+            "name": "onCreateLOAN_APP_EXECS"
+          },
+          {
+            "name": "onUpdateLOAN_APP_EXECS"
+          },
+          {
+            "name": "onDeleteLOAN_APP_EXECS"
+          },
+          {
+            "name": "onCreateLOAN_APP_STEP_STATUS"
+          },
+          {
+            "name": "onUpdateLOAN_APP_STEP_STATUS"
+          },
+          {
+            "name": "onDeleteLOAN_APP_STEP_STATUS"
+          },
+          {
+            "name": "onCreateNEW_MEMBER_TOKEN"
+          },
+          {
+            "name": "onUpdateNEW_MEMBER_TOKEN"
+          },
+          {
+            "name": "onDeleteNEW_MEMBER_TOKEN"
+          },
+          {
+            "name": "onCreateORIGIN_PRODUCT"
+          },
+          {
+            "name": "onUpdateORIGIN_PRODUCT"
+          },
+          {
+            "name": "onDeleteORIGIN_PRODUCT"
+          },
+          {
+            "name": "onCreateREDIRECT_URL"
+          },
+          {
+            "name": "onUpdateREDIRECT_URL"
+          },
+          {
+            "name": "onDeleteREDIRECT_URL"
+          },
+          {
+            "name": "onCreateSERVICE"
+          },
+          {
+            "name": "onUpdateSERVICE"
+          },
+          {
+            "name": "onDeleteSERVICE"
+          },
+          {
+            "name": "onCreateSERVICE_EXPR_MAPPING"
+          },
+          {
+            "name": "onUpdateSERVICE_EXPR_MAPPING"
+          },
+          {
+            "name": "onDeleteSERVICE_EXPR_MAPPING"
+          },
+          {
+            "name": "onCreateSERVICE_PARAM"
+          },
+          {
+            "name": "onUpdateSERVICE_PARAM"
+          },
+          {
+            "name": "onDeleteSERVICE_PARAM"
+          },
+          {
+            "name": "onCreateSERVICE_PARAM_MAPPING"
+          },
+          {
+            "name": "onUpdateSERVICE_PARAM_MAPPING"
+          },
+          {
+            "name": "onDeleteSERVICE_PARAM_MAPPING"
+          },
+          {
+            "name": "onCreateSERVICE_PROVIDER"
+          },
+          {
+            "name": "onUpdateSERVICE_PROVIDER"
+          },
+          {
+            "name": "onDeleteSERVICE_PROVIDER"
+          },
+          {
+            "name": "onCreateSTEP_SERVICE_MAPPING"
+          },
+          {
+            "name": "onUpdateSTEP_SERVICE_MAPPING"
+          },
+          {
+            "name": "onDeleteSTEP_SERVICE_MAPPING"
+          },
+          {
+            "name": "onCreateSTEP_TYPE"
+          },
+          {
+            "name": "onUpdateSTEP_TYPE"
+          },
+          {
+            "name": "onDeleteSTEP_TYPE"
+          }
+        ]
+      }
+    }
+  }
+}

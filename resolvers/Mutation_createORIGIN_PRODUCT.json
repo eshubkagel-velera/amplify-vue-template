@@ -1,0 +1,16 @@
+{
+    "resolver": {
+        "typeName": "Mutation",
+        "fieldName": "createORIGIN_PRODUCT",
+        "dataSourceName": "hazel_mapping_dev",
+        "resolverArn": "arn:aws:appsync:us-east-2:794611117044:apis/rxlu3umb3bdhjgswtlwqbsd44m/types/Mutation/resolvers/createORIGIN_PRODUCT",
+        "kind": "UNIT",
+        "maxBatchSize": 0,
+        "runtime": {
+            "name": "APPSYNC_JS",
+            "runtimeVersion": "1.0.0"
+        },
+        "code": "import { util } from '@aws-appsync/utils';\r\nimport { insert, createMySQLStatement, toJsonObject } from '@aws-appsync/utils/rds';\r\n\r\n/**\r\n * Puts an item into the ORIGIN_PRODUCT table using the supplied input.\r\n * @param {import('@aws-appsync/utils').Context} ctx the context\r\n * @returns {*} the request\r\n */\r\nexport function request(ctx) {\r\n    const { input } = ctx.args;\r\n\r\n    const insertStatement = insert({\r\n        table: 'ORIGIN_PRODUCT',\r\n        values: input,\r\n    });\r\n\r\n    const { ORIGIN_PRODUCT_ID } = input;\r\n    const where = {\r\n        ORIGIN_PRODUCT_ID: {\r\n            eq: ORIGIN_PRODUCT_ID,\r\n        },\r\n    };\r\n    \r\n    // const selectStatement = {\r\n    //     statement:\r\n    //     \"SELECT * FROM hazel_mapping_dev.ORIGIN_PRODUCT WHERE ORIGIN_PRODUCT_ID IN (SELECT MAX(ORIGIN_PRODUCT_ID) FROM hazel_mapping_dev.ORIGIN_PRODUCT)\"\r\n    // };\r\n    const selectStatement = `SELECT ORIGIN_PRODUCT_ID, VENDOR_NAME, PRODUCT_ID, PSCU_CLIENT_ID, PRODUCT_DESC, PARTNER_CODE, CREATED_BY_USER_ID, CREATED_DATE FROM hazel_mapping_dev.ORIGIN_PRODUCT WHERE ORIGIN_PRODUCT_ID IN (SELECT MAX(ORIGIN_PRODUCT_ID) FROM hazel_mapping_dev.ORIGIN_PRODUCT)`;\r\n    return createMySQLStatement(insertStatement, selectStatement)\r\n}\r\n\r\n/**\r\n * Returns the result or throws an error if the operation failed.\r\n * @param {import('@aws-appsync/utils').Context} ctx the context\r\n * @returns {*} the result\r\n */\r\nexport function response(ctx) {\r\n    const { error, result } = ctx;\r\n    if (error) {\r\n        return util.appendError(\r\n            error.message,\r\n            error.type,\r\n            result\r\n        )\r\n    }\r\n    return toJsonObject(result)[1][0]\r\n}\r\n",
+        "metricsConfig": "DISABLED"
+    }
+}

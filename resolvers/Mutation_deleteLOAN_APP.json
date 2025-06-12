@@ -1,0 +1,15 @@
+{
+    "resolver": {
+        "typeName": "Mutation",
+        "fieldName": "deleteLOAN_APP",
+        "dataSourceName": "hazel_mapping_dev",
+        "resolverArn": "arn:aws:appsync:us-east-2:794611117044:apis/rxlu3umb3bdhjgswtlwqbsd44m/types/Mutation/resolvers/deleteLOAN_APP",
+        "kind": "UNIT",
+        "maxBatchSize": 0,
+        "runtime": {
+            "name": "APPSYNC_JS",
+            "runtimeVersion": "1.0.0"
+        },
+        "code": "import { util } from '@aws-appsync/utils';\nimport { remove, select, createMySQLStatement, toJsonObject } from '@aws-appsync/utils/rds';\n\n/**\n * Deletes an item with LOAN_APP_ID `ctx.args.input.LOAN_APP_ID` from the LOAN_APP table.\n * @param {import('@aws-appsync/utils').Context} ctx the context\n * @returns {*} the request\n */\nexport function request(ctx) {\n    const { input: { LOAN_APP_ID }, condition = {} } = ctx.args;\n    const where = {\n        ...condition,\n        LOAN_APP_ID: {\n            eq: LOAN_APP_ID,\n        },\n    };\n    const selectStatement = select({\n        table: 'LOAN_APP',\n        columns: '*',\n        where,\n        limit: 1,\n    });\n    const deleteStatement = remove({\n        table: 'LOAN_APP',\n        where,\n    });\n    return createMySQLStatement(selectStatement, deleteStatement)\n}\n\n/**\n * Returns the result or throws an error if the operation failed.\n * @param {import('@aws-appsync/utils').Context} ctx the context\n * @returns {*} the result\n */\nexport function response(ctx) {\n    const { error, result } = ctx;\n    if (error) {\n        return util.appendError(\n            error.message,\n            error.type,\n            result\n        )\n    }\n    return toJsonObject(result)[0][0]\n}\n"
+    }
+}
