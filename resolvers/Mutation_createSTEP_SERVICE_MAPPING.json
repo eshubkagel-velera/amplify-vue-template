@@ -1,0 +1,15 @@
+{
+    "resolver": {
+        "typeName": "Mutation",
+        "fieldName": "createSTEP_SERVICE_MAPPING",
+        "dataSourceName": "hazel_mapping_dev",
+        "resolverArn": "arn:aws:appsync:us-east-2:794611117044:apis/rxlu3umb3bdhjgswtlwqbsd44m/types/Mutation/resolvers/createSTEP_SERVICE_MAPPING",
+        "kind": "UNIT",
+        "maxBatchSize": 0,
+        "runtime": {
+            "name": "APPSYNC_JS",
+            "runtimeVersion": "1.0.0"
+        },
+        "code": "import { util } from '@aws-appsync/utils';\nimport { insert, select, createMySQLStatement, toJsonObject } from '@aws-appsync/utils/rds';\n\n/**\n * Puts an item into the STEP_SERVICE_MAPPING table using the supplied input.\n * @param {import('@aws-appsync/utils').Context} ctx the context\n * @returns {*} the request\n */\nexport function request(ctx) {\n    const { input } = ctx.args;\n    const insertStatement = insert({\n        table: 'STEP_SERVICE_MAPPING',\n        values: input,\n    });\n    const selectStatement = `SELECT * FROM hazel_mapping_dev.STEP_SERVICE_MAPPING WHERE STEP_SERVICE_MAPPING_ID IN (SELECT MAX(STEP_SERVICE_MAPPING_ID) FROM hazel_mapping_dev.STEP_SERVICE_MAPPING)`;\n    return createMySQLStatement(insertStatement, selectStatement)\n}\n\n/**\n * Returns the result or throws an error if the operation failed.\n * @param {import('@aws-appsync/utils').Context} ctx the context\n * @returns {*} the result\n */\nexport function response(ctx) {\n    const { error, result } = ctx;\n    if (error) {\n        return util.appendError(\n            error.message,\n            error.type,\n            result\n        )\n    }\n    return toJsonObject(result)[1][0]\n}\n"
+    }
+}
