@@ -1,0 +1,1852 @@
+input CreateLOAN_APPInput {
+	CHANGED_DATE: String
+	CREATED_DATE: String!
+	EXEC_ID: String
+	LOAN_APP_ID: Int!
+	ORIGIN_LOAN_APP_ID: String!
+	ORIGIN_PRODUCT_ID: Int!
+	PROCESS_FLAG: String!
+}
+
+input CreateLOAN_APP_EXECSInput {
+	AWS_EXEC_ID: String!
+	CREATED_DATE: String!
+	LOAN_APP_EXEC_ID: Int!
+	LOAN_APP_ID: Int!
+}
+
+input CreateLOAN_APP_STEP_STATUSInput {
+	COMPLETE_FLAG: String!
+	CREATED_DATE: String!
+	LOAN_APP_EXEC_ID: Int
+	LOAN_APP_ID: Int!
+	LOAN_APP_STEP_STATUS_ID: Int!
+	OUTPUT_JSON: String
+	RESPONSE_TEXT: String
+	STEP_TYPE_ID: Int!
+}
+
+input CreateNEW_MEMBER_TOKENInput {
+	CHANGED_DATE: AWSDate
+	CREATED_DATE: AWSDate!
+	CUSTOMER_NBR: String
+	DOB: String
+	EMAIL_ADDRESS_TEXT: String
+	FIRST_NAME: String
+	HOME_PHONE_NBR: String
+	LAST_NAME: String
+	LOAN_APP_ID: Int!
+	MEMBER_NBR: String
+	MOBILE_PHONE_NBR: String
+	NEW_MEMBER_TOKEN_ID: Int!
+	PERSON_NBR: String
+	TAX_ID: String
+	TOKEN_USED_FLAG: String!
+	TOKEN_VALUE: String
+	ZIP_CODE: String
+}
+
+input CreateORIGIN_PRODUCTInput {
+	ORIGIN_PRODUCT_ID: Int
+	CREATED_BY_USER_ID: Int!
+	CREATED_DATE: AWSDate!
+	PARTNER_CODE: String
+	PRODUCT_DESC: String!
+	PRODUCT_ID: String!
+	PSCU_CLIENT_ID: Int!
+	VENDOR_NAME: String!
+}
+
+input CreateREDIRECT_URLInput {
+	CHANGED_BY_USER_ID: Int
+	CHANGED_DATE: AWSDate
+	CREATED_BY_USER_ID: Int!
+	CREATED_DATE: AWSDate!
+	ORIGIN_PRODUCT_ID: Int!
+	RESPONSE_TEXT: String
+	URL: String!
+	URL_TYPE_CODE: String!
+}
+
+input CreateSERVICEInput {
+	CHANGED_BY_USER_ID: Int
+	CHANGED_DATE: AWSDate
+	CREATED_BY_USER_ID: Int!
+	CREATED_DATE: AWSDate!
+	SERVICE_PROVIDER_ID: Int!
+	URI: String!
+}
+
+input CreateSERVICE_EXPR_MAPPINGInput {
+	CHANGED_BY_USER_ID: Int
+	CHANGED_DATE: AWSDate
+	COMMENT_TEXT: String
+	CREATED_BY_USER_ID: Int!
+	CREATED_DATE: AWSDate!
+	SERVICE_PARAM_MAPPING_ID: Int!
+	SOURCE_EXPR: String
+	TARGET_EXPR: String
+}
+
+input CreateSERVICE_PARAMInput {
+	CHANGED_BY_USER_ID: Int
+	CHANGED_DATE: AWSDate
+	CREATED_BY_USER_ID: Int!
+	CREATED_DATE: AWSDate!
+	PARAM_NAME: String!
+	SERVICE_ID: Int!
+}
+
+input CreateSERVICE_PARAM_MAPPINGInput {
+	AGENT_NBR: String
+	CHANGED_BY_USER_ID: Int
+	CHANGED_DATE: AWSDate
+	COMMENT_TEXT: String
+	CREATED_BY_USER_ID: Int!
+	CREATED_DATE: AWSDate!
+	ORIGIN_PRODUCT_ID: Int!
+	PLASTIC_TYPE_ID: String
+	PRIN_NBR: String
+	SOURCE_SERVICE_PARAM_ID: Int!
+	SYSTEM_NBR: String
+	TARGET_SERVICE_PARAM_ID: Int!
+}
+
+input CreateSERVICE_PROVIDERInput {
+	CHANGED_BY_USER_ID: Int
+	CHANGED_DATE: AWSDate
+	CREATED_BY_USER_ID: Int!
+	CREATED_DATE: AWSDate!
+	SERVICE_PROVIDER_NAME: String!
+}
+
+input CreateSTEP_SERVICE_MAPPINGInput {
+	SEQUENCE_NBR: Int
+	SERVICE_ID: Int!
+	STEP_TYPE_ID: Int!
+}
+
+input CreateSTEP_TYPEInput {
+	CHANGED_BY_USER_ID: Int
+	CHANGED_DATE: AWSDate
+	CREATED_BY_USER_ID: Int!
+	CREATED_DATE: AWSDate!
+	RESOURCE_NAME: String!
+	STEP_TYPE_DESC: String
+	STEP_TYPE_NAME: String!
+}
+
+input DeleteLOAN_APPInput {
+	LOAN_APP_ID: Int!
+}
+
+input DeleteLOAN_APP_EXECSInput {
+	LOAN_APP_EXEC_ID: Int!
+}
+
+input DeleteLOAN_APP_STEP_STATUSInput {
+	LOAN_APP_STEP_STATUS_ID: Int!
+}
+
+input DeleteNEW_MEMBER_TOKENInput {
+	NEW_MEMBER_TOKEN_ID: Int!
+}
+
+input DeleteORIGIN_PRODUCTInput {
+	ORIGIN_PRODUCT_ID: Int!
+}
+
+input DeleteREDIRECT_URLInput {
+	REDIRECT_URL_ID: Int!
+}
+
+input DeleteSERVICEInput {
+	SERVICE_ID: Int!
+}
+
+input DeleteSERVICE_EXPR_MAPPINGInput {
+	SERVICE_EXPR_MAPPING_ID: Int!
+}
+
+input DeleteSERVICE_PARAMInput {
+	SERVICE_PARAM_ID: Int!
+}
+
+input DeleteSERVICE_PARAM_MAPPINGInput {
+	SERVICE_PARAM_MAPPING_ID: Int!
+}
+
+input DeleteSERVICE_PROVIDERInput {
+	SERVICE_PROVIDER_ID: Int!
+}
+
+input DeleteSTEP_SERVICE_MAPPINGInput {
+	STEP_SERVICE_MAPPING_ID: Int!
+}
+
+input DeleteSTEP_TYPEInput {
+	STEP_TYPE_ID: Int!
+}
+
+type LOAN_APP {
+	CHANGED_DATE: String
+	CREATED_DATE: String!
+	EXEC_ID: String
+	LOAN_APP_ID: Int!
+	ORIGIN_LOAN_APP_ID: String!
+	ORIGIN_PRODUCT_ID: Int!
+	PROCESS_FLAG: String!
+}
+
+type LOAN_APPConnection {
+	items: [LOAN_APP]
+	nextToken: String
+}
+
+type LOAN_APP_EXECS {
+	AWS_EXEC_ID: String!
+	CREATED_DATE: String!
+	LOAN_APP_EXEC_ID: Int!
+	LOAN_APP_ID: Int!
+}
+
+type LOAN_APP_EXECSConnection {
+	items: [LOAN_APP_EXECS]
+	nextToken: String
+}
+
+type LOAN_APP_STEP_STATUS {
+	COMPLETE_FLAG: String!
+	CREATED_DATE: String!
+	LOAN_APP_EXEC_ID: Int
+	LOAN_APP_ID: Int!
+	LOAN_APP_STEP_STATUS_ID: Int!
+	OUTPUT_JSON: String
+	RESPONSE_TEXT: String
+	STEP_TYPE_ID: Int!
+}
+
+type LOAN_APP_STEP_STATUSConnection {
+	items: [LOAN_APP_STEP_STATUS]
+	nextToken: String
+}
+
+input ModelSizeInput {
+	ne: Int
+	eq: Int
+	le: Int
+	lt: Int
+	ge: Int
+	gt: Int
+	between: [Int]
+}
+
+enum ModelSortDirection {
+	ASC
+	DESC
+}
+
+type NEW_MEMBER_TOKEN {
+	CHANGED_DATE: AWSDate
+	CREATED_DATE: AWSDate!
+	CUSTOMER_NBR: String
+	DOB: String
+	EMAIL_ADDRESS_TEXT: String
+	FIRST_NAME: String
+	HOME_PHONE_NBR: String
+	LAST_NAME: String
+	LOAN_APP_ID: Int!
+	MEMBER_NBR: String
+	MOBILE_PHONE_NBR: String
+	NEW_MEMBER_TOKEN_ID: Int!
+	PERSON_NBR: String
+	TAX_ID: String
+	TOKEN_USED_FLAG: String!
+	TOKEN_VALUE: String
+	ZIP_CODE: String
+}
+
+type NEW_MEMBER_TOKENConnection {
+	items: [NEW_MEMBER_TOKEN]
+	nextToken: String
+}
+
+type ORIGIN_PRODUCT {
+	CHANGED_BY_USER_ID: Int
+	CHANGED_DATE: AWSDate
+	CREATED_BY_USER_ID: Int!
+	CREATED_DATE: AWSDate!
+	ORIGIN_PRODUCT_ID: Int!
+	PARTNER_CODE: String
+	PRODUCT_DESC: String!
+	PRODUCT_ID: String!
+	PSCU_CLIENT_ID: Int!
+	VENDOR_NAME: String!
+}
+
+type ORIGIN_PRODUCTConnection {
+	items: [ORIGIN_PRODUCT]
+	nextToken: String
+}
+
+input OrderByLOAN_APPInput {
+	CHANGED_DATE: ModelSortDirection
+	CREATED_DATE: ModelSortDirection
+	EXEC_ID: ModelSortDirection
+	LOAN_APP_ID: ModelSortDirection
+	ORIGIN_LOAN_APP_ID: ModelSortDirection
+	ORIGIN_PRODUCT_ID: ModelSortDirection
+	PROCESS_FLAG: ModelSortDirection
+}
+
+input OrderByLOAN_APP_EXECSInput {
+	AWS_EXEC_ID: ModelSortDirection
+	CREATED_DATE: ModelSortDirection
+	LOAN_APP_EXEC_ID: ModelSortDirection
+	LOAN_APP_ID: ModelSortDirection
+}
+
+input OrderByLOAN_APP_STEP_STATUSInput {
+	COMPLETE_FLAG: ModelSortDirection
+	CREATED_DATE: ModelSortDirection
+	LOAN_APP_EXEC_ID: ModelSortDirection
+	LOAN_APP_ID: ModelSortDirection
+	LOAN_APP_STEP_STATUS_ID: ModelSortDirection
+	OUTPUT_JSON: ModelSortDirection
+	RESPONSE_TEXT: ModelSortDirection
+	STEP_TYPE_ID: ModelSortDirection
+}
+
+input OrderByNEW_MEMBER_TOKENInput {
+	CHANGED_DATE: ModelSortDirection
+	CREATED_DATE: ModelSortDirection
+	CUSTOMER_NBR: ModelSortDirection
+	DOB: ModelSortDirection
+	EMAIL_ADDRESS_TEXT: ModelSortDirection
+	FIRST_NAME: ModelSortDirection
+	HOME_PHONE_NBR: ModelSortDirection
+	LAST_NAME: ModelSortDirection
+	LOAN_APP_ID: ModelSortDirection
+	MEMBER_NBR: ModelSortDirection
+	MOBILE_PHONE_NBR: ModelSortDirection
+	NEW_MEMBER_TOKEN_ID: ModelSortDirection
+	PERSON_NBR: ModelSortDirection
+	TAX_ID: ModelSortDirection
+	TOKEN_USED_FLAG: ModelSortDirection
+	TOKEN_VALUE: ModelSortDirection
+	ZIP_CODE: ModelSortDirection
+}
+
+input OrderByORIGIN_PRODUCTInput {
+	CHANGED_BY_USER_ID: ModelSortDirection
+	CHANGED_DATE: ModelSortDirection
+	CREATED_BY_USER_ID: ModelSortDirection
+	CREATED_DATE: ModelSortDirection
+	ORIGIN_PRODUCT_ID: ModelSortDirection
+	PARTNER_CODE: ModelSortDirection
+	PRODUCT_DESC: ModelSortDirection
+	PRODUCT_ID: ModelSortDirection
+	PSCU_CLIENT_ID: ModelSortDirection
+	VENDOR_NAME: ModelSortDirection
+}
+
+input OrderByOrigin_productsInput {
+	CHANGED_BY_USER_ID: ModelSortDirection
+	CHANGED_DATE: ModelSortDirection
+	CREATED_BY_USER_ID: ModelSortDirection
+	CREATED_DATE: ModelSortDirection
+	ORIGIN_PRODUCT_ID: ModelSortDirection
+	PARTNER_CODE: ModelSortDirection
+	PRODUCT_DESC: ModelSortDirection
+	PRODUCT_ID: ModelSortDirection
+	PSCU_CLIENT_ID: ModelSortDirection
+	VENDOR_NAME: ModelSortDirection
+}
+
+input OrderByREDIRECT_URLInput {
+	CHANGED_BY_USER_ID: ModelSortDirection
+	CHANGED_DATE: ModelSortDirection
+	CREATED_BY_USER_ID: ModelSortDirection
+	CREATED_DATE: ModelSortDirection
+	ORIGIN_PRODUCT_ID: ModelSortDirection
+	REDIRECT_URL_ID: ModelSortDirection
+	RESPONSE_TEXT: ModelSortDirection
+	URL: ModelSortDirection
+	URL_TYPE_CODE: ModelSortDirection
+}
+
+input OrderByRedirect_urlsInput {
+	CHANGED_BY_USER_ID: ModelSortDirection
+	CHANGED_DATE: ModelSortDirection
+	CREATED_BY_USER_ID: ModelSortDirection
+	CREATED_DATE: ModelSortDirection
+	ORIGIN_PRODUCT_ID: ModelSortDirection
+	PRODUCT_ID: ModelSortDirection
+	REDIRECT_URL_ID: ModelSortDirection
+	RESPONSE_TEXT: ModelSortDirection
+	URL: ModelSortDirection
+	URL_TYPE_CODE: ModelSortDirection
+	VENDOR_NAME: ModelSortDirection
+}
+
+input OrderBySERVICEInput {
+	CHANGED_BY_USER_ID: ModelSortDirection
+	CHANGED_DATE: ModelSortDirection
+	CREATED_BY_USER_ID: ModelSortDirection
+	CREATED_DATE: ModelSortDirection
+	SERVICE_ID: ModelSortDirection
+	SERVICE_PROVIDER_ID: ModelSortDirection
+	URI: ModelSortDirection
+}
+
+input OrderBySERVICE_EXPR_MAPPINGInput {
+	CHANGED_BY_USER_ID: ModelSortDirection
+	CHANGED_DATE: ModelSortDirection
+	COMMENT_TEXT: ModelSortDirection
+	CREATED_BY_USER_ID: ModelSortDirection
+	CREATED_DATE: ModelSortDirection
+	SERVICE_EXPR_MAPPING_ID: ModelSortDirection
+	SERVICE_PARAM_MAPPING_ID: ModelSortDirection
+	SOURCE_EXPR: ModelSortDirection
+	TARGET_EXPR: ModelSortDirection
+}
+
+input OrderBySERVICE_PARAMInput {
+	CHANGED_BY_USER_ID: ModelSortDirection
+	CHANGED_DATE: ModelSortDirection
+	CREATED_BY_USER_ID: ModelSortDirection
+	CREATED_DATE: ModelSortDirection
+	PARAM_NAME: ModelSortDirection
+	SERVICE_ID: ModelSortDirection
+	SERVICE_PARAM_ID: ModelSortDirection
+}
+
+input OrderBySERVICE_PARAM_MAPPINGInput {
+	AGENT_NBR: ModelSortDirection
+	CHANGED_BY_USER_ID: ModelSortDirection
+	CHANGED_DATE: ModelSortDirection
+	COMMENT_TEXT: ModelSortDirection
+	CREATED_BY_USER_ID: ModelSortDirection
+	CREATED_DATE: ModelSortDirection
+	ORIGIN_PRODUCT_ID: ModelSortDirection
+	PLASTIC_TYPE_ID: ModelSortDirection
+	PRIN_NBR: ModelSortDirection
+	SERVICE_PARAM_MAPPING_ID: ModelSortDirection
+	SOURCE_SERVICE_PARAM_ID: ModelSortDirection
+	SYSTEM_NBR: ModelSortDirection
+	TARGET_SERVICE_PARAM_ID: ModelSortDirection
+}
+
+input OrderBySERVICE_PROVIDERInput {
+	CHANGED_BY_USER_ID: ModelSortDirection
+	CHANGED_DATE: ModelSortDirection
+	CREATED_BY_USER_ID: ModelSortDirection
+	CREATED_DATE: ModelSortDirection
+	SERVICE_PROVIDER_ID: ModelSortDirection
+	SERVICE_PROVIDER_NAME: ModelSortDirection
+}
+
+input OrderBySTEP_SERVICE_MAPPINGInput {
+	SEQUENCE_NBR: ModelSortDirection
+	SERVICE_ID: ModelSortDirection
+	STEP_SERVICE_MAPPING_ID: ModelSortDirection
+	STEP_TYPE_ID: ModelSortDirection
+}
+
+input OrderBySTEP_TYPEInput {
+	CHANGED_BY_USER_ID: ModelSortDirection
+	CHANGED_DATE: ModelSortDirection
+	CREATED_BY_USER_ID: ModelSortDirection
+	CREATED_DATE: ModelSortDirection
+	RESOURCE_NAME: ModelSortDirection
+	STEP_TYPE_DESC: ModelSortDirection
+	STEP_TYPE_ID: ModelSortDirection
+	STEP_TYPE_NAME: ModelSortDirection
+}
+
+input OrderByService_param_mappingsInput {
+	AGENT_NBR: ModelSortDirection
+	ORIGIN_PRODUCT_ID: ModelSortDirection
+	PARTNER_CODE: ModelSortDirection
+	PRIN_NBR: ModelSortDirection
+	PRODUCT_DESC: ModelSortDirection
+	PRODUCT_ID: ModelSortDirection
+	PSCU_CLIENT_ID: ModelSortDirection
+	SERVICE_EXPR_MAPPING_ID: ModelSortDirection
+	SERVICE_PARAM_MAPPING_ID: ModelSortDirection
+	SOURCE_EXPR: ModelSortDirection
+	SOURCE_PARAM_ID: ModelSortDirection
+	SOURCE_PARAM_NAME: ModelSortDirection
+	SOURCE_PROVIDER_ID: ModelSortDirection
+	SOURCE_PROVIDER_NAME: ModelSortDirection
+	SOURCE_SERVICE_ID: ModelSortDirection
+	SOURCE_SERVICE_URI: ModelSortDirection
+	SYSTEM_NBR: ModelSortDirection
+	TARGET_EXPR: ModelSortDirection
+	TARGET_PARAM_ID: ModelSortDirection
+	TARGET_PARAM_NAME: ModelSortDirection
+	TARGET_PROVIDER_ID: ModelSortDirection
+	TARGET_PROVIDER_NAME: ModelSortDirection
+	TARGET_SERVICE_ID: ModelSortDirection
+	TARGET_SERVICE_URI: ModelSortDirection
+	VENDOR_NAME: ModelSortDirection
+}
+
+input OrderByService_paramsInput {
+	CHANGED_BY_USER_ID: ModelSortDirection
+	CHANGED_DATE: ModelSortDirection
+	CREATED_BY_USER_ID: ModelSortDirection
+	CREATED_DATE: ModelSortDirection
+	PARAM_NAME: ModelSortDirection
+	SERVICE_ID: ModelSortDirection
+	SERVICE_PARAM_ID: ModelSortDirection
+	SERVICE_PROVIDER_ID: ModelSortDirection
+	SERVICE_PROVIDER_NAME: ModelSortDirection
+	URI: ModelSortDirection
+}
+
+input OrderByServicesInput {
+	CHANGED_BY_USER_ID: ModelSortDirection
+	CHANGED_DATE: ModelSortDirection
+	CREATED_BY_USER_ID: ModelSortDirection
+	CREATED_DATE: ModelSortDirection
+	SERVICE_ID: ModelSortDirection
+	SERVICE_PROVIDER_ID: ModelSortDirection
+	SERVICE_PROVIDER_NAME: ModelSortDirection
+	URI: ModelSortDirection
+}
+
+type Origin_products {
+	CHANGED_BY_USER_ID: Int
+	CHANGED_DATE: AWSDate
+	CREATED_BY_USER_ID: Int!
+	CREATED_DATE: AWSDate!
+	ORIGIN_PRODUCT_ID: Int!
+	PARTNER_CODE: String
+	PRODUCT_DESC: String!
+	PRODUCT_ID: String!
+	PSCU_CLIENT_ID: Int!
+	VENDOR_NAME: String!
+}
+
+type Origin_productsConnection {
+	items: [Origin_products]
+	nextToken: String
+}
+
+type REDIRECT_URL {
+	CHANGED_BY_USER_ID: Int
+	CHANGED_DATE: AWSDate
+	CREATED_BY_USER_ID: Int!
+	CREATED_DATE: AWSDate!
+	ORIGIN_PRODUCT_ID: Int!
+	REDIRECT_URL_ID: Int
+	RESPONSE_TEXT: String
+	URL: String!
+	URL_TYPE_CODE: String!
+}
+
+type REDIRECT_URLConnection {
+	items: [REDIRECT_URL]
+	nextToken: String
+}
+
+type Redirect_urls {
+	CHANGED_BY_USER_ID: Int
+	CHANGED_DATE: AWSDate
+	CREATED_BY_USER_ID: Int!
+	CREATED_DATE: AWSDate!
+	ORIGIN_PRODUCT_ID: Int!
+	PRODUCT_ID: String!
+	REDIRECT_URL_ID: Int
+	RESPONSE_TEXT: String
+	URL: String!
+	URL_TYPE_CODE: String!
+	VENDOR_NAME: String!
+}
+
+type Redirect_urlsConnection {
+	items: [Redirect_urls]
+	nextToken: String
+}
+
+type SERVICE {
+	CHANGED_BY_USER_ID: Int
+	CHANGED_DATE: AWSDate
+	CREATED_BY_USER_ID: Int!
+	CREATED_DATE: AWSDate!
+	SERVICE_ID: Int!
+	SERVICE_PROVIDER_ID: Int!
+	URI: String!
+}
+
+type SERVICEConnection {
+	items: [SERVICE]
+	nextToken: String
+}
+
+type SERVICE_EXPR_MAPPING {
+	CHANGED_BY_USER_ID: Int
+	CHANGED_DATE: AWSDate
+	COMMENT_TEXT: String
+	CREATED_BY_USER_ID: Int!
+	CREATED_DATE: AWSDate!
+	SERVICE_EXPR_MAPPING_ID: Int!
+	SERVICE_PARAM_MAPPING_ID: Int!
+	SOURCE_EXPR: String
+	TARGET_EXPR: String
+}
+
+type SERVICE_EXPR_MAPPINGConnection {
+	items: [SERVICE_EXPR_MAPPING]
+	nextToken: String
+}
+
+type SERVICE_PARAM {
+	CHANGED_BY_USER_ID: Int
+	CHANGED_DATE: AWSDate
+	CREATED_BY_USER_ID: Int!
+	CREATED_DATE: AWSDate!
+	PARAM_NAME: String!
+	SERVICE_ID: Int!
+	SERVICE_PARAM_ID: Int!
+}
+
+type SERVICE_PARAMConnection {
+	items: [SERVICE_PARAM]
+	nextToken: String
+}
+
+type SERVICE_PARAM_MAPPING {
+	AGENT_NBR: String
+	CHANGED_BY_USER_ID: Int
+	CHANGED_DATE: AWSDate
+	COMMENT_TEXT: String
+	CREATED_BY_USER_ID: Int!
+	CREATED_DATE: AWSDate!
+	ORIGIN_PRODUCT_ID: Int!
+	PLASTIC_TYPE_ID: String
+	PRIN_NBR: String
+	SERVICE_PARAM_MAPPING_ID: Int!
+	SOURCE_SERVICE_PARAM_ID: Int!
+	SYSTEM_NBR: String
+	TARGET_SERVICE_PARAM_ID: Int!
+}
+
+type SERVICE_PARAM_MAPPINGConnection {
+	items: [SERVICE_PARAM_MAPPING]
+	nextToken: String
+}
+
+type SERVICE_PROVIDER {
+	CHANGED_BY_USER_ID: Int
+	CHANGED_DATE: AWSDate
+	CREATED_BY_USER_ID: Int!
+	CREATED_DATE: AWSDate!
+	SERVICE_PROVIDER_ID: Int
+	SERVICE_PROVIDER_NAME: String!
+}
+
+type SERVICE_PROVIDERConnection {
+	items: [SERVICE_PROVIDER]
+	nextToken: String
+}
+
+type STEP_SERVICE_MAPPING {
+	SEQUENCE_NBR: Int
+	SERVICE_ID: Int!
+	STEP_SERVICE_MAPPING_ID: Int!
+	STEP_TYPE_ID: Int!
+}
+
+type STEP_SERVICE_MAPPINGConnection {
+	items: [STEP_SERVICE_MAPPING]
+	nextToken: String
+}
+
+type STEP_TYPE {
+	CHANGED_BY_USER_ID: Int
+	CHANGED_DATE: AWSDate
+	CREATED_BY_USER_ID: Int!
+	CREATED_DATE: AWSDate!
+	RESOURCE_NAME: String!
+	STEP_TYPE_DESC: String
+	STEP_TYPE_ID: Int!
+	STEP_TYPE_NAME: String!
+}
+
+type STEP_TYPEConnection {
+	items: [STEP_TYPE]
+	nextToken: String
+}
+
+type Service_param_mappings {
+	AGENT_NBR: String
+	ORIGIN_PRODUCT_ID: Int!
+	PARTNER_CODE: String
+	PRIN_NBR: String
+	PRODUCT_DESC: String!
+	PRODUCT_ID: String!
+	PSCU_CLIENT_ID: Int!
+	SERVICE_EXPR_MAPPING_ID: Int!
+	SERVICE_PARAM_MAPPING_ID: Int!
+	SOURCE_EXPR: String
+	SOURCE_PARAM_ID: Int!
+	SOURCE_PARAM_NAME: String!
+	SOURCE_PROVIDER_ID: Int!
+	SOURCE_PROVIDER_NAME: String!
+	SOURCE_SERVICE_ID: Int!
+	SOURCE_SERVICE_URI: String!
+	SYSTEM_NBR: String
+	TARGET_EXPR: String
+	TARGET_PARAM_ID: Int!
+	TARGET_PARAM_NAME: String!
+	TARGET_PROVIDER_ID: Int!
+	TARGET_PROVIDER_NAME: String!
+	TARGET_SERVICE_ID: Int!
+	TARGET_SERVICE_URI: String!
+	VENDOR_NAME: String!
+}
+
+type Service_param_mappingsConnection {
+	items: [Service_param_mappings]
+	nextToken: String
+}
+
+type Service_params {
+	CHANGED_BY_USER_ID: Int
+	CHANGED_DATE: AWSDate
+	CREATED_BY_USER_ID: Int!
+	CREATED_DATE: AWSDate!
+	PARAM_NAME: String!
+	SERVICE_ID: Int!
+	SERVICE_PARAM_ID: Int!
+	SERVICE_PROVIDER_ID: Int!
+	SERVICE_PROVIDER_NAME: String!
+	URI: String!
+}
+
+type Service_paramsConnection {
+	items: [Service_params]
+	nextToken: String
+}
+
+type Services {
+	CHANGED_BY_USER_ID: Int
+	CHANGED_DATE: AWSDate
+	CREATED_BY_USER_ID: Int!
+	CREATED_DATE: AWSDate!
+	SERVICE_ID: Int!
+	SERVICE_PROVIDER_ID: Int!
+	SERVICE_PROVIDER_NAME: String!
+	URI: String!
+}
+
+type ServicesConnection {
+	items: [Services]
+	nextToken: String
+}
+
+input TableIntFilterInput {
+	ne: Int
+	eq: Int
+	le: Int
+	lt: Int
+	ge: Int
+	gt: Int
+	between: [Int]
+	attributeExists: Boolean
+}
+
+input TableLOAN_APPConditionInput {
+	CHANGED_DATE: TableStringFilterInput
+	CREATED_DATE: TableStringFilterInput
+	EXEC_ID: TableStringFilterInput
+	ORIGIN_LOAN_APP_ID: TableStringFilterInput
+	ORIGIN_PRODUCT_ID: TableIntFilterInput
+	PROCESS_FLAG: TableStringFilterInput
+	and: [TableLOAN_APPConditionInput]
+	or: [TableLOAN_APPConditionInput]
+	not: [TableLOAN_APPConditionInput]
+}
+
+input TableLOAN_APPFilterInput {
+	CHANGED_DATE: TableStringFilterInput
+	CREATED_DATE: TableStringFilterInput
+	EXEC_ID: TableStringFilterInput
+	LOAN_APP_ID: TableIntFilterInput
+	ORIGIN_LOAN_APP_ID: TableStringFilterInput
+	ORIGIN_PRODUCT_ID: TableIntFilterInput
+	PROCESS_FLAG: TableStringFilterInput
+	and: [TableLOAN_APPFilterInput]
+	or: [TableLOAN_APPFilterInput]
+	not: [TableLOAN_APPFilterInput]
+}
+
+input TableLOAN_APP_EXECSConditionInput {
+	AWS_EXEC_ID: TableStringFilterInput
+	CREATED_DATE: TableStringFilterInput
+	LOAN_APP_ID: TableIntFilterInput
+	and: [TableLOAN_APP_EXECSConditionInput]
+	or: [TableLOAN_APP_EXECSConditionInput]
+	not: [TableLOAN_APP_EXECSConditionInput]
+}
+
+input TableLOAN_APP_EXECSFilterInput {
+	AWS_EXEC_ID: TableStringFilterInput
+	CREATED_DATE: TableStringFilterInput
+	LOAN_APP_EXEC_ID: TableIntFilterInput
+	LOAN_APP_ID: TableIntFilterInput
+	and: [TableLOAN_APP_EXECSFilterInput]
+	or: [TableLOAN_APP_EXECSFilterInput]
+	not: [TableLOAN_APP_EXECSFilterInput]
+}
+
+input TableLOAN_APP_STEP_STATUSConditionInput {
+	COMPLETE_FLAG: TableStringFilterInput
+	CREATED_DATE: TableStringFilterInput
+	LOAN_APP_EXEC_ID: TableIntFilterInput
+	LOAN_APP_ID: TableIntFilterInput
+	OUTPUT_JSON: TableStringFilterInput
+	RESPONSE_TEXT: TableStringFilterInput
+	STEP_TYPE_ID: TableIntFilterInput
+	and: [TableLOAN_APP_STEP_STATUSConditionInput]
+	or: [TableLOAN_APP_STEP_STATUSConditionInput]
+	not: [TableLOAN_APP_STEP_STATUSConditionInput]
+}
+
+input TableLOAN_APP_STEP_STATUSFilterInput {
+	COMPLETE_FLAG: TableStringFilterInput
+	CREATED_DATE: TableStringFilterInput
+	LOAN_APP_EXEC_ID: TableIntFilterInput
+	LOAN_APP_ID: TableIntFilterInput
+	LOAN_APP_STEP_STATUS_ID: TableIntFilterInput
+	OUTPUT_JSON: TableStringFilterInput
+	RESPONSE_TEXT: TableStringFilterInput
+	STEP_TYPE_ID: TableIntFilterInput
+	and: [TableLOAN_APP_STEP_STATUSFilterInput]
+	or: [TableLOAN_APP_STEP_STATUSFilterInput]
+	not: [TableLOAN_APP_STEP_STATUSFilterInput]
+}
+
+input TableNEW_MEMBER_TOKENConditionInput {
+	CHANGED_DATE: TableStringFilterInput
+	CREATED_DATE: TableStringFilterInput
+	CUSTOMER_NBR: TableStringFilterInput
+	DOB: TableStringFilterInput
+	EMAIL_ADDRESS_TEXT: TableStringFilterInput
+	FIRST_NAME: TableStringFilterInput
+	HOME_PHONE_NBR: TableStringFilterInput
+	LAST_NAME: TableStringFilterInput
+	LOAN_APP_ID: TableIntFilterInput
+	MEMBER_NBR: TableStringFilterInput
+	MOBILE_PHONE_NBR: TableStringFilterInput
+	PERSON_NBR: TableStringFilterInput
+	TAX_ID: TableStringFilterInput
+	TOKEN_USED_FLAG: TableStringFilterInput
+	TOKEN_VALUE: TableStringFilterInput
+	ZIP_CODE: TableStringFilterInput
+	and: [TableNEW_MEMBER_TOKENConditionInput]
+	or: [TableNEW_MEMBER_TOKENConditionInput]
+	not: [TableNEW_MEMBER_TOKENConditionInput]
+}
+
+input TableNEW_MEMBER_TOKENFilterInput {
+	CHANGED_DATE: TableStringFilterInput
+	CREATED_DATE: TableStringFilterInput
+	CUSTOMER_NBR: TableStringFilterInput
+	DOB: TableStringFilterInput
+	EMAIL_ADDRESS_TEXT: TableStringFilterInput
+	FIRST_NAME: TableStringFilterInput
+	HOME_PHONE_NBR: TableStringFilterInput
+	LAST_NAME: TableStringFilterInput
+	LOAN_APP_ID: TableIntFilterInput
+	MEMBER_NBR: TableStringFilterInput
+	MOBILE_PHONE_NBR: TableStringFilterInput
+	NEW_MEMBER_TOKEN_ID: TableIntFilterInput
+	PERSON_NBR: TableStringFilterInput
+	TAX_ID: TableStringFilterInput
+	TOKEN_USED_FLAG: TableStringFilterInput
+	TOKEN_VALUE: TableStringFilterInput
+	ZIP_CODE: TableStringFilterInput
+	and: [TableNEW_MEMBER_TOKENFilterInput]
+	or: [TableNEW_MEMBER_TOKENFilterInput]
+	not: [TableNEW_MEMBER_TOKENFilterInput]
+}
+
+input TableORIGIN_PRODUCTConditionInput {
+	CHANGED_BY_USER_ID: TableIntFilterInput
+	CHANGED_DATE: TableStringFilterInput
+	CREATED_BY_USER_ID: TableIntFilterInput
+	CREATED_DATE: TableStringFilterInput
+	PARTNER_CODE: TableStringFilterInput
+	PRODUCT_DESC: TableStringFilterInput
+	PRODUCT_ID: TableStringFilterInput
+	PSCU_CLIENT_ID: TableIntFilterInput
+	VENDOR_NAME: TableStringFilterInput
+	and: [TableORIGIN_PRODUCTConditionInput]
+	or: [TableORIGIN_PRODUCTConditionInput]
+	not: [TableORIGIN_PRODUCTConditionInput]
+}
+
+input TableORIGIN_PRODUCTFilterInput {
+	CHANGED_BY_USER_ID: TableIntFilterInput
+	CHANGED_DATE: TableStringFilterInput
+	CREATED_BY_USER_ID: TableIntFilterInput
+	CREATED_DATE: TableStringFilterInput
+	ORIGIN_PRODUCT_ID: TableIntFilterInput
+	PARTNER_CODE: TableStringFilterInput
+	PRODUCT_DESC: TableStringFilterInput
+	PRODUCT_ID: TableStringFilterInput
+	PSCU_CLIENT_ID: TableIntFilterInput
+	VENDOR_NAME: TableStringFilterInput
+	and: [TableORIGIN_PRODUCTFilterInput]
+	or: [TableORIGIN_PRODUCTFilterInput]
+	not: [TableORIGIN_PRODUCTFilterInput]
+}
+
+input TableOrigin_productsFilterInput {
+	CHANGED_BY_USER_ID: TableIntFilterInput
+	CHANGED_DATE: TableStringFilterInput
+	CREATED_BY_USER_ID: TableIntFilterInput
+	CREATED_DATE: TableStringFilterInput
+	ORIGIN_PRODUCT_ID: TableIntFilterInput
+	PARTNER_CODE: TableStringFilterInput
+	PRODUCT_DESC: TableStringFilterInput
+	PRODUCT_ID: TableStringFilterInput
+	PSCU_CLIENT_ID: TableIntFilterInput
+	VENDOR_NAME: TableStringFilterInput
+	and: [TableOrigin_productsFilterInput]
+	or: [TableOrigin_productsFilterInput]
+	not: [TableOrigin_productsFilterInput]
+}
+
+input TableREDIRECT_URLConditionInput {
+	CHANGED_BY_USER_ID: TableIntFilterInput
+	CHANGED_DATE: TableStringFilterInput
+	CREATED_BY_USER_ID: TableIntFilterInput
+	CREATED_DATE: TableStringFilterInput
+	ORIGIN_PRODUCT_ID: TableIntFilterInput
+	RESPONSE_TEXT: TableStringFilterInput
+	URL: TableStringFilterInput
+	URL_TYPE_CODE: TableStringFilterInput
+	and: [TableREDIRECT_URLConditionInput]
+	or: [TableREDIRECT_URLConditionInput]
+	not: [TableREDIRECT_URLConditionInput]
+}
+
+input TableREDIRECT_URLFilterInput {
+	CHANGED_BY_USER_ID: TableIntFilterInput
+	CHANGED_DATE: TableStringFilterInput
+	CREATED_BY_USER_ID: TableIntFilterInput
+	CREATED_DATE: TableStringFilterInput
+	ORIGIN_PRODUCT_ID: TableIntFilterInput
+	REDIRECT_URL_ID: TableIntFilterInput
+	RESPONSE_TEXT: TableStringFilterInput
+	URL: TableStringFilterInput
+	URL_TYPE_CODE: TableStringFilterInput
+	and: [TableREDIRECT_URLFilterInput]
+	or: [TableREDIRECT_URLFilterInput]
+	not: [TableREDIRECT_URLFilterInput]
+}
+
+input TableRedirect_urlsFilterInput {
+	CHANGED_BY_USER_ID: TableIntFilterInput
+	CHANGED_DATE: TableStringFilterInput
+	CREATED_BY_USER_ID: TableIntFilterInput
+	CREATED_DATE: TableStringFilterInput
+	ORIGIN_PRODUCT_ID: TableIntFilterInput
+	PRODUCT_ID: TableStringFilterInput
+	REDIRECT_URL_ID: TableIntFilterInput
+	RESPONSE_TEXT: TableStringFilterInput
+	URL: TableStringFilterInput
+	URL_TYPE_CODE: TableStringFilterInput
+	VENDOR_NAME: TableStringFilterInput
+	and: [TableRedirect_urlsFilterInput]
+	or: [TableRedirect_urlsFilterInput]
+	not: [TableRedirect_urlsFilterInput]
+}
+
+input TableSERVICEConditionInput {
+	CHANGED_BY_USER_ID: TableIntFilterInput
+	CHANGED_DATE: TableStringFilterInput
+	CREATED_BY_USER_ID: TableIntFilterInput
+	CREATED_DATE: TableStringFilterInput
+	SERVICE_PROVIDER_ID: TableIntFilterInput
+	URI: TableStringFilterInput
+	and: [TableSERVICEConditionInput]
+	or: [TableSERVICEConditionInput]
+	not: [TableSERVICEConditionInput]
+}
+
+input TableSERVICEFilterInput {
+	CHANGED_BY_USER_ID: TableIntFilterInput
+	CHANGED_DATE: TableStringFilterInput
+	CREATED_BY_USER_ID: TableIntFilterInput
+	CREATED_DATE: TableStringFilterInput
+	SERVICE_ID: TableIntFilterInput
+	SERVICE_PROVIDER_ID: TableIntFilterInput
+	URI: TableStringFilterInput
+	and: [TableSERVICEFilterInput]
+	or: [TableSERVICEFilterInput]
+	not: [TableSERVICEFilterInput]
+}
+
+input TableSERVICE_EXPR_MAPPINGConditionInput {
+	CHANGED_BY_USER_ID: TableIntFilterInput
+	CHANGED_DATE: TableStringFilterInput
+	COMMENT_TEXT: TableStringFilterInput
+	CREATED_BY_USER_ID: TableIntFilterInput
+	CREATED_DATE: TableStringFilterInput
+	SERVICE_PARAM_MAPPING_ID: TableIntFilterInput
+	SOURCE_EXPR: TableStringFilterInput
+	TARGET_EXPR: TableStringFilterInput
+	and: [TableSERVICE_EXPR_MAPPINGConditionInput]
+	or: [TableSERVICE_EXPR_MAPPINGConditionInput]
+	not: [TableSERVICE_EXPR_MAPPINGConditionInput]
+}
+
+input TableSERVICE_EXPR_MAPPINGFilterInput {
+	CHANGED_BY_USER_ID: TableIntFilterInput
+	CHANGED_DATE: TableStringFilterInput
+	COMMENT_TEXT: TableStringFilterInput
+	CREATED_BY_USER_ID: TableIntFilterInput
+	CREATED_DATE: TableStringFilterInput
+	SERVICE_EXPR_MAPPING_ID: TableIntFilterInput
+	SERVICE_PARAM_MAPPING_ID: TableIntFilterInput
+	SOURCE_EXPR: TableStringFilterInput
+	TARGET_EXPR: TableStringFilterInput
+	and: [TableSERVICE_EXPR_MAPPINGFilterInput]
+	or: [TableSERVICE_EXPR_MAPPINGFilterInput]
+	not: [TableSERVICE_EXPR_MAPPINGFilterInput]
+}
+
+input TableSERVICE_PARAMConditionInput {
+	CHANGED_BY_USER_ID: TableIntFilterInput
+	CHANGED_DATE: TableStringFilterInput
+	CREATED_BY_USER_ID: TableIntFilterInput
+	CREATED_DATE: TableStringFilterInput
+	PARAM_NAME: TableStringFilterInput
+	SERVICE_ID: TableIntFilterInput
+	and: [TableSERVICE_PARAMConditionInput]
+	or: [TableSERVICE_PARAMConditionInput]
+	not: [TableSERVICE_PARAMConditionInput]
+}
+
+input TableSERVICE_PARAMFilterInput {
+	CHANGED_BY_USER_ID: TableIntFilterInput
+	CHANGED_DATE: TableStringFilterInput
+	CREATED_BY_USER_ID: TableIntFilterInput
+	CREATED_DATE: TableStringFilterInput
+	PARAM_NAME: TableStringFilterInput
+	SERVICE_ID: TableIntFilterInput
+	SERVICE_PARAM_ID: TableIntFilterInput
+	and: [TableSERVICE_PARAMFilterInput]
+	or: [TableSERVICE_PARAMFilterInput]
+	not: [TableSERVICE_PARAMFilterInput]
+}
+
+input TableSERVICE_PARAM_MAPPINGConditionInput {
+	AGENT_NBR: TableStringFilterInput
+	CHANGED_BY_USER_ID: TableIntFilterInput
+	CHANGED_DATE: TableStringFilterInput
+	COMMENT_TEXT: TableStringFilterInput
+	CREATED_BY_USER_ID: TableIntFilterInput
+	CREATED_DATE: TableStringFilterInput
+	ORIGIN_PRODUCT_ID: TableIntFilterInput
+	PLASTIC_TYPE_ID: TableStringFilterInput
+	PRIN_NBR: TableStringFilterInput
+	SOURCE_SERVICE_PARAM_ID: TableIntFilterInput
+	SYSTEM_NBR: TableStringFilterInput
+	TARGET_SERVICE_PARAM_ID: TableIntFilterInput
+	and: [TableSERVICE_PARAM_MAPPINGConditionInput]
+	or: [TableSERVICE_PARAM_MAPPINGConditionInput]
+	not: [TableSERVICE_PARAM_MAPPINGConditionInput]
+}
+
+input TableSERVICE_PARAM_MAPPINGFilterInput {
+	AGENT_NBR: TableStringFilterInput
+	CHANGED_BY_USER_ID: TableIntFilterInput
+	CHANGED_DATE: TableStringFilterInput
+	COMMENT_TEXT: TableStringFilterInput
+	CREATED_BY_USER_ID: TableIntFilterInput
+	CREATED_DATE: TableStringFilterInput
+	ORIGIN_PRODUCT_ID: TableIntFilterInput
+	PLASTIC_TYPE_ID: TableStringFilterInput
+	PRIN_NBR: TableStringFilterInput
+	SERVICE_PARAM_MAPPING_ID: TableIntFilterInput
+	SOURCE_SERVICE_PARAM_ID: TableIntFilterInput
+	SYSTEM_NBR: TableStringFilterInput
+	TARGET_SERVICE_PARAM_ID: TableIntFilterInput
+	and: [TableSERVICE_PARAM_MAPPINGFilterInput]
+	or: [TableSERVICE_PARAM_MAPPINGFilterInput]
+	not: [TableSERVICE_PARAM_MAPPINGFilterInput]
+}
+
+input TableSERVICE_PROVIDERConditionInput {
+	CHANGED_BY_USER_ID: TableIntFilterInput
+	CHANGED_DATE: TableStringFilterInput
+	CREATED_BY_USER_ID: TableIntFilterInput
+	CREATED_DATE: TableStringFilterInput
+	SERVICE_PROVIDER_NAME: TableStringFilterInput
+	and: [TableSERVICE_PROVIDERConditionInput]
+	or: [TableSERVICE_PROVIDERConditionInput]
+	not: [TableSERVICE_PROVIDERConditionInput]
+}
+
+input TableSERVICE_PROVIDERFilterInput {
+	CHANGED_BY_USER_ID: TableIntFilterInput
+	CHANGED_DATE: TableStringFilterInput
+	CREATED_BY_USER_ID: TableIntFilterInput
+	CREATED_DATE: TableStringFilterInput
+	SERVICE_PROVIDER_ID: TableIntFilterInput
+	SERVICE_PROVIDER_NAME: TableStringFilterInput
+	and: [TableSERVICE_PROVIDERFilterInput]
+	or: [TableSERVICE_PROVIDERFilterInput]
+	not: [TableSERVICE_PROVIDERFilterInput]
+}
+
+input TableSTEP_SERVICE_MAPPINGConditionInput {
+	SEQUENCE_NBR: TableIntFilterInput
+	SERVICE_ID: TableIntFilterInput
+	STEP_TYPE_ID: TableIntFilterInput
+	and: [TableSTEP_SERVICE_MAPPINGConditionInput]
+	or: [TableSTEP_SERVICE_MAPPINGConditionInput]
+	not: [TableSTEP_SERVICE_MAPPINGConditionInput]
+}
+
+input TableSTEP_SERVICE_MAPPINGFilterInput {
+	SEQUENCE_NBR: TableIntFilterInput
+	SERVICE_ID: TableIntFilterInput
+	STEP_SERVICE_MAPPING_ID: TableIntFilterInput
+	STEP_TYPE_ID: TableIntFilterInput
+	and: [TableSTEP_SERVICE_MAPPINGFilterInput]
+	or: [TableSTEP_SERVICE_MAPPINGFilterInput]
+	not: [TableSTEP_SERVICE_MAPPINGFilterInput]
+}
+
+input TableSTEP_TYPEConditionInput {
+	CHANGED_BY_USER_ID: TableIntFilterInput
+	CHANGED_DATE: TableStringFilterInput
+	CREATED_BY_USER_ID: TableIntFilterInput
+	CREATED_DATE: TableStringFilterInput
+	RESOURCE_NAME: TableStringFilterInput
+	STEP_TYPE_DESC: TableStringFilterInput
+	STEP_TYPE_NAME: TableStringFilterInput
+	and: [TableSTEP_TYPEConditionInput]
+	or: [TableSTEP_TYPEConditionInput]
+	not: [TableSTEP_TYPEConditionInput]
+}
+
+input TableSTEP_TYPEFilterInput {
+	CHANGED_BY_USER_ID: TableIntFilterInput
+	CHANGED_DATE: TableStringFilterInput
+	CREATED_BY_USER_ID: TableIntFilterInput
+	CREATED_DATE: TableStringFilterInput
+	RESOURCE_NAME: TableStringFilterInput
+	STEP_TYPE_DESC: TableStringFilterInput
+	STEP_TYPE_ID: TableIntFilterInput
+	STEP_TYPE_NAME: TableStringFilterInput
+	and: [TableSTEP_TYPEFilterInput]
+	or: [TableSTEP_TYPEFilterInput]
+	not: [TableSTEP_TYPEFilterInput]
+}
+
+input TableService_param_mappingsFilterInput {
+	AGENT_NBR: TableStringFilterInput
+	ORIGIN_PRODUCT_ID: TableIntFilterInput
+	PARTNER_CODE: TableStringFilterInput
+	PRIN_NBR: TableStringFilterInput
+	PRODUCT_DESC: TableStringFilterInput
+	PRODUCT_ID: TableStringFilterInput
+	PSCU_CLIENT_ID: TableIntFilterInput
+	SERVICE_EXPR_MAPPING_ID: TableIntFilterInput
+	SERVICE_PARAM_MAPPING_ID: TableIntFilterInput
+	SOURCE_EXPR: TableStringFilterInput
+	SOURCE_PARAM_ID: TableIntFilterInput
+	SOURCE_PARAM_NAME: TableStringFilterInput
+	SOURCE_PROVIDER_ID: TableIntFilterInput
+	SOURCE_PROVIDER_NAME: TableStringFilterInput
+	SOURCE_SERVICE_ID: TableIntFilterInput
+	SOURCE_SERVICE_URI: TableStringFilterInput
+	SYSTEM_NBR: TableStringFilterInput
+	TARGET_EXPR: TableStringFilterInput
+	TARGET_PARAM_ID: TableIntFilterInput
+	TARGET_PARAM_NAME: TableStringFilterInput
+	TARGET_PROVIDER_ID: TableIntFilterInput
+	TARGET_PROVIDER_NAME: TableStringFilterInput
+	TARGET_SERVICE_ID: TableIntFilterInput
+	TARGET_SERVICE_URI: TableStringFilterInput
+	VENDOR_NAME: TableStringFilterInput
+	and: [TableService_param_mappingsFilterInput]
+	or: [TableService_param_mappingsFilterInput]
+	not: [TableService_param_mappingsFilterInput]
+}
+
+input TableService_paramsFilterInput {
+	CHANGED_BY_USER_ID: TableIntFilterInput
+	CHANGED_DATE: TableStringFilterInput
+	CREATED_BY_USER_ID: TableIntFilterInput
+	CREATED_DATE: TableStringFilterInput
+	PARAM_NAME: TableStringFilterInput
+	SERVICE_ID: TableIntFilterInput
+	SERVICE_PARAM_ID: TableIntFilterInput
+	SERVICE_PROVIDER_ID: TableIntFilterInput
+	SERVICE_PROVIDER_NAME: TableStringFilterInput
+	URI: TableStringFilterInput
+	and: [TableService_paramsFilterInput]
+	or: [TableService_paramsFilterInput]
+	not: [TableService_paramsFilterInput]
+}
+
+input TableServicesFilterInput {
+	CHANGED_BY_USER_ID: TableIntFilterInput
+	CHANGED_DATE: TableStringFilterInput
+	CREATED_BY_USER_ID: TableIntFilterInput
+	CREATED_DATE: TableStringFilterInput
+	SERVICE_ID: TableIntFilterInput
+	SERVICE_PROVIDER_ID: TableIntFilterInput
+	SERVICE_PROVIDER_NAME: TableStringFilterInput
+	URI: TableStringFilterInput
+	and: [TableServicesFilterInput]
+	or: [TableServicesFilterInput]
+	not: [TableServicesFilterInput]
+}
+
+input TableStringFilterInput {
+	ne: String
+	eq: String
+	le: String
+	lt: String
+	ge: String
+	gt: String
+	contains: String
+	notContains: String
+	between: [String]
+	beginsWith: String
+	attributeExists: Boolean
+	size: ModelSizeInput
+}
+
+input UpdateLOAN_APPInput {
+	CHANGED_DATE: String
+	CREATED_DATE: String
+	EXEC_ID: String
+	LOAN_APP_ID: Int!
+	ORIGIN_LOAN_APP_ID: String
+	ORIGIN_PRODUCT_ID: Int
+	PROCESS_FLAG: String
+}
+
+input UpdateLOAN_APP_EXECSInput {
+	AWS_EXEC_ID: String
+	CREATED_DATE: String
+	LOAN_APP_EXEC_ID: Int!
+	LOAN_APP_ID: Int
+}
+
+input UpdateLOAN_APP_STEP_STATUSInput {
+	COMPLETE_FLAG: String
+	CREATED_DATE: String
+	LOAN_APP_EXEC_ID: Int
+	LOAN_APP_ID: Int
+	LOAN_APP_STEP_STATUS_ID: Int!
+	OUTPUT_JSON: String
+	RESPONSE_TEXT: String
+	STEP_TYPE_ID: Int
+}
+
+input UpdateNEW_MEMBER_TOKENInput {
+	CHANGED_DATE: AWSDate
+	CREATED_DATE: AWSDate
+	CUSTOMER_NBR: String
+	DOB: String
+	EMAIL_ADDRESS_TEXT: String
+	FIRST_NAME: String
+	HOME_PHONE_NBR: String
+	LAST_NAME: String
+	LOAN_APP_ID: Int
+	MEMBER_NBR: String
+	MOBILE_PHONE_NBR: String
+	NEW_MEMBER_TOKEN_ID: Int!
+	PERSON_NBR: String
+	TAX_ID: String
+	TOKEN_USED_FLAG: String
+	TOKEN_VALUE: String
+	ZIP_CODE: String
+}
+
+input UpdateORIGIN_PRODUCTInput {
+	CHANGED_BY_USER_ID: Int
+	CHANGED_DATE: AWSDate
+	CREATED_BY_USER_ID: Int
+	CREATED_DATE: AWSDate
+	ORIGIN_PRODUCT_ID: Int!
+	PARTNER_CODE: String
+	PRODUCT_DESC: String
+	PRODUCT_ID: String
+	PSCU_CLIENT_ID: Int
+	VENDOR_NAME: String
+}
+
+input UpdateREDIRECT_URLInput {
+	CHANGED_BY_USER_ID: Int
+	CHANGED_DATE: AWSDate
+	CREATED_BY_USER_ID: Int
+	CREATED_DATE: AWSDate
+	ORIGIN_PRODUCT_ID: Int
+	REDIRECT_URL_ID: Int!
+	RESPONSE_TEXT: String
+	URL: String
+	URL_TYPE_CODE: String
+}
+
+input UpdateSERVICEInput {
+	CHANGED_BY_USER_ID: Int
+	CHANGED_DATE: AWSDate
+	CREATED_BY_USER_ID: Int
+	CREATED_DATE: AWSDate
+	SERVICE_ID: Int!
+	SERVICE_PROVIDER_ID: Int
+	URI: String
+}
+
+input UpdateSERVICE_EXPR_MAPPINGInput {
+	CHANGED_BY_USER_ID: Int
+	CHANGED_DATE: AWSDate
+	COMMENT_TEXT: String
+	CREATED_BY_USER_ID: Int
+	CREATED_DATE: AWSDate
+	SERVICE_EXPR_MAPPING_ID: Int!
+	SERVICE_PARAM_MAPPING_ID: Int
+	SOURCE_EXPR: String
+	TARGET_EXPR: String
+}
+
+input UpdateSERVICE_PARAMInput {
+	CHANGED_BY_USER_ID: Int
+	CHANGED_DATE: AWSDate
+	CREATED_BY_USER_ID: Int
+	CREATED_DATE: AWSDate
+	PARAM_NAME: String
+	SERVICE_ID: Int
+	SERVICE_PARAM_ID: Int!
+}
+
+input UpdateSERVICE_PARAM_MAPPINGInput {
+	AGENT_NBR: String
+	CHANGED_BY_USER_ID: Int
+	CHANGED_DATE: AWSDate
+	COMMENT_TEXT: String
+	CREATED_BY_USER_ID: Int
+	CREATED_DATE: AWSDate
+	ORIGIN_PRODUCT_ID: Int
+	PLASTIC_TYPE_ID: String
+	PRIN_NBR: String
+	SERVICE_PARAM_MAPPING_ID: Int!
+	SOURCE_SERVICE_PARAM_ID: Int
+	SYSTEM_NBR: String
+	TARGET_SERVICE_PARAM_ID: Int
+}
+
+input UpdateSERVICE_PROVIDERInput {
+	CHANGED_BY_USER_ID: Int
+	CHANGED_DATE: AWSDate
+	CREATED_BY_USER_ID: Int
+	CREATED_DATE: AWSDate
+	SERVICE_PROVIDER_ID: Int!
+	SERVICE_PROVIDER_NAME: String
+}
+
+input UpdateSTEP_SERVICE_MAPPINGInput {
+	SEQUENCE_NBR: Int
+	SERVICE_ID: Int
+	STEP_SERVICE_MAPPING_ID: Int!
+	STEP_TYPE_ID: Int
+}
+
+input UpdateSTEP_TYPEInput {
+	CHANGED_BY_USER_ID: Int
+	CHANGED_DATE: AWSDate
+	CREATED_BY_USER_ID: Int
+	CREATED_DATE: AWSDate
+	RESOURCE_NAME: String
+	STEP_TYPE_DESC: String
+	STEP_TYPE_ID: Int!
+	STEP_TYPE_NAME: String
+}
+
+type Mutation {
+	createLOAN_APP(input: CreateLOAN_APPInput!): LOAN_APP
+	updateLOAN_APP(input: UpdateLOAN_APPInput!, condition: TableLOAN_APPConditionInput): LOAN_APP
+	deleteLOAN_APP(input: DeleteLOAN_APPInput!, condition: TableLOAN_APPConditionInput): LOAN_APP
+	createLOAN_APP_EXECS(input: CreateLOAN_APP_EXECSInput!): LOAN_APP_EXECS
+	updateLOAN_APP_EXECS(input: UpdateLOAN_APP_EXECSInput!, condition: TableLOAN_APP_EXECSConditionInput): LOAN_APP_EXECS
+	deleteLOAN_APP_EXECS(input: DeleteLOAN_APP_EXECSInput!, condition: TableLOAN_APP_EXECSConditionInput): LOAN_APP_EXECS
+	createLOAN_APP_STEP_STATUS(input: CreateLOAN_APP_STEP_STATUSInput!): LOAN_APP_STEP_STATUS
+	updateLOAN_APP_STEP_STATUS(input: UpdateLOAN_APP_STEP_STATUSInput!, condition: TableLOAN_APP_STEP_STATUSConditionInput): LOAN_APP_STEP_STATUS
+	deleteLOAN_APP_STEP_STATUS(input: DeleteLOAN_APP_STEP_STATUSInput!, condition: TableLOAN_APP_STEP_STATUSConditionInput): LOAN_APP_STEP_STATUS
+	createNEW_MEMBER_TOKEN(input: CreateNEW_MEMBER_TOKENInput!): NEW_MEMBER_TOKEN
+	updateNEW_MEMBER_TOKEN(input: UpdateNEW_MEMBER_TOKENInput!, condition: TableNEW_MEMBER_TOKENConditionInput): NEW_MEMBER_TOKEN
+	deleteNEW_MEMBER_TOKEN(input: DeleteNEW_MEMBER_TOKENInput!, condition: TableNEW_MEMBER_TOKENConditionInput): NEW_MEMBER_TOKEN
+	createORIGIN_PRODUCT(input: CreateORIGIN_PRODUCTInput!): ORIGIN_PRODUCT
+	updateORIGIN_PRODUCT(input: UpdateORIGIN_PRODUCTInput!, condition: TableORIGIN_PRODUCTConditionInput): ORIGIN_PRODUCT
+	deleteORIGIN_PRODUCT(input: DeleteORIGIN_PRODUCTInput!, condition: TableORIGIN_PRODUCTConditionInput): ORIGIN_PRODUCT
+	createREDIRECT_URL(input: CreateREDIRECT_URLInput!): REDIRECT_URL
+	updateREDIRECT_URL(input: UpdateREDIRECT_URLInput!, condition: TableREDIRECT_URLConditionInput): REDIRECT_URL
+	deleteREDIRECT_URL(input: DeleteREDIRECT_URLInput!, condition: TableREDIRECT_URLConditionInput): REDIRECT_URL
+	createSERVICE(input: CreateSERVICEInput!): SERVICE
+	updateSERVICE(input: UpdateSERVICEInput!, condition: TableSERVICEConditionInput): SERVICE
+	deleteSERVICE(input: DeleteSERVICEInput!, condition: TableSERVICEConditionInput): SERVICE
+	createSERVICE_EXPR_MAPPING(input: CreateSERVICE_EXPR_MAPPINGInput!): SERVICE_EXPR_MAPPING
+	updateSERVICE_EXPR_MAPPING(input: UpdateSERVICE_EXPR_MAPPINGInput!, condition: TableSERVICE_EXPR_MAPPINGConditionInput): SERVICE_EXPR_MAPPING
+	deleteSERVICE_EXPR_MAPPING(input: DeleteSERVICE_EXPR_MAPPINGInput!, condition: TableSERVICE_EXPR_MAPPINGConditionInput): SERVICE_EXPR_MAPPING
+	createSERVICE_PARAM(input: CreateSERVICE_PARAMInput!): SERVICE_PARAM
+	updateSERVICE_PARAM(input: UpdateSERVICE_PARAMInput!, condition: TableSERVICE_PARAMConditionInput): SERVICE_PARAM
+	deleteSERVICE_PARAM(input: DeleteSERVICE_PARAMInput!, condition: TableSERVICE_PARAMConditionInput): SERVICE_PARAM
+	createSERVICE_PARAM_MAPPING(input: CreateSERVICE_PARAM_MAPPINGInput!): SERVICE_PARAM_MAPPING
+	updateSERVICE_PARAM_MAPPING(input: UpdateSERVICE_PARAM_MAPPINGInput!, condition: TableSERVICE_PARAM_MAPPINGConditionInput): SERVICE_PARAM_MAPPING
+	deleteSERVICE_PARAM_MAPPING(input: DeleteSERVICE_PARAM_MAPPINGInput!, condition: TableSERVICE_PARAM_MAPPINGConditionInput): SERVICE_PARAM_MAPPING
+	createSERVICE_PROVIDER(input: CreateSERVICE_PROVIDERInput!): SERVICE_PROVIDER
+	updateSERVICE_PROVIDER(input: UpdateSERVICE_PROVIDERInput!, condition: TableSERVICE_PROVIDERConditionInput): SERVICE_PROVIDER
+	deleteSERVICE_PROVIDER(input: DeleteSERVICE_PROVIDERInput!, condition: TableSERVICE_PROVIDERConditionInput): SERVICE_PROVIDER
+	createSTEP_SERVICE_MAPPING(input: CreateSTEP_SERVICE_MAPPINGInput!): STEP_SERVICE_MAPPING
+	updateSTEP_SERVICE_MAPPING(input: UpdateSTEP_SERVICE_MAPPINGInput!, condition: TableSTEP_SERVICE_MAPPINGConditionInput): STEP_SERVICE_MAPPING
+	deleteSTEP_SERVICE_MAPPING(input: DeleteSTEP_SERVICE_MAPPINGInput!, condition: TableSTEP_SERVICE_MAPPINGConditionInput): STEP_SERVICE_MAPPING
+	createSTEP_TYPE(input: CreateSTEP_TYPEInput!): STEP_TYPE
+	updateSTEP_TYPE(input: UpdateSTEP_TYPEInput!, condition: TableSTEP_TYPEConditionInput): STEP_TYPE
+	deleteSTEP_TYPE(input: DeleteSTEP_TYPEInput!, condition: TableSTEP_TYPEConditionInput): STEP_TYPE
+}
+
+type Query {
+	getLOAN_APP(LOAN_APP_ID: Int!): LOAN_APP
+	listLOAN_APPS(
+		filter: TableLOAN_APPFilterInput,
+		limit: Int,
+		orderBy: [OrderByLOAN_APPInput],
+		nextToken: String
+	): LOAN_APPConnection
+	getLOAN_APP_EXECS(LOAN_APP_EXEC_ID: Int!): LOAN_APP_EXECS
+	listLOAN_APP_EXECS(
+		filter: TableLOAN_APP_EXECSFilterInput,
+		limit: Int,
+		orderBy: [OrderByLOAN_APP_EXECSInput],
+		nextToken: String
+	): LOAN_APP_EXECSConnection
+	getLOAN_APP_STEP_STATUS(LOAN_APP_STEP_STATUS_ID: Int!): LOAN_APP_STEP_STATUS
+	listLOAN_APP_STEP_STATUSES(
+		filter: TableLOAN_APP_STEP_STATUSFilterInput,
+		limit: Int,
+		orderBy: [OrderByLOAN_APP_STEP_STATUSInput],
+		nextToken: String
+	): LOAN_APP_STEP_STATUSConnection
+	getNEW_MEMBER_TOKEN(NEW_MEMBER_TOKEN_ID: Int!): NEW_MEMBER_TOKEN
+	listNEW_MEMBER_TOKENS(
+		filter: TableNEW_MEMBER_TOKENFilterInput,
+		limit: Int,
+		orderBy: [OrderByNEW_MEMBER_TOKENInput],
+		nextToken: String
+	): NEW_MEMBER_TOKENConnection
+	getORIGIN_PRODUCT(ORIGIN_PRODUCT_ID: Int!): ORIGIN_PRODUCT
+	listORIGIN_PRODUCTS(
+		filter: TableORIGIN_PRODUCTFilterInput,
+		limit: Int,
+		orderBy: [OrderByORIGIN_PRODUCTInput],
+		nextToken: String
+	): ORIGIN_PRODUCTConnection
+	getREDIRECT_URL(REDIRECT_URL_ID: Int!): REDIRECT_URL
+	listREDIRECT_URLS(
+		filter: TableREDIRECT_URLFilterInput,
+		limit: Int,
+		orderBy: [OrderByREDIRECT_URLInput],
+		nextToken: String
+	): REDIRECT_URLConnection
+	getSERVICE(SERVICE_ID: Int!): SERVICE
+	listSERVICES(
+		filter: TableSERVICEFilterInput,
+		limit: Int,
+		orderBy: [OrderBySERVICEInput],
+		nextToken: String
+	): SERVICEConnection
+	getSERVICE_EXPR_MAPPING(SERVICE_EXPR_MAPPING_ID: Int!): SERVICE_EXPR_MAPPING
+	listSERVICE_EXPR_MAPPINGS(
+		filter: TableSERVICE_EXPR_MAPPINGFilterInput,
+		limit: Int,
+		orderBy: [OrderBySERVICE_EXPR_MAPPINGInput],
+		nextToken: String
+	): SERVICE_EXPR_MAPPINGConnection
+	getSERVICE_PARAM(SERVICE_PARAM_ID: Int!): SERVICE_PARAM
+	listSERVICE_PARAMS(
+		filter: TableSERVICE_PARAMFilterInput,
+		limit: Int,
+		orderBy: [OrderBySERVICE_PARAMInput],
+		nextToken: String
+	): SERVICE_PARAMConnection
+	getSERVICE_PARAM_MAPPING(SERVICE_PARAM_MAPPING_ID: Int!): SERVICE_PARAM_MAPPING
+	listSERVICE_PARAM_MAPPINGS(
+		filter: TableSERVICE_PARAM_MAPPINGFilterInput,
+		limit: Int,
+		orderBy: [OrderBySERVICE_PARAM_MAPPINGInput],
+		nextToken: String
+	): SERVICE_PARAM_MAPPINGConnection
+	getSERVICE_PROVIDER(SERVICE_PROVIDER_ID: Int!): SERVICE_PROVIDER
+	listSERVICE_PROVIDERS(
+		filter: TableSERVICE_PROVIDERFilterInput,
+		limit: Int,
+		orderBy: [OrderBySERVICE_PROVIDERInput],
+		nextToken: String
+	): SERVICE_PROVIDERConnection
+	getSTEP_SERVICE_MAPPING(STEP_SERVICE_MAPPING_ID: Int!): STEP_SERVICE_MAPPING
+	listSTEP_SERVICE_MAPPINGS(
+		filter: TableSTEP_SERVICE_MAPPINGFilterInput,
+		limit: Int,
+		orderBy: [OrderBySTEP_SERVICE_MAPPINGInput],
+		nextToken: String
+	): STEP_SERVICE_MAPPINGConnection
+	getSTEP_TYPE(STEP_TYPE_ID: Int!): STEP_TYPE
+	listSTEP_TYPES(
+		filter: TableSTEP_TYPEFilterInput,
+		limit: Int,
+		orderBy: [OrderBySTEP_TYPEInput],
+		nextToken: String
+	): STEP_TYPEConnection
+	listOrigin_products(
+		filter: TableOrigin_productsFilterInput,
+		limit: Int,
+		orderBy: [OrderByOrigin_productsInput],
+		nextToken: String
+	): Origin_productsConnection
+	listRedirect_urls(
+		filter: TableRedirect_urlsFilterInput,
+		limit: Int,
+		orderBy: [OrderByRedirect_urlsInput],
+		nextToken: String
+	): Redirect_urlsConnection
+	listService_param_mappings(
+		filter: TableService_param_mappingsFilterInput,
+		limit: Int,
+		orderBy: [OrderByService_param_mappingsInput],
+		nextToken: String
+	): Service_param_mappingsConnection
+	listService_params(
+		filter: TableService_paramsFilterInput,
+		limit: Int,
+		orderBy: [OrderByService_paramsInput],
+		nextToken: String
+	): Service_paramsConnection
+	listServices(
+		filter: TableServicesFilterInput,
+		limit: Int,
+		orderBy: [OrderByServicesInput],
+		nextToken: String
+	): ServicesConnection
+}
+
+type Subscription {
+	onCreateLOAN_APP(
+		CHANGED_DATE: String,
+		CREATED_DATE: String,
+		EXEC_ID: String,
+		LOAN_APP_ID: Int,
+		ORIGIN_LOAN_APP_ID: String
+	): LOAN_APP
+		@aws_subscribe(mutations: ["createLOAN_APP"])
+	onUpdateLOAN_APP(
+		CHANGED_DATE: String,
+		CREATED_DATE: String,
+		EXEC_ID: String,
+		LOAN_APP_ID: Int,
+		ORIGIN_LOAN_APP_ID: String
+	): LOAN_APP
+		@aws_subscribe(mutations: ["updateLOAN_APP"])
+	onDeleteLOAN_APP(
+		CHANGED_DATE: String,
+		CREATED_DATE: String,
+		EXEC_ID: String,
+		LOAN_APP_ID: Int,
+		ORIGIN_LOAN_APP_ID: String
+	): LOAN_APP
+		@aws_subscribe(mutations: ["deleteLOAN_APP"])
+	onCreateLOAN_APP_EXECS(
+		AWS_EXEC_ID: String,
+		CREATED_DATE: String,
+		LOAN_APP_EXEC_ID: Int,
+		LOAN_APP_ID: Int
+	): LOAN_APP_EXECS
+		@aws_subscribe(mutations: ["createLOAN_APP_EXECS"])
+	onUpdateLOAN_APP_EXECS(
+		AWS_EXEC_ID: String,
+		CREATED_DATE: String,
+		LOAN_APP_EXEC_ID: Int,
+		LOAN_APP_ID: Int
+	): LOAN_APP_EXECS
+		@aws_subscribe(mutations: ["updateLOAN_APP_EXECS"])
+	onDeleteLOAN_APP_EXECS(
+		AWS_EXEC_ID: String,
+		CREATED_DATE: String,
+		LOAN_APP_EXEC_ID: Int,
+		LOAN_APP_ID: Int
+	): LOAN_APP_EXECS
+		@aws_subscribe(mutations: ["deleteLOAN_APP_EXECS"])
+	onCreateLOAN_APP_STEP_STATUS(
+		COMPLETE_FLAG: String,
+		CREATED_DATE: String,
+		LOAN_APP_EXEC_ID: Int,
+		LOAN_APP_ID: Int,
+		LOAN_APP_STEP_STATUS_ID: Int
+	): LOAN_APP_STEP_STATUS
+		@aws_subscribe(mutations: ["createLOAN_APP_STEP_STATUS"])
+	onUpdateLOAN_APP_STEP_STATUS(
+		COMPLETE_FLAG: String,
+		CREATED_DATE: String,
+		LOAN_APP_EXEC_ID: Int,
+		LOAN_APP_ID: Int,
+		LOAN_APP_STEP_STATUS_ID: Int
+	): LOAN_APP_STEP_STATUS
+		@aws_subscribe(mutations: ["updateLOAN_APP_STEP_STATUS"])
+	onDeleteLOAN_APP_STEP_STATUS(
+		COMPLETE_FLAG: String,
+		CREATED_DATE: String,
+		LOAN_APP_EXEC_ID: Int,
+		LOAN_APP_ID: Int,
+		LOAN_APP_STEP_STATUS_ID: Int
+	): LOAN_APP_STEP_STATUS
+		@aws_subscribe(mutations: ["deleteLOAN_APP_STEP_STATUS"])
+	onCreateNEW_MEMBER_TOKEN(
+		CHANGED_DATE: AWSDate,
+		CREATED_DATE: AWSDate,
+		CUSTOMER_NBR: String,
+		DOB: String,
+		EMAIL_ADDRESS_TEXT: String
+	): NEW_MEMBER_TOKEN
+		@aws_subscribe(mutations: ["createNEW_MEMBER_TOKEN"])
+	onUpdateNEW_MEMBER_TOKEN(
+		CHANGED_DATE: AWSDate,
+		CREATED_DATE: AWSDate,
+		CUSTOMER_NBR: String,
+		DOB: String,
+		EMAIL_ADDRESS_TEXT: String
+	): NEW_MEMBER_TOKEN
+		@aws_subscribe(mutations: ["updateNEW_MEMBER_TOKEN"])
+	onDeleteNEW_MEMBER_TOKEN(
+		CHANGED_DATE: AWSDate,
+		CREATED_DATE: AWSDate,
+		CUSTOMER_NBR: String,
+		DOB: String,
+		EMAIL_ADDRESS_TEXT: String
+	): NEW_MEMBER_TOKEN
+		@aws_subscribe(mutations: ["deleteNEW_MEMBER_TOKEN"])
+	onCreateORIGIN_PRODUCT(
+		CHANGED_BY_USER_ID: Int,
+		CHANGED_DATE: AWSDate,
+		CREATED_BY_USER_ID: Int,
+		CREATED_DATE: AWSDate,
+		ORIGIN_PRODUCT_ID: Int
+	): ORIGIN_PRODUCT
+		@aws_subscribe(mutations: ["createORIGIN_PRODUCT"])
+	onUpdateORIGIN_PRODUCT(
+		CHANGED_BY_USER_ID: Int,
+		CHANGED_DATE: AWSDate,
+		CREATED_BY_USER_ID: Int,
+		CREATED_DATE: AWSDate,
+		ORIGIN_PRODUCT_ID: Int
+	): ORIGIN_PRODUCT
+		@aws_subscribe(mutations: ["updateORIGIN_PRODUCT"])
+	onDeleteORIGIN_PRODUCT(
+		CHANGED_BY_USER_ID: Int,
+		CHANGED_DATE: AWSDate,
+		CREATED_BY_USER_ID: Int,
+		CREATED_DATE: AWSDate,
+		ORIGIN_PRODUCT_ID: Int
+	): ORIGIN_PRODUCT
+		@aws_subscribe(mutations: ["deleteORIGIN_PRODUCT"])
+	onCreateREDIRECT_URL(
+		CHANGED_BY_USER_ID: Int,
+		CHANGED_DATE: AWSDate,
+		CREATED_BY_USER_ID: Int,
+		CREATED_DATE: AWSDate,
+		ORIGIN_PRODUCT_ID: Int
+	): REDIRECT_URL
+		@aws_subscribe(mutations: ["createREDIRECT_URL"])
+	onUpdateREDIRECT_URL(
+		CHANGED_BY_USER_ID: Int,
+		CHANGED_DATE: AWSDate,
+		CREATED_BY_USER_ID: Int,
+		CREATED_DATE: AWSDate,
+		ORIGIN_PRODUCT_ID: Int
+	): REDIRECT_URL
+		@aws_subscribe(mutations: ["updateREDIRECT_URL"])
+	onDeleteREDIRECT_URL(
+		CHANGED_BY_USER_ID: Int,
+		CHANGED_DATE: AWSDate,
+		CREATED_BY_USER_ID: Int,
+		CREATED_DATE: AWSDate,
+		ORIGIN_PRODUCT_ID: Int
+	): REDIRECT_URL
+		@aws_subscribe(mutations: ["deleteREDIRECT_URL"])
+	onCreateSERVICE(
+		CHANGED_BY_USER_ID: Int,
+		CHANGED_DATE: AWSDate,
+		CREATED_BY_USER_ID: Int,
+		CREATED_DATE: AWSDate,
+		SERVICE_ID: Int
+	): SERVICE
+		@aws_subscribe(mutations: ["createSERVICE"])
+	onUpdateSERVICE(
+		CHANGED_BY_USER_ID: Int,
+		CHANGED_DATE: AWSDate,
+		CREATED_BY_USER_ID: Int,
+		CREATED_DATE: AWSDate,
+		SERVICE_ID: Int
+	): SERVICE
+		@aws_subscribe(mutations: ["updateSERVICE"])
+	onDeleteSERVICE(
+		CHANGED_BY_USER_ID: Int,
+		CHANGED_DATE: AWSDate,
+		CREATED_BY_USER_ID: Int,
+		CREATED_DATE: AWSDate,
+		SERVICE_ID: Int
+	): SERVICE
+		@aws_subscribe(mutations: ["deleteSERVICE"])
+	onCreateSERVICE_EXPR_MAPPING(
+		CHANGED_BY_USER_ID: Int,
+		CHANGED_DATE: AWSDate,
+		COMMENT_TEXT: String,
+		CREATED_BY_USER_ID: Int,
+		CREATED_DATE: AWSDate
+	): SERVICE_EXPR_MAPPING
+		@aws_subscribe(mutations: ["createSERVICE_EXPR_MAPPING"])
+	onUpdateSERVICE_EXPR_MAPPING(
+		CHANGED_BY_USER_ID: Int,
+		CHANGED_DATE: AWSDate,
+		COMMENT_TEXT: String,
+		CREATED_BY_USER_ID: Int,
+		CREATED_DATE: AWSDate
+	): SERVICE_EXPR_MAPPING
+		@aws_subscribe(mutations: ["updateSERVICE_EXPR_MAPPING"])
+	onDeleteSERVICE_EXPR_MAPPING(
+		CHANGED_BY_USER_ID: Int,
+		CHANGED_DATE: AWSDate,
+		COMMENT_TEXT: String,
+		CREATED_BY_USER_ID: Int,
+		CREATED_DATE: AWSDate
+	): SERVICE_EXPR_MAPPING
+		@aws_subscribe(mutations: ["deleteSERVICE_EXPR_MAPPING"])
+	onCreateSERVICE_PARAM(
+		CHANGED_BY_USER_ID: Int,
+		CHANGED_DATE: AWSDate,
+		CREATED_BY_USER_ID: Int,
+		CREATED_DATE: AWSDate,
+		PARAM_NAME: String
+	): SERVICE_PARAM
+		@aws_subscribe(mutations: ["createSERVICE_PARAM"])
+	onUpdateSERVICE_PARAM(
+		CHANGED_BY_USER_ID: Int,
+		CHANGED_DATE: AWSDate,
+		CREATED_BY_USER_ID: Int,
+		CREATED_DATE: AWSDate,
+		PARAM_NAME: String
+	): SERVICE_PARAM
+		@aws_subscribe(mutations: ["updateSERVICE_PARAM"])
+	onDeleteSERVICE_PARAM(
+		CHANGED_BY_USER_ID: Int,
+		CHANGED_DATE: AWSDate,
+		CREATED_BY_USER_ID: Int,
+		CREATED_DATE: AWSDate,
+		PARAM_NAME: String
+	): SERVICE_PARAM
+		@aws_subscribe(mutations: ["deleteSERVICE_PARAM"])
+	onCreateSERVICE_PARAM_MAPPING(
+		AGENT_NBR: String,
+		CHANGED_BY_USER_ID: Int,
+		CHANGED_DATE: AWSDate,
+		COMMENT_TEXT: String,
+		CREATED_BY_USER_ID: Int
+	): SERVICE_PARAM_MAPPING
+		@aws_subscribe(mutations: ["createSERVICE_PARAM_MAPPING"])
+	onUpdateSERVICE_PARAM_MAPPING(
+		AGENT_NBR: String,
+		CHANGED_BY_USER_ID: Int,
+		CHANGED_DATE: AWSDate,
+		COMMENT_TEXT: String,
+		CREATED_BY_USER_ID: Int
+	): SERVICE_PARAM_MAPPING
+		@aws_subscribe(mutations: ["updateSERVICE_PARAM_MAPPING"])
+	onDeleteSERVICE_PARAM_MAPPING(
+		AGENT_NBR: String,
+		CHANGED_BY_USER_ID: Int,
+		CHANGED_DATE: AWSDate,
+		COMMENT_TEXT: String,
+		CREATED_BY_USER_ID: Int
+	): SERVICE_PARAM_MAPPING
+		@aws_subscribe(mutations: ["deleteSERVICE_PARAM_MAPPING"])
+	onCreateSERVICE_PROVIDER(
+		CHANGED_BY_USER_ID: Int,
+		CHANGED_DATE: AWSDate,
+		CREATED_BY_USER_ID: Int,
+		CREATED_DATE: AWSDate,
+		SERVICE_PROVIDER_ID: Int
+	): SERVICE_PROVIDER
+		@aws_subscribe(mutations: ["createSERVICE_PROVIDER"])
+	onUpdateSERVICE_PROVIDER(
+		CHANGED_BY_USER_ID: Int,
+		CHANGED_DATE: AWSDate,
+		CREATED_BY_USER_ID: Int,
+		CREATED_DATE: AWSDate,
+		SERVICE_PROVIDER_ID: Int
+	): SERVICE_PROVIDER
+		@aws_subscribe(mutations: ["updateSERVICE_PROVIDER"])
+	onDeleteSERVICE_PROVIDER(
+		CHANGED_BY_USER_ID: Int,
+		CHANGED_DATE: AWSDate,
+		CREATED_BY_USER_ID: Int,
+		CREATED_DATE: AWSDate,
+		SERVICE_PROVIDER_ID: Int
+	): SERVICE_PROVIDER
+		@aws_subscribe(mutations: ["deleteSERVICE_PROVIDER"])
+	onCreateSTEP_SERVICE_MAPPING(
+		SEQUENCE_NBR: Int,
+		SERVICE_ID: Int,
+		STEP_SERVICE_MAPPING_ID: Int,
+		STEP_TYPE_ID: Int
+	): STEP_SERVICE_MAPPING
+		@aws_subscribe(mutations: ["createSTEP_SERVICE_MAPPING"])
+	onUpdateSTEP_SERVICE_MAPPING(
+		SEQUENCE_NBR: Int,
+		SERVICE_ID: Int,
+		STEP_SERVICE_MAPPING_ID: Int,
+		STEP_TYPE_ID: Int
+	): STEP_SERVICE_MAPPING
+		@aws_subscribe(mutations: ["updateSTEP_SERVICE_MAPPING"])
+	onDeleteSTEP_SERVICE_MAPPING(
+		SEQUENCE_NBR: Int,
+		SERVICE_ID: Int,
+		STEP_SERVICE_MAPPING_ID: Int,
+		STEP_TYPE_ID: Int
+	): STEP_SERVICE_MAPPING
+		@aws_subscribe(mutations: ["deleteSTEP_SERVICE_MAPPING"])
+	onCreateSTEP_TYPE(
+		CHANGED_BY_USER_ID: Int,
+		CHANGED_DATE: AWSDate,
+		CREATED_BY_USER_ID: Int,
+		CREATED_DATE: AWSDate,
+		RESOURCE_NAME: String
+	): STEP_TYPE
+		@aws_subscribe(mutations: ["createSTEP_TYPE"])
+	onUpdateSTEP_TYPE(
+		CHANGED_BY_USER_ID: Int,
+		CHANGED_DATE: AWSDate,
+		CREATED_BY_USER_ID: Int,
+		CREATED_DATE: AWSDate,
+		RESOURCE_NAME: String
+	): STEP_TYPE
+		@aws_subscribe(mutations: ["updateSTEP_TYPE"])
+	onDeleteSTEP_TYPE(
+		CHANGED_BY_USER_ID: Int,
+		CHANGED_DATE: AWSDate,
+		CREATED_BY_USER_ID: Int,
+		CREATED_DATE: AWSDate,
+		RESOURCE_NAME: String
+	): STEP_TYPE
+		@aws_subscribe(mutations: ["deleteSTEP_TYPE"])
+}
