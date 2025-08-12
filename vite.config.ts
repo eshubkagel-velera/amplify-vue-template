@@ -14,7 +14,10 @@ export default defineConfig({
     }
   },
   define: {
-    // This ensures environment variables are properly processed
+    global: 'globalThis',
     'process.env': {}
+  },
+  optimizeDeps: {
+    include: ['buffer']
   }
 })
