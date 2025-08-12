@@ -1,0 +1,831 @@
+openapi: 3.0.3
+info:
+  title: NXTsoft Monetary
+  description: >
+    <br/>
+
+    Service for processing monetary transactions. Supports general ledger
+    transactions, transferring funds between accounts, ACH file uploads and Loan
+    Payments from GL.
+
+    <br/>
+
+    <br/>
+
+    <h1>Change Log</h1>
+
+
+    |Change
+    Date|Version|Operation|Description                                                                                         
+    |
+
+    |----------|-----|---------------|-------------------------------------------------------------------------------------------------|
+
+    |08/06/2025|1.1.27|Pay Loan|Add standard field memoPost to request.|
+
+    |06/17/2025|1.1.26|Money Movement|Add standard field branch to request.|
+
+    |04/25/2025|1.1.25|Transfer Funds|Add standard fields fromAccount.branch,
+    fromAccount.costCenter, toAccount.branch, and toAccount.costCenter to the
+    Request.|
+
+    |03/26/2025|1.1.24|Pay Loan|Add standard field cashBoxTxnYN to the Request.|
+
+    |03/18/2025|1.1.23|All APIs|Consolidate coreSpecificFields to master list
+    per API call (example AllNonStandardFields_TransferFunds). Core filters to
+    remain in place. Add descriptions to consolidated fields list indicating
+    core utilization.|
+
+    |02/21/2025|1.1.22|Transfer Funds|Add standard field description to
+    Response.|
+
+    |02/06/2025|1.1.21|Money Movement, Pay Loan, Transfer Funds|Add standard
+    field traceNbr.|
+
+    |02/03/2025|1.1.20|Pay Loan|Add standard field cashBox.|
+
+    |01/27/2025|1.1.19|Monetary|Add endpoint for Money Movement.|
+
+    |04/05/2024|1.1.18|General Ledger|Add creditGLAccount.glCode and
+    debitGLAccount.glCode to Credit and Debit a GL Account.|
+
+    |04/01/2024|1.1.17|Transfer Funds|Add toAccount.ledgerAccount,
+    toAccount.subLedgerAccount, fromAccount.ledgerAccount, and
+    fromAccount.subLedgerAccount to Transfer Funds.|
+
+    |03/14/2024|1.1.16|General Ledger, Transfer Funds|Add CSI-specific fields
+    departmentNumber and asOfDate to GL and sourceType to Transfer Funds.|
+
+    |11/29/2023|1.1.15|Monetary|Remove Corelation specific fields
+    recipientSerial and targetSerial.|
+
+    |11/28/2023|1.1.14|Monetary|In GeneralLedgerTransactionRs,
+    InternalTransferTransactionRs, PayLoanRs, change field confirmation to
+    activityID.|
+
+    |10/18/2023|1.1.13|General Ledger, Transfer Funds, Pay Loan|Add standard
+    fields confirmation, isPosted, override, transactionPostDate and to Response
+    message.|
+
+    |07/12/2023|1.1.12|Pay Loan|Remove SymXchange specific language.|
+
+    |06/05/2023|1.1.11|Transfer Funds|Add field "fee" to accountID.|
+
+    |05/09/2023|1.1.10|Transfer Funds|Add memoPost to
+    InternalTransferTransactionRq.|
+
+    |10/28/2022|1.0.9|All|Add security definitions.|
+
+    |09/09/2022|1.0.8|Monetary|Shorten and update core specific field names. TS
+    (Transaction Search).|
+
+    |09/02/2022|1.0.7|All|Enable specification download. Move API description to
+    info block.|
+
+    |08/29/2022|1.0.6|Pay Loan Response|Add confirmation to response.|
+
+    |08/04/2022|1.0.5|Monetary|Add endpoint for Payloan (pay loan from GL).|
+
+    |06/24/2022|1.0.4|Monetary|Add Correlation speicific field
+    toTransferCategory.|
+
+    |06/08/2022|1.0.3|Monetary|Review and update field descriptions.
+    Alphabetize.|
+
+    |05/13/2022|1.0.2|Transfer Funds|Add "GL" to accountType enums.|
+
+    |02/28/2022|1.0.1|Transfer Funds|Add fields targetSerial and recipientSerial
+    as strings to CorelationSpecificFields in Monetary API, transfer-funds.|
+  contact:
+    name: API Support
+    email: apisupport@nxtsoft.com
+    url: https://omniportal.nxtsoft.com/
+  version: v1
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  x-logo:
+    url: /assets/omni_connect.png
+servers:
+  - url: https://api-test.nxtsoft.com/v1/monetary
+    description: Test Based URL
+  - url: https://api.nxtsoft.com/v1/monetary
+    description: Production Based URL
+paths:
+  /money-movement:
+    post:
+      tags:
+        - Money Movement Operations
+      operationId: moneyMovement
+      summary: Send One-Sided Transaction(s)
+      requestBody:
+        description: Move money with one-sided transactions.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoneyMovementTransactionRq'
+        required: true
+      responses:
+        '200':
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MoneyMovementTransactionRs'
+  /gl-transaction:
+    post:
+      tags:
+        - General Ledger Operations
+      operationId: glTransaction
+      summary: Credit And Debit A GL Account
+      requestBody:
+        description: Transfer funds with a debit and a credit.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GeneralLedgerTransactionRq'
+        required: true
+      responses:
+        '200':
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralLedgerTransactionRs'
+  /transfer-funds:
+    post:
+      tags:
+        - Transfer Operations
+      operationId: transferFunds
+      summary: Transfer Funds Between Accounts
+      requestBody:
+        description: Request to initiate a monetary transfer.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InternalTransferTransactionRq'
+        required: true
+      responses:
+        '200':
+          description: Successful Operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalTransferTransactionRs'
+  /payloan:
+    post:
+      tags:
+        - Loan Payment from GL Operations
+      operationId: payLoan
+      summary: Make a loan payment from GL
+      requestBody:
+        description: Request to initiate a loan payment from GL.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayLoanRq'
+        required: true
+      responses:
+        '200':
+          description: Successful Operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayLoanRs'
+  /ach:
+    post:
+      tags:
+        - ACH Operations
+      operationId: ach
+      summary: Add NACHA Standard-Formatted File
+      requestBody:
+        description: Request to initiate a monetary transfer.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/achRq'
+        required: true
+      responses:
+        '200':
+          description: Successful Operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/achRs'
+components:
+  securitySchemes:
+    oAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://auth.nxtsoft.com/oauth2/token
+          scopes: {}
+  schemas:
+    accountID:
+      type: object
+      properties:
+        accountNumber:
+          type: string
+          description: Account number.
+        accountType:
+          type: string
+          description: Type of account.
+          enum:
+            - CD
+            - Checking
+            - GL
+            - IRA
+            - Line
+            - Loan
+            - MoneyMarket
+            - Other
+            - Savings
+            - Stock
+        branch:
+          type: string
+          description: Branch number for the financial institution.
+        cashBox:
+          type: string
+          description: CashBox for the transaction.
+        costCenter:
+          type: string
+          description: The cost center assigned to this account for GL reporting purposes.
+        description:
+          type: string
+          description: Description of the account.
+        fee:
+          type: number
+          format: double
+          description: Fee to be charged for transfer.
+        ledgerAccount:
+          type: string
+          description: Ledger account number.
+        subAccountNumber:
+          type: string
+          description: GL sub number for the account.
+        subLedgerAccount:
+          type: string
+          description: Sub ledger account number.
+        traceNbr:
+          type: string
+          description: Unique transaction trace number.
+        transactionCode:
+          type: string
+          description: Transaction code.
+    achRq:
+      type: object
+      properties:
+        assetID:
+          type: string
+          description: >-
+            A specific software-based key for identifying a client utilizing the
+            Omni Platform. NXTsoft provides the unique value to the partner,
+            vendor, or client.
+        content:
+          type: object
+          properties:
+            achFileConsumerReferenceID:
+              type: string
+              description: >-
+                A reference identifier given by the consumer when a formatted
+                ACH file is delivered.
+            achNachaFile:
+              type: string
+              description: A formated ACH file that meets Nacha standards.
+        uuid:
+          type: string
+          description: Unique identifier for the request.
+      required:
+        - assetID
+    achRs:
+      type: object
+      properties:
+        content: {}
+        statusCode:
+          type: number
+          description: Reference the `Codes` table.
+        statusFlag:
+          type: boolean
+          description: >-
+            Returns `true` if the post is successful. Returns `false` if any
+            errors are encountered.
+        statusMessage:
+          type: string
+          description: Details of the request `success` or `errors`.
+        uuid:
+          type: string
+          description: Unique identifier for the request.
+    MoneyMovementTransactionRq:
+      type: object
+      properties:
+        assetID:
+          type: string
+          description: >-
+            A specific software-based key for identifying a client utilizing the
+            Omni Platform. NXTsoft provides the unique value to the partner,
+            vendor, or client.
+        content:
+          type: array
+          items:
+            type: object
+            properties:
+              accountNumber:
+                type: string
+                description: Account number.
+              accountType:
+                type: string
+                description: Type of account.
+                enum:
+                  - CD
+                  - Checking
+                  - GL
+                  - IRA
+                  - Line
+                  - Loan
+                  - MoneyMarket
+                  - Savings
+              amount:
+                type: number
+                format: double
+                description: Amount of the transaction.
+              batchNumber:
+                type: string
+                description: Batch number for the transaction.
+              branch:
+                type: string
+                description: Branch number for the financial institution.
+              cashBox:
+                type: string
+                description: CashBox for the transaction.
+              departmentNumber:
+                type: string
+                description: Department number.
+              description:
+                type: string
+                description: Description of the transaction.
+              effectiveDate:
+                type: string
+                format: date
+                description: The effective date of the transaction.
+              feeType:
+                type: string
+                description: Type of fee.
+              fundType:
+                type: string
+                description: Type of fund.
+              glCode:
+                type: string
+                description: General ledger code.
+              glNumber:
+                type: string
+                description: General ledger number.
+              miscID:
+                type: string
+                description: Miscellaneous ID.
+              subAccountNumber:
+                type: string
+                description: Sub-account number.
+              traceNbr:
+                type: string
+                description: Unique transaction trace number.
+              transactionCode:
+                type: string
+                description: Transaction code.
+        uuid:
+          type: string
+          description: Unique identifier for the request.
+      required:
+        - assetID
+    MoneyMovementTransactionRs:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            type: object
+            properties:
+              activityID:
+                type: string
+                description: Activity ID.
+              applicationCode:
+                type: string
+                description: Application code.
+              isPosted:
+                type: boolean
+                description: True if transaction is successful.
+              override:
+                type: string
+                description: Indicates override status.
+              response:
+                type: string
+                description: Response from the core.
+              transactionCode:
+                type: string
+                description: Transaction code.
+              transactionPostDate:
+                type: string
+                format: date
+                description: The date the transaction posted.
+        statusCode:
+          type: number
+          description: Reference the `Codes` table.
+        statusFlag:
+          type: boolean
+          description: >-
+            Returns `true` if the post is successful.  Returns `false` if any
+            errors are encountered.
+        statusMessage:
+          type: string
+          description: Details of the request `success` or `errors`.
+        uuid:
+          type: string
+          description: Unique identifier for the request.
+    GeneralLedgerTransactionRq:
+      type: object
+      properties:
+        assetID:
+          type: string
+          description: >-
+            A specific software-based key for identifying a client utilizing the
+            Omni Platform. NXTsoft provides the unique value to the partner,
+            vendor, or client.
+        content:
+          type: object
+          properties:
+            amount:
+              type: number
+              format: double
+              description: Amount of the transaction.
+            batchNumber:
+              type: string
+              description: Batch number for the transaction.
+            creditGLAccount:
+              $ref: '#/components/schemas/glID'
+            customerID:
+              type: string
+              description: Unique identifier for the customer.
+            debitGLAccount:
+              $ref: '#/components/schemas/glID'
+            description:
+              type: string
+              description: Description of the transaction.
+            effectiveDate:
+              type: string
+              format: date
+              description: The effective date of the transaction.
+            frequency:
+              type: string
+              description: Indicates how often or if a transaction should re-occur.
+            coreSpecificFields:
+              oneOf:
+                - $ref: '#/components/schemas/AllNonStandardFields_GeneralLedger'
+                - $ref: '#/components/schemas/CSIGL'
+        uuid:
+          type: string
+          description: Unique identifier for the request.
+      required:
+        - assetID
+    GeneralLedgerTransactionRs:
+      type: object
+      properties:
+        content:
+          type: object
+          properties:
+            activityID:
+              type: string
+              description: Activity ID.
+            isPosted:
+              type: boolean
+              description: True if transaction is successful.
+            override:
+              type: string
+              description: Indicates override status.
+            transactionPostDate:
+              type: string
+              format: date
+              description: The date the transaction posted.
+        statusCode:
+          type: number
+          description: Reference the `Codes` table.
+        statusFlag:
+          type: boolean
+          description: >-
+            Returns `true` if the post is successful.  Returns `false` if any
+            errors are encountered.
+        statusMessage:
+          type: string
+          description: Details of the request `success` or `errors`.
+        uuid:
+          type: string
+          description: Unique identifier for the request.
+    glID:
+      type: object
+      properties:
+        accountType:
+          type: string
+          description: Type of account.
+        cashBox:
+          type: string
+          description: CashBox for the transaction.
+        description:
+          type: string
+          description: Description of the transaction.
+        glCode:
+          type: string
+          description: General ledger code.
+        glNumber:
+          type: string
+          description: General ledger number.
+        subAccountNumber:
+          type: string
+          description: General ledger sub number.
+        transactionCode:
+          type: string
+          description: Transaction code description.
+    InternalTransferTransactionRq:
+      type: object
+      properties:
+        assetID:
+          type: string
+          description: >-
+            A specific software-based key for identifying a client utilizing the
+            Omni Platform. NXTsoft provides the unique value to the partner,
+            vendor, or client.
+        content:
+          type: object
+          properties:
+            amount:
+              type: number
+              format: double
+              description: Amount of the transaction.
+            batchNumber:
+              type: string
+              description: Batch number for the transaction.
+            customerID:
+              type: string
+              description: Unique identifier for the customer.
+            description:
+              type: string
+              description: Description of the account.
+            effectiveDate:
+              type: string
+              format: date
+              description: Effective date of the transaction.
+            frequency:
+              type: string
+              description: Indicates how often or if a transaction should re-occur.
+            fromAccount:
+              $ref: '#/components/schemas/accountID'
+            memoPost:
+              type: string
+              description: Indicates if memo post is included.
+            toAccount:
+              $ref: '#/components/schemas/accountID'
+            transferType:
+              type: string
+              description: Type of transfer.
+              enum:
+                - Regular
+                - PrincipalOnly
+                - InterestOnly
+                - EscrowOnly
+                - CRATransfer
+                - RVCPrincipalOnly
+            coreSpecificFields:
+              oneOf:
+                - $ref: '#/components/schemas/AllNonStandardFields_TransferFunds'
+                - $ref: '#/components/schemas/CorelationTS'
+                - $ref: '#/components/schemas/CSITS'
+                - $ref: '#/components/schemas/JH2020TS'
+                - $ref: '#/components/schemas/JHCoreDirectorTS'
+                - $ref: '#/components/schemas/JHSilverlakeTS'
+        uuid:
+          type: string
+          description: Unique identifier for the request.
+      required:
+        - assetID
+    InternalTransferTransactionRs:
+      type: object
+      properties:
+        content:
+          type: object
+          properties:
+            activityID:
+              type: string
+              description: Activity ID.
+            isPosted:
+              type: boolean
+              description: True if transaction is successful.
+            description:
+              type: string
+              description: Description of the account.
+            override:
+              type: string
+              description: Indicates override status.
+            transactionPostDate:
+              type: string
+              format: date
+              description: The date the transaction posted.
+        statusCode:
+          type: number
+          description: Reference the `Codes` table.
+        statusFlag:
+          type: boolean
+          description: >-
+            Returns `true` if the post is successful. Returns `false` if any
+            errors are encountered.
+        statusMessage:
+          type: string
+          description: Details of the request `success` or `errors`.
+        uuid:
+          type: string
+          description: Unique identifier for the request.
+    PayLoanRq:
+      type: object
+      properties:
+        assetID:
+          type: string
+          description: >-
+            A specific software-based key for identifying a client utilizing the
+            Omni Platform. NXTsoft provides the unique value to the partner,
+            vendor, or client.
+        content:
+          type: object
+          properties:
+            cashBox:
+              type: string
+              description: CashBox for the transaction.
+            cashBoxTxnYN:
+              type: string
+              enum:
+                - 'Y'
+                - 'N'
+              description: >-
+                Indicates whether this is a cashbox transaction or not (Required
+                if cashBox is provided for DNA).
+            comment:
+              type: string
+              description: Description of transaction type.
+            effectiveDate:
+              type: string
+              format: date
+              description: The effective date of the loan payment.
+            glCode:
+              type: string
+              description: GL code for offseting account.
+            glAccount:
+              type: string
+              description: Account Number for offsetting GL.
+            loanPaymentType:
+              type: string
+              description: Type of payment. Controls advancement of the due date.
+            memoPost:
+              type: string
+              description: Indicates if memo post is included.
+            paymentAmounts:
+              type: object
+              properties:
+                checkAmount:
+                  type: number
+                  format: double
+                  description: Amount of payment applied by check.
+                principalAmount:
+                  type: number
+                  format: double
+                  description: Amount of the payment to apply to principal.
+                totalAmount:
+                  type: number
+                  format: double
+                  description: Total amount of payment applied.
+            recipientAccountNumber:
+              type: string
+              description: Account Number for recipient account.
+            recipientID:
+              type: string
+              description: Account identification for the recipient account,
+            sourceCode:
+              type: string
+              description: Code identifying the transaction source.
+            traceNbr:
+              type: string
+              description: Unique transaction trace number.
+        uuid:
+          type: string
+          description: Unique identifier for the request.
+      required:
+        - assetID
+    PayLoanRs:
+      type: object
+      properties:
+        content:
+          type: object
+          properties:
+            activityID:
+              type: string
+              description: Activity ID.
+            isPosted:
+              type: boolean
+              description: True if transaction is successful.
+            override:
+              type: string
+              description: Indicates override status.
+            transactionPostDate:
+              type: string
+              format: date
+              description: The date the transaction posted.
+        statusCode:
+          type: number
+          description: Reference the `Codes` table.
+        statusFlag:
+          type: boolean
+          description: >-
+            Returns `true` if the post is successful. Returns `false` if any
+            errors are encountered.
+        statusMessage:
+          type: string
+          description: Details of the request `success` or `errors`.
+        uuid:
+          type: string
+          description: Unique identifier for the request.
+    AllNonStandardFields_TransferFunds:
+      type: object
+      description: All non-standard fields provided for Transfer Funds request.
+      properties:
+        principalReduction:
+          type: string
+          description: >-
+            Reduce principal with this transaction. (JH 2020, JH CoreDirector,
+            JH Silverlake)
+        sourceType:
+          type: number
+          description: Numeric value to indicate source type. (CSi NuPoint)
+        toTransferCategory:
+          type: string
+          enum:
+            - D
+            - 'N'
+          description: >-
+            Indicates whether the transfer is for a deposit (D) or a new loan
+            (N). (Corelation Keystone)
+    CorelationTS:
+      type: object
+      description: Corelation specific fields.
+      properties:
+        toTransferCategory:
+          type: string
+          enum:
+            - D
+            - 'N'
+          description: >-
+            Indicates whether the transfer is for a deposit (D) or a new loan
+            (N).
+    CSITS:
+      type: object
+      description: CSI specific fields.
+      properties:
+        sourceType:
+          type: number
+          description: Numeric value to indicate source type.
+    JH2020TS:
+      type: object
+      description: Fields specific for JH 2020 core.
+      properties:
+        principalReduction:
+          type: string
+          description: Reduce principal with this transaction.
+    JHCoreDirectorTS:
+      type: object
+      description: Fields specific for JH CoreDirector core.
+      properties:
+        principalReduction:
+          type: string
+          description: Reduce principal with this transaction.
+    JHSilverlakeTS:
+      type: object
+      description: Fields specific for JH Silverlake core.
+      properties:
+        principalReduction:
+          type: string
+          description: Reduce principal with this transaction.
+    AllNonStandardFields_GeneralLedger:
+      type: object
+      description: All non-standard fields provided for General Ledger request.
+      properties:
+        departmentNumber:
+          type: number
+          description: Department number. (CSi NuPoint)
+        asOfDate:
+          type: string
+          description: Date the transaction is as-of. (CSi NuPoint)
+    CSIGL:
+      type: object
+      description: CSI specific fields.
+      properties:
+        departmentNumber:
+          type: number
+          description: Department number.
+        asOfDate:
+          type: string
+          description: Date the transaction is as-of.
+security:
+  - oAuth2: []
