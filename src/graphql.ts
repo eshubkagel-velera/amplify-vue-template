@@ -225,3 +225,82 @@ export const deleteOriginProduct = async (input: any) => {
     return { data: { deleteORIGIN_PRODUCT: { ORIGIN_PRODUCT_ID: input.ORIGIN_PRODUCT_ID } } };
   }
 };
+
+// Batch operations
+export const createServiceParamMappingBatch = async (inputs: any[]) => {
+  return client.graphql({
+    query: `mutation CreateSERVICE_PARAM_MAPPINGBatch($inputs: [CreateSERVICE_PARAM_MAPPINGInput!]!) {
+      createSERVICE_PARAM_MAPPINGBatch(inputs: $inputs) {
+        items {
+          SERVICE_PARAM_MAPPING_ID
+          SERVICE_PARAM_ID
+          STEP_TYPE_ID
+          ORIGIN_PRODUCT_ID
+          RESOURCE_NAME
+          MAPPING_TYPE
+          MAPPING_VALUE
+          CREATED_DATE
+        }
+        errors
+      }
+    }`,
+    variables: { inputs }
+  });
+};
+
+export const createServiceExprMappingBatch = async (inputs: any[]) => {
+  return client.graphql({
+    query: `mutation CreateSERVICE_EXPR_MAPPINGBatch($inputs: [CreateSERVICE_EXPR_MAPPINGInput!]!) {
+      createSERVICE_EXPR_MAPPINGBatch(inputs: $inputs) {
+        items {
+          SERVICE_EXPR_MAPPING_ID
+          SERVICE_PARAM_ID
+          STEP_TYPE_ID
+          ORIGIN_PRODUCT_ID
+          RESOURCE_NAME
+          EXPRESSION_TEXT
+          CREATED_DATE
+        }
+        errors
+      }
+    }`,
+    variables: { inputs }
+  });
+};
+
+export const createServiceBatch = async (inputs: any[]) => {
+  return client.graphql({
+    query: `mutation CreateSERVICEBatch($inputs: [CreateSERVICEInput!]!) {
+      createSERVICEBatch(inputs: $inputs) {
+        items {
+          SERVICE_ID
+          SERVICE_PROVIDER_ID
+          URI
+          HTTP_METHOD
+          CREATED_DATE
+        }
+        errors
+      }
+    }`,
+    variables: { inputs }
+  });
+};
+
+export const createServiceParamBatch = async (inputs: any[]) => {
+  return client.graphql({
+    query: `mutation CreateSERVICE_PARAMBatch($inputs: [CreateSERVICE_PARAMInput!]!) {
+      createSERVICE_PARAMBatch(inputs: $inputs) {
+        items {
+          SERVICE_PARAM_ID
+          SERVICE_ID
+          PARAM_NAME
+          PARAM_TYPE
+          REQUIRED_FLAG
+          CREATED_DATE
+        }
+        errors
+      }
+    }`,
+    variables: { inputs }
+  });
+};

@@ -47,6 +47,26 @@ type LOAN_APP_STEP_STATUSConnection {
   nextToken: String
 }
 
+type BatchSERVICE_PARAM_MAPPINGResult {
+  items: [SERVICE_PARAM_MAPPING]
+  errors: [String]
+}
+
+type BatchSERVICE_EXPR_MAPPINGResult {
+  items: [SERVICE_EXPR_MAPPING]
+  errors: [String]
+}
+
+type BatchSERVICEResult {
+  items: [SERVICE]
+  errors: [String]
+}
+
+type BatchSERVICE_PARAMResult {
+  items: [SERVICE_PARAM]
+  errors: [String]
+}
+
 type Mutation {
   createLOAN_APP(input: CreateLOAN_APPInput!): LOAN_APP
   createLOAN_APP_EXECS(input: CreateLOAN_APP_EXECSInput!): LOAN_APP_EXECS
@@ -61,6 +81,10 @@ type Mutation {
   createSERVICE_PROVIDER(input: CreateSERVICE_PROVIDERInput!): SERVICE_PROVIDER
   createSTEP_SERVICE_MAPPING(input: CreateSTEP_SERVICE_MAPPINGInput!): STEP_SERVICE_MAPPING
   createSTEP_TYPE(input: CreateSTEP_TYPEInput!): STEP_TYPE
+  createSERVICE_PARAM_MAPPINGBatch(inputs: [CreateSERVICE_PARAM_MAPPINGInput!]!): BatchSERVICE_PARAM_MAPPINGResult
+  createSERVICE_EXPR_MAPPINGBatch(inputs: [CreateSERVICE_EXPR_MAPPINGInput!]!): BatchSERVICE_EXPR_MAPPINGResult
+  createSERVICEBatch(inputs: [CreateSERVICEInput!]!): BatchSERVICEResult
+  createSERVICE_PARAMBatch(inputs: [CreateSERVICE_PARAMInput!]!): BatchSERVICE_PARAMResult
   deleteLOAN_APP(condition: TableLOAN_APPConditionInput, input: DeleteLOAN_APPInput!): LOAN_APP
   deleteLOAN_APP_EXECS(condition: TableLOAN_APP_EXECSConditionInput, input: DeleteLOAN_APP_EXECSInput!): LOAN_APP_EXECS
   deleteLOAN_APP_STEP_STATUS(condition: TableLOAN_APP_STEP_STATUSConditionInput, input: DeleteLOAN_APP_STEP_STATUSInput!): LOAN_APP_STEP_STATUS
