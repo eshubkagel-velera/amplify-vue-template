@@ -1,9 +1,21 @@
 <template>
   <div class="service-import">
-    <h2>Import Services from OpenAPI</h2>
+    <div class="header-row">
+      <h2>Import Services from OpenAPI</h2>
+      <ThemeToggle />
+    </div>
     
-    <!-- File Upload Section -->
-    <div class="upload-section">
+    <!-- Format Selection -->
+    <div class="format-section">
+      <label for="formatType">Import Format:</label>
+      <select id="formatType" v-model="selectedFormat" @change="onFormatChange">
+        <option value="openapi">OpenAPI</option>
+        <option value="json">JSON</option>
+      </select>
+    </div>
+
+    <!-- OpenAPI File Upload Section -->
+    <div v-if="selectedFormat === 'openapi'" class="upload-section">
       <input 
         type="file" 
         @change="handleFileUpload" 
@@ -15,9 +27,73 @@
       </button>
     </div>
 
+    <!-- JSON Import Section -->
+    <div v-if="selectedFormat === 'json'" class="json-section">
+      <div class="json-input-section">
+        <label>JSON Input: <a href="#" @click.prevent="showQueryModal = true" class="help-link">Need help generating JSON?</a></label>
+        <div class="json-controls">
+          <input 
+            type="file" 
+            @change="handleJsonFileUpload" 
+            accept=".json"
+            ref="jsonFileInput"
+          />
+          <button v-if="selectedJsonFile" @click="clearJsonFile" class="clear-btn">Clear File</button>
+        </div>
+        <div class="json-input-container">
+          <div class="json-sample">
+            <strong>Expected Format:</strong>
+            <pre>{
+  "path": "/api/endpoint",
+  "method": "POST",
+  "parameters": [
+    {
+      "name": "$.param1",
+      "type": "string"
+    },
+    {
+      "name": "$.param2", 
+      "type": "number"
+    }
+  ]
+}</pre>
+          </div>
+          <textarea 
+            v-model="jsonText" 
+            placeholder="Paste JSON here or select a file above"
+            rows="10"
+            class="json-textarea"
+          ></textarea>
+        </div>
+        <button @click="parseJsonData" :disabled="(!jsonText && !selectedJsonFile) || loading">
+          {{ loading ? 'Parsing...' : 'Parse JSON Data' }}
+        </button>
+      </div>
+    </div>
+
     <!-- Error Display -->
     <div v-if="error" class="error">
       {{ error }}
+    </div>
+
+    <!-- Service Provider Selection -->
+    <div v-if="parsedServices.length > 0" class="service-provider-section">
+      <h3>Service Provider:</h3>
+      <div class="provider-input-group">
+        <select v-model="selectedServiceProvider" @change="onServiceProviderChange" class="provider-select">
+          <option value="">-- Select Service Provider --</option>
+          <option v-for="provider in serviceProviders" :key="provider.SERVICE_PROVIDER_ID" :value="provider.SERVICE_PROVIDER_ID">
+            {{ provider.SERVICE_PROVIDER_NAME }}
+          </option>
+          <option value="new">+ Add New Provider</option>
+        </select>
+        <input 
+          v-if="selectedServiceProvider === 'new'" 
+          v-model="newServiceProviderName" 
+          placeholder="Enter new provider name"
+          class="new-provider-input"
+        />
+      </div>
     </div>
 
     <!-- Service Selection -->
@@ -33,27 +109,35 @@
 
     <!-- Service Details -->
     <div v-if="selectedService" class="service-details">
-      <!-- Action Buttons -->
-      <div class="sticky-buttons">
-        <button 
-          v-if="!serviceExists" 
-          @click="insertService" 
-          :disabled="saving"
-          class="btn-primary"
-        >
-          {{ saving ? 'Inserting...' : 'Insert Service' }}
-        </button>
-        <button 
-          v-if="serviceExists" 
-          @click="updateService" 
-          :disabled="saving"
-          class="btn-primary"
-        >
-          {{ saving ? 'Updating...' : 'Update Parameters' }}
-        </button>
-        <button @click="addCustomParam('request')" class="btn-success">
-          Add Custom Parameter
-        </button>
+      <!-- Action Buttons and Target Parameters Row -->
+      <div v-if="selectedService" class="buttons-params-row">
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+          <button 
+            v-if="!serviceExists" 
+            @click="insertService" 
+            :disabled="saving || !selectedServiceProvider || (selectedServiceProvider === 'new' && !newServiceProviderName.trim())"
+            class="btn-success"
+          >
+            {{ saving ? 'Inserting...' : 'Insert Service' }}
+          </button>
+          <button 
+            v-if="serviceExists" 
+            @click="updateService" 
+            :disabled="saving"
+            class="btn-primary"
+          >
+            {{ saving ? 'Updating...' : 'Update Parameters' }}
+          </button>
+          <button @click="addCustomParam('request')" class="btn-success">
+            Add Custom Parameter
+          </button>
+        </div>
+
+        <!-- Target Parameters Available -->
+        <div class="target-params-info">
+          <h3>Request Parameters Available: {{ filteredParams.length }}</h3>
+        </div>
       </div>
       
       <h3>Service: {{ selectedService.method.toUpperCase() }} {{ selectedService.path }}</h3>
@@ -61,7 +145,8 @@
       <!-- Request Parameters Table -->
       <div class="parameters-section">
         <h4>Request Parameters</h4>
-        <table class="params-table">
+        <div class="table-container">
+          <table class="params-table">
           <thead>
             <tr>
               <th class="w-12">
@@ -128,21 +213,12 @@
                   class="h-4 w-4"
                 />
               </td>
-              <td class="w-72">
-                <input 
-                  v-model="param.name" 
-                  :disabled="param.exists || !param.custom"
-                  :class="{ 'disabled': param.exists || !param.custom }"
-                  class="w-full"
-                />
+              <td>
+                <input v-if="param.custom && !param.exists" v-model="param.name" class="full-width-input">
+                <span v-else class="read-only-text">{{ param.name }}</span>
               </td>
-              <td class="w-18">
-                <select 
-                  v-model="param.type" 
-                  :disabled="param.exists || !param.custom"
-                  :class="{ 'disabled': param.exists || !param.custom }"
-                  class="w-full text-xs"
-                >
+              <td>
+                <select v-if="param.custom && !param.exists" v-model="param.type" class="full-width-input">
                   <option value="string">string</option>
                   <option value="number">number</option>
                   <option value="integer">integer</option>
@@ -151,16 +227,12 @@
                   <option value="object">object</option>
                   <option value="file">file</option>
                 </select>
+                <span v-else class="read-only-text">{{ param.type }}</span>
               </td>
 
-              <td class="w-desc">
-                <textarea 
-                  v-model="param.description" 
-                  :disabled="param.exists || !param.custom"
-                  :class="{ 'disabled': param.exists || !param.custom }"
-                  class="w-full resize-none"
-                  rows="2"
-                ></textarea>
+              <td>
+                <textarea v-if="param.custom && !param.exists" v-model="param.description" class="full-width-textarea" rows="2"></textarea>
+                <span v-else class="read-only-text">{{ param.description }}</span>
               </td>
               <td class="text-center w-10">
                 <button v-if="!param.exists && param.custom" @click="removeCustomParam(index, 'request')" class="text-red-600 hover:text-red-800">
@@ -170,6 +242,7 @@
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
 
       <!-- Response Parameters Table -->
@@ -265,13 +338,62 @@
       </div>
     </div>
     
+    <!-- Query Help Modal -->
+    <div v-if="showQueryModal" class="modal-overlay">
+      <div class="modal-content query-modal">
+        <h3>Generate Database Query</h3>
+        <p>Use this query to extract service parameters from your database:</p>
+        
+        <div class="query-inputs">
+          <div class="input-group">
+            <label>Service ID:</label>
+            <input v-model="queryServiceId" type="number" placeholder="e.g. 57" @input="generateQuery" :disabled="queryUri.trim() !== ''" />
+          </div>
+          <div class="input-group">
+            <label>OR URI (partial match):</label>
+            <input v-model="queryUri" type="text" placeholder="e.g. FIMember-Card" @input="generateQuery" :disabled="queryServiceId !== '' && queryServiceId != null" />
+          </div>
+        </div>
+        
+        <div class="query-output">
+          <label>Generated Query:</label>
+          <textarea v-model="generatedQuery" readonly rows="15" class="query-textarea"></textarea>
+          <button @click="copyQuery" class="copy-btn">Copy Query</button>
+        </div>
+        
+        <div class="form-actions">
+          <button @click="showQueryModal = false" class="btn-primary">Close</button>
+        </div>
+      </div>
+    </div>
+    
     <!-- Error Modal -->
     <div v-if="showErrorModal" class="modal-overlay">
       <div class="modal-content">
         <h3>Error</h3>
-        <p>{{ errorMessage }}</p>
+        <div v-if="errorMessage.includes('JSON Format Validation Failed')">
+          <p style="white-space: pre-line; margin-bottom: 15px;">{{ errorMessage.split('Expected Format:')[0] }}</p>
+          <div class="json-sample">
+            <strong>Expected Format:</strong>
+            <pre>{
+  "path": "/api/endpoint",
+  "method": "POST",
+  "parameters": [
+    {
+      "name": "$.param1",
+      "type": "string"
+    },
+    {
+      "name": "$.param2", 
+      "type": "number"
+    }
+  ]
+}</pre>
+          </div>
+        </div>
+        <p v-else>{{ errorMessage }}</p>
         <div class="form-actions">
-          <button @click="showErrorModal = false" class="btn-primary">OK</button>
+          <button @click="clearError" class="btn-primary">OK</button>
         </div>
       </div>
     </div>
@@ -283,6 +405,8 @@ import { ref, computed } from 'vue';
 import { Buffer } from 'buffer';
 import SwaggerParser from '@apidevtools/swagger-parser';
 import { generateClient } from 'aws-amplify/api';
+import { useErrorHandler } from '../composables/useErrorHandler';
+import type { Service, ServiceParam, ServiceProvider } from '../types';
 
 // Make Buffer available globally for SwaggerParser
 if (typeof window !== 'undefined') {
@@ -290,12 +414,85 @@ if (typeof window !== 'undefined') {
 }
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
-import { createServiceBatch, createServiceParamBatch } from '../graphql.ts';
 
-const client = generateClient();
+// Load service providers on component mount
+const loadServiceProviders = async () => {
+  try {
+    const result = await generateClient().graphql({ query: queries.listServiceProviders });
+    serviceProviders.value = result.data.listSERVICE_PROVIDERS.items;
+  } catch (err) {
+    console.error('Error loading service providers:', err);
+  }
+};
+
+// Create new service provider if needed
+const createServiceProviderIfNeeded = async () => {
+  if (!newServiceProviderName.value.trim()) return null;
+  
+  // Check if provider already exists
+  const existing = serviceProviders.value.find(sp => 
+    sp.SERVICE_PROVIDER_NAME.toLowerCase() === newServiceProviderName.value.toLowerCase()
+  );
+  
+  if (existing) {
+    return existing.SERVICE_PROVIDER_ID;
+  }
+  
+  // Create new provider
+  try {
+    const providerInput = {
+      SERVICE_PROVIDER_NAME: newServiceProviderName.value.trim(),
+      CREATED_BY_USER_ID: 1,
+      CREATED_DATE: new Date().toISOString().split('T')[0]
+    };
+    
+    const result = await generateClient().graphql({
+      query: mutations.createServiceProvider,
+      variables: { input: providerInput }
+    });
+    
+    const newProvider = result.data.createSERVICE_PROVIDER;
+    serviceProviders.value.push(newProvider);
+    return newProvider.SERVICE_PROVIDER_ID;
+  } catch (err) {
+    console.error('Error creating service provider:', err);
+    throw err;
+  }
+};
+
+// Handle service provider selection
+const onServiceProviderChange = async (event: Event) => {
+  const target = event.target as HTMLSelectElement;
+  const value = target.value;
+  
+  if (value === 'new') {
+    selectedServiceProvider.value = 'new';
+    newServiceProviderName.value = '';
+  } else {
+    selectedServiceProvider.value = value;
+    newServiceProviderName.value = '';
+  }
+  
+  // Recheck service existence when provider changes
+  if (selectedService.value && selectedServiceProvider.value) {
+    await checkServiceExists();
+    // Recheck existing parameters
+    await checkExistingParameters(requestParams.value, responseParams.value);
+    applyFilters();
+  }
+};
+
+import { createServiceBatch, createServiceParamBatch } from '../graphql.ts';
+import ThemeToggle from './ThemeToggle.vue';
+
+
+
+// Initialize component
+loadServiceProviders();
 
 // Reactive data
 const selectedFile = ref<File | null>(null);
+const jsonFileInput = ref<HTMLInputElement | null>(null);
 const loading = ref(false);
 const saving = ref(false);
 const error = ref('');
@@ -307,8 +504,7 @@ const serviceExists = ref(false);
 const existingServiceId = ref<number | null>(null);
 const showProgressModal = ref(false);
 const showSuccessModal = ref(false);
-const showErrorModal = ref(false);
-const errorMessage = ref('');
+const { error: errorMessage, showErrorModal, handleError, clearError } = useErrorHandler();
 const currentInsert = ref(0);
 const totalInserts = ref(0);
 const progressPercentage = computed(() => 
@@ -321,6 +517,18 @@ const sortField = ref('');
 const sortDirection = ref('asc');
 const filters = ref({ name: '', type: '', description: '' });
 const filteredParams = ref([]);
+const selectedFormat = ref('openapi');
+const jsonText = ref('');
+const selectedJsonFile = ref(null);
+const showQueryModal = ref(false);
+const queryServiceId = ref('');
+const queryUri = ref('');
+const generatedQuery = ref('');
+const isResizing = ref(false);
+const resizeData = ref({ field: '', startX: 0, startWidth: 0 });
+const serviceProviders = ref<ServiceProvider[]>([]);
+const selectedServiceProvider = ref('');
+const newServiceProviderName = ref('');
 
 // File handling
 const handleFileUpload = (event: Event) => {
@@ -331,7 +539,146 @@ const handleFileUpload = (event: Event) => {
   }
 };
 
+const handleJsonFileUpload = async (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  if (target.files && target.files[0]) {
+    selectedJsonFile.value = target.files[0];
+    try {
+      const fileContent = await target.files[0].text();
+      jsonText.value = fileContent;
+      error.value = '';
+    } catch (err) {
+      error.value = 'Failed to read file content';
+      jsonText.value = '';
+    }
+  }
+};
 
+const clearJsonFile = () => {
+  selectedJsonFile.value = null;
+  if (jsonFileInput.value) {
+    jsonFileInput.value.value = '';
+  }
+};
+
+const onFormatChange = () => {
+  // Clear previous data when format changes
+  selectedFile.value = null;
+  selectedJsonFile.value = null;
+  jsonText.value = '';
+  parsedServices.value = [];
+  selectedService.value = null;
+  requestParams.value = [];
+  responseParams.value = [];
+  filteredParams.value = [];
+  error.value = '';
+};
+
+const generateQuery = () => {
+  let whereClause = '';
+  if (queryServiceId.value.trim()) {
+    whereClause = `WHERE s.SERVICE_ID = ${queryServiceId.value.trim()}`;
+  } else if (queryUri.value.trim()) {
+    whereClause = `WHERE s.URI LIKE '%${queryUri.value.trim()}%'`;
+  } else {
+    whereClause = 'WHERE s.SERVICE_ID = YOUR_SERVICE_ID';
+  }
+  
+  generatedQuery.value = `SELECT
+  JSON_OBJECT(
+    'SERVICE_ID', s.SERVICE_ID,
+    'path', s.URI,
+    'method', 'POST',
+    'parameters', (
+      SELECT JSON_ARRAYAGG(
+        JSON_OBJECT(
+          'name', PARAM_NAME,
+          'type', 'string'
+        )
+      )
+      FROM SERVICE_PARAM sp
+      WHERE sp.SERVICE_ID = s.SERVICE_ID
+    )
+  ) as json_result
+FROM SERVICE s
+${whereClause};`;
+};
+
+const copyQuery = () => {
+  navigator.clipboard.writeText(generatedQuery.value);
+};
+
+
+
+// Parse JSON data
+const parseJsonData = async () => {
+  loading.value = true;
+  error.value = '';
+  
+  try {
+    let jsonData;
+    
+    if (selectedJsonFile.value) {
+      const fileContent = await selectedJsonFile.value.text();
+      jsonData = JSON.parse(fileContent);
+    } else if (jsonText.value.trim()) {
+      jsonData = JSON.parse(jsonText.value);
+    } else {
+      throw new Error('No JSON data provided');
+    }
+    
+    // Validate JSON structure
+    const validationErrors = [];
+    
+    if (!jsonData.path || typeof jsonData.path !== 'string') {
+      validationErrors.push('Missing or invalid "path" field (must be a string)');
+    }
+    
+    if (!jsonData.parameters) {
+      validationErrors.push('Missing "parameters" field');
+    } else if (!Array.isArray(jsonData.parameters)) {
+      validationErrors.push('"parameters" must be an array');
+    } else {
+      jsonData.parameters.forEach((param, index) => {
+        if (!param.name || typeof param.name !== 'string') {
+          validationErrors.push(`Parameter ${index + 1}: missing or invalid "name" field`);
+        }
+        if (!param.type || typeof param.type !== 'string') {
+          validationErrors.push(`Parameter ${index + 1}: missing or invalid "type" field`);
+        }
+      });
+    }
+    
+    if (validationErrors.length > 0) {
+      errorMessage.value = 'JSON Format Validation Failed:\n\n' + validationErrors.join('\n');
+      showErrorModal.value = true;
+      return;
+    }
+    
+    // Convert JSON to service format
+    const service = {
+      path: jsonData.path,
+      method: jsonData.method || 'POST',
+      operationId: `${jsonData.method || 'post'}_${jsonData.path.replace(/[^a-zA-Z0-9]/g, '_')}`,
+      summary: `${jsonData.method || 'GET'} ${jsonData.path}`,
+      description: '',
+      parameters: [],
+      requestBody: null,
+      responses: {}
+    };
+    
+    parsedServices.value = [service];
+    
+    // Auto-select the service
+    selectedService.value = service;
+    await onServiceSelect();
+    
+  } catch (err: any) {
+    error.value = `Failed to parse JSON: ${err.message}`;
+  } finally {
+    loading.value = false;
+  }
+};
 
 // Parse OpenAPI file
 const parseFile = async () => {
@@ -389,29 +736,76 @@ const parseFile = async () => {
 
 // Service selection
 const onServiceSelect = async () => {
+  // Clear tables first
+  requestParams.value = [];
+  responseParams.value = [];
+  filteredParams.value = [];
+  
   if (!selectedService.value) return;
   
   // Extract request parameters
   const reqParams = extractRequestParameters(selectedService.value);
   const respParams = extractResponseParameters(selectedService.value);
   
-  // Check if service exists
-  await checkServiceExists();
-  
-  // Check which parameters already exist
-  if (serviceExists.value) {
+  // Check if service exists (only if service provider is selected)
+  if (selectedServiceProvider.value) {
+    await checkServiceExists();
+    // Always check which parameters already exist for this service
     await checkExistingParameters(reqParams, respParams);
   }
   
   requestParams.value = reqParams;
   responseParams.value = respParams;
+  
+  // Initialize filteredParams with all request parameters
+  filteredParams.value = [...reqParams];
   applyFilters();
 };
 
-// Extract request parameters from OpenAPI spec
+// Initialize query with default
+generateQuery();
+
+// Extract request parameters from OpenAPI spec or JSON format
 const extractRequestParameters = (service: any) => {
   const params: any[] = [];
   
+  // Handle JSON format (from SQL export)
+  if (selectedFormat.value === 'json') {
+    let jsonData;
+    
+    if (selectedJsonFile.value || jsonText.value) {
+      try {
+        if (selectedJsonFile.value) {
+          // File content was already parsed in parseJsonData
+          const fileContent = jsonText.value || '{}';
+          jsonData = JSON.parse(fileContent);
+        } else {
+          jsonData = JSON.parse(jsonText.value);
+        }
+        
+        if (jsonData.parameters && Array.isArray(jsonData.parameters)) {
+          jsonData.parameters.forEach((param: any) => {
+            params.push({
+              name: param.name,
+              type: param.type || 'string',
+              required: false,
+              description: param.description || '',
+              location: 'json',
+              exists: false,
+              custom: true,
+              import: true
+            });
+          });
+        }
+      } catch (err) {
+        console.error('Error parsing JSON parameters:', err);
+      }
+    }
+    
+    return params;
+  }
+  
+  // Handle OpenAPI format
   // Path parameters
   if (service.parameters) {
     service.parameters.forEach((param: any) => {
@@ -433,7 +827,7 @@ const extractRequestParameters = (service: any) => {
     const schema = service.requestBody.content['application/json'].schema;
     extractSchemaProperties(schema, params, 'body');
   }
-  
+
   return params;
 };
 
@@ -453,7 +847,14 @@ const extractResponseParameters = (service: any) => {
 
 // Extract properties from schema (SwaggerParser resolved all $refs)
 const extractSchemaProperties = (schema: any, params: any[], location: string, prefix = '', visited = new Set()) => {
-  if (!schema) return;
+
+  
+  if (!schema) {
+    console.log('No schema provided');
+    return;
+  }
+  
+
   
   // Prevent infinite recursion
   const schemaKey = `${JSON.stringify(schema)}_${prefix}`;
@@ -516,11 +917,22 @@ const extractSchemaProperties = (schema: any, params: any[], location: string, p
 // Check if service exists in database
 const checkServiceExists = async () => {
   try {
-    const result = await client.graphql({ query: queries.listServices });
+    // Get service provider ID
+    let serviceProviderId;
+    if (selectedServiceProvider.value === 'new') {
+      // For new providers, we know it doesn't exist yet
+      serviceExists.value = false;
+      existingServiceId.value = null;
+      return;
+    } else {
+      serviceProviderId = parseInt(selectedServiceProvider.value);
+    }
+    
+    const result = await generateClient().graphql({ query: queries.listServices });
     const services = result.data.listSERVICES.items;
     
     const existing = services.find((s: any) => 
-      s.URI === selectedService.value.path
+      s.URI === selectedService.value.path && s.SERVICE_PROVIDER_ID === serviceProviderId
     );
     
     serviceExists.value = !!existing;
@@ -530,19 +942,36 @@ const checkServiceExists = async () => {
   }
 };
 
-// Check which parameters already exist
+// Check which parameters already exist for specific service
 const checkExistingParameters = async (reqParams: any[], respParams: any[]) => {
   if (!existingServiceId.value) return;
   
   try {
-    const result = await client.graphql({ query: queries.listServiceParams });
-    const existingParams = result.data.listSERVICE_PARAMS.items.filter(
-      (p: any) => p.SERVICE_ID === existingServiceId.value
-    );
+    let allExistingParams = [];
+    let nextToken = null;
+    
+    // Paginate through all parameters for this service
+    do {
+      const variables = {
+        filter: { SERVICE_ID: { eq: existingServiceId.value } },
+        limit: 1000
+      };
+      if (nextToken) {
+        variables.nextToken = nextToken;
+      }
+      
+      const result = await generateClient().graphql({ 
+        query: queries.listServiceParams,
+        variables
+      });
+      
+      allExistingParams.push(...result.data.listSERVICE_PARAMS.items);
+      nextToken = result.data.listSERVICE_PARAMS.nextToken;
+    } while (nextToken);
     
     // Mark existing request parameters and disable/uncheck them
     reqParams.forEach(param => {
-      const exists = existingParams.some((ep: any) => ep.PARAM_NAME === param.name);
+      const exists = allExistingParams.some((ep: any) => ep.PARAM_NAME === param.name);
       param.exists = exists;
       if (exists) {
         param.import = false;
@@ -551,7 +980,7 @@ const checkExistingParameters = async (reqParams: any[], respParams: any[]) => {
     
     // Mark existing response parameters and disable/uncheck them
     respParams.forEach(param => {
-      const exists = existingParams.some((ep: any) => ep.PARAM_NAME === param.name);
+      const exists = allExistingParams.some((ep: any) => ep.PARAM_NAME === param.name);
       param.exists = exists;
       if (exists) {
         param.import = false;
@@ -601,16 +1030,27 @@ const insertService = async () => {
     const serviceUri = selectedService.value.path;
     let serviceId = existingServiceId.value;
     
+    // Get or create service provider ID
+    let serviceProviderId;
+    if (selectedServiceProvider.value === 'new') {
+      serviceProviderId = await createServiceProviderIfNeeded();
+      if (!serviceProviderId) {
+        throw new Error('Failed to create service provider');
+      }
+    } else {
+      serviceProviderId = parseInt(selectedServiceProvider.value);
+    }
+    
     // Check if service exists
     if (!serviceExists.value) {
       const serviceInput = {
-        SERVICE_PROVIDER_ID: 1,
+        SERVICE_PROVIDER_ID: serviceProviderId,
         URI: serviceUri,
         CREATED_BY_USER_ID: 1,
         CREATED_DATE: new Date().toISOString().split('T')[0]
       };
       
-      const serviceResult = await client.graphql({
+      const serviceResult = await generateClient().graphql({
         query: mutations.createService,
         variables: { input: serviceInput }
       });
@@ -618,17 +1058,42 @@ const insertService = async () => {
       serviceId = serviceResult.data.createSERVICE.SERVICE_ID;
     }
     
-    // Get existing parameters for this service
-    const existingParamsResult = await client.graphql({ query: queries.listServiceParams });
-    const existingParams = existingParamsResult.data.listSERVICE_PARAMS.items.filter(
-      (p: any) => p.SERVICE_ID === serviceId
-    );
+    // Get fresh existing parameters for this service only
+    let existingParams = [];
+    let nextToken = null;
+    
+    do {
+      const variables = {
+        filter: { SERVICE_ID: { eq: serviceId } },
+        limit: 1000
+      };
+      if (nextToken) {
+        variables.nextToken = nextToken;
+      }
+      
+      const result = await generateClient().graphql({ 
+        query: queries.listServiceParams,
+        variables
+      });
+      
+      existingParams.push(...result.data.listSERVICE_PARAMS.items);
+      nextToken = result.data.listSERVICE_PARAMS.nextToken;
+    } while (nextToken);
+    
+    // Update requestParams to mark existing ones for THIS service only
+    requestParams.value.forEach(param => {
+      const exists = existingParams.some((ep: any) => ep.PARAM_NAME === param.name);
+      if (exists) {
+        param.exists = true;
+        param.import = false;
+      }
+    });
     
     // Insert only checked parameters that don't exist
     const paramsToInsert = requestParams.value.filter(param => 
       param.import && 
-      param.name && 
-      !existingParams.some((ep: any) => ep.PARAM_NAME === param.name)
+      param.name.trim() && 
+      !param.exists
     );
     
     if (paramsToInsert.length > 0) {
@@ -643,21 +1108,32 @@ const insertService = async () => {
         CREATED_DATE: new Date().toISOString().split('T')[0]
       }));
       
-      const results = await createServiceParamBatch(paramInputs);
-      
-      // Update progress based on successful inserts
-      results.forEach(result => {
-        if (result.data?.createSERVICE_PARAMBatch?.items) {
-          currentInsert.value += result.data.createSERVICE_PARAMBatch.items.length;
+      for (const paramInput of paramInputs) {
+        try {
+          await generateClient().graphql({
+            query: mutations.createServiceParam,
+            variables: { input: paramInput }
+          });
+          currentInsert.value++;
+        } catch (err) {
+          console.error('Failed to create parameter:', paramInput.PARAM_NAME, err);
+          if (err.errors) {
+            err.errors.forEach(error => console.error('GraphQL Error:', error.message));
+          }
         }
-      });
+      }
     }
     
     showProgressModal.value = false;
+    
+    // Refresh the service selection to show newly inserted parameters
+    if (currentInsert.value > 0) {
+      await onServiceSelect();
+    }
+    
     showSuccessModal.value = true;
   } catch (err: any) {
-    errorMessage.value = err.message || 'Failed to insert service';
-    showErrorModal.value = true;
+    handleError(err, 'inserting service');
     showProgressModal.value = false;
   } finally {
     saving.value = false;
@@ -669,7 +1145,42 @@ const updateService = async () => {
   saving.value = true;
   
   try {
-    const paramsToInsert = requestParams.value.filter(param => param.import && param.name && !param.exists);
+    // Get fresh existing parameters for this service only
+    let existingParams = [];
+    let nextToken = null;
+    
+    do {
+      const variables = {
+        filter: { SERVICE_ID: { eq: existingServiceId.value } },
+        limit: 1000
+      };
+      if (nextToken) {
+        variables.nextToken = nextToken;
+      }
+      
+      const result = await generateClient().graphql({ 
+        query: queries.listServiceParams,
+        variables
+      });
+      
+      existingParams.push(...result.data.listSERVICE_PARAMS.items);
+      nextToken = result.data.listSERVICE_PARAMS.nextToken;
+    } while (nextToken);
+    
+    // Update requestParams to mark existing ones for THIS service only
+    requestParams.value.forEach(param => {
+      const exists = existingParams.some((ep: any) => ep.PARAM_NAME === param.name);
+      if (exists) {
+        param.exists = true;
+        param.import = false;
+      }
+    });
+    
+    const paramsToInsert = requestParams.value.filter(param => 
+      param.import && 
+      param.name.trim() && 
+      !param.exists
+    );
     
     if (paramsToInsert.length > 0) {
       showProgressModal.value = true;
@@ -683,21 +1194,32 @@ const updateService = async () => {
         CREATED_DATE: new Date().toISOString().split('T')[0]
       }));
       
-      const results = await createServiceParamBatch(paramInputs);
-      
-      // Update progress based on successful inserts
-      results.forEach(result => {
-        if (result.data?.createSERVICE_PARAMBatch?.items) {
-          currentInsert.value += result.data.createSERVICE_PARAMBatch.items.length;
+      for (const paramInput of paramInputs) {
+        try {
+          await generateClient().graphql({
+            query: mutations.createServiceParam,
+            variables: { input: paramInput }
+          });
+          currentInsert.value++;
+        } catch (err) {
+          console.error('Failed to create parameter:', paramInput.PARAM_NAME, err);
+          if (err.errors) {
+            err.errors.forEach(error => console.error('GraphQL Error:', error.message));
+          }
         }
-      });
+      }
     }
     
     showProgressModal.value = false;
+    
+    // Refresh the service selection to show newly inserted parameters
+    if (currentInsert.value > 0) {
+      await onServiceSelect();
+    }
+    
     showSuccessModal.value = true;
   } catch (err: any) {
-    errorMessage.value = err.message || 'Failed to update service';
-    showErrorModal.value = true;
+    handleError(err, 'updating service');
     showProgressModal.value = false;
   } finally {
     saving.value = false;
@@ -707,7 +1229,9 @@ const updateService = async () => {
 const toggleSelectAll = () => {
   const newValue = !allSelected.value;
   requestParams.value.forEach(param => {
-    param.import = newValue;
+    if (!param.exists) {
+      param.import = newValue;
+    }
   });
 };
 
@@ -750,20 +1274,52 @@ const closeSuccessModal = () => {
   resetForm();
 };
 
+const startResize = (event, field) => {
+  isResizing.value = true;
+  resizeData.value.field = field;
+  resizeData.value.startX = event.clientX;
+  const th = event.target.parentElement;
+  resizeData.value.startWidth = th.offsetWidth;
+  
+  document.addEventListener('mousemove', doResize);
+  document.addEventListener('mouseup', stopResize);
+  event.preventDefault();
+};
+
+const doResize = (event) => {
+  if (!isResizing.value) return;
+  const diff = event.clientX - resizeData.value.startX;
+  const newWidth = Math.max(50, resizeData.value.startWidth + diff);
+  const th = document.querySelector(`th[data-field="${resizeData.value.field}"]`);
+  if (th) {
+    th.style.width = newWidth + 'px';
+  }
+};
+
+const stopResize = () => {
+  isResizing.value = false;
+  document.removeEventListener('mousemove', doResize);
+  document.removeEventListener('mouseup', stopResize);
+};
+
 // Reset form
 const resetForm = () => {
+  // Clear tables immediately
+  requestParams.value = [];
+  responseParams.value = [];
+  filteredParams.value = [];
+  
   selectedFile.value = null;
   parsedServices.value = [];
   selectedService.value = null;
-  requestParams.value = [];
-  responseParams.value = [];
   serviceExists.value = false;
   existingServiceId.value = null;
   error.value = '';
   sortField.value = '';
   sortDirection.value = 'asc';
   filters.value = { name: '', type: '', description: '' };
-  filteredParams.value = [];
+  selectedServiceProvider.value = '';
+  newServiceProviderName.value = '';
 };
 </script>
 
@@ -774,13 +1330,16 @@ const resetForm = () => {
   margin: 0 auto;
   padding: 20px;
   overflow: auto;
+  background-color: var(--bg-color);
+  color: var(--text-color);
 }
 
 .upload-section {
   margin-bottom: 20px;
   padding: 20px;
-  border: 2px dashed #ccc;
+  border: 2px dashed var(--border-color);
   border-radius: 5px;
+  background-color: var(--bg-color);
 }
 
 .upload-section input[type="file"] {
@@ -809,6 +1368,40 @@ const resetForm = () => {
   margin-bottom: 20px;
 }
 
+.service-provider-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+}
+
+.provider-input-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.provider-select {
+  flex: 1;
+  padding: 8px;
+  font-size: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+}
+
+.new-provider-input {
+  flex: 1;
+  padding: 8px;
+  font-size: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+}
+
 .service-selection {
   margin-bottom: 20px;
 }
@@ -817,10 +1410,15 @@ const resetForm = () => {
   width: 100%;
   padding: 8px;
   font-size: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
 }
 
 .service-details {
-  background-color: #f9f9f9;
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
   padding: 20px;
   border-radius: 5px;
 }
@@ -829,30 +1427,109 @@ const resetForm = () => {
   margin-bottom: 30px;
 }
 
+.table-container {
+  max-height: 600px;
+  overflow: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--bg-color);
+}
+
 .params-table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
   table-layout: fixed;
 }
 
-.params-table {
+.params-table th {
+  background-color: var(--table-header-bg);
   position: sticky;
   top: 0;
   z-index: 10;
-}
-
-.params-table th {
-  background-color: #f2f2f2;
-  position: sticky;
-  top: 0;
+  height: 45px;
+  vertical-align: middle;
 }
 
 .filter-row th {
-  background-color: #e9ecef;
+  background-color: var(--table-filter-bg);
   padding: 4px;
   position: sticky;
-  top: 41px;
+  top: 45px;
+  z-index: 10;
+  height: 35px;
+}
+
+.buttons-params-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 20px;
+}
+
+.target-params-info {
+  width: fit-content;
+}
+
+.action-buttons button {
+  margin-right: 10px;
+}
+
+.w-12 {
+  width: 3%;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.resizable {
+  position: relative;
+  user-select: none;
+}
+
+.resize-handle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 5px;
+  height: 100%;
+  cursor: col-resize;
+  background: transparent;
+}
+
+.resize-handle:hover {
+  background: #007bff;
+}
+
+.full-width-input {
+  width: 100%;
+  padding: 4px;
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  box-sizing: border-box;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+}
+
+.full-width-textarea {
+  width: 100%;
+  padding: 4px;
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  box-sizing: border-box;
+  resize: vertical;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+}
+
+.read-only-text {
+  display: block;
+  width: 100%;
+  padding: 4px;
+  word-wrap: break-word;
+  white-space: normal;
+  line-height: 1.4;
 }
 
 .params-table th:nth-child(1) { width: 60px; }
@@ -867,7 +1544,7 @@ const resetForm = () => {
 }
 
 .sortable:hover {
-  background-color: #e9ecef;
+  background-color: var(--table-filter-bg);
 }
 
 .sort-indicator {
@@ -879,8 +1556,10 @@ const resetForm = () => {
   width: 100%;
   padding: 4px;
   font-size: 12px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   border-radius: 3px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
 }
 
 .clear-filters-btn {
@@ -899,39 +1578,27 @@ const resetForm = () => {
 
 .params-table th,
 .params-table td {
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   padding: 8px;
   text-align: left;
+  background-color: var(--bg-color);
+  color: var(--text-color);
 }
 
-.w-12 { width: 3rem; }
-.w-16 { width: 4rem; }
-.w-20 { width: 5rem; }
-.w-24 { width: 6rem; }
-.w-32 { width: 8rem; }
-.w-48 { width: 12rem; }
-.w-72 { width: 18rem; }
-.w-18 { width: 4.5rem; }
-.w-8 { width: 2rem; }
-.w-desc { width: 15rem; }
-.text-xs { font-size: 0.75rem; }
-.w-full { width: 100%; }
-.text-center { text-align: center; }
-.h-4 { height: 1rem; }
-.text-red-600 { color: #dc2626; }
-.hover\:text-red-800:hover { color: #991b1b; }
+
 
 .params-table th {
-  background-color: #f2f2f2;
+  background-color: var(--table-header-bg);
 }
 
 .params-table tr.existing {
-  background-color: #e9ecef;
+  background-color: var(--table-filter-bg);
 }
 
 .params-table input.disabled {
-  background-color: #e9ecef;
-  color: #6c757d;
+  background-color: var(--table-filter-bg);
+  color: var(--text-color);
+  opacity: 0.6;
 }
 
 .params-table input[type="checkbox"]:disabled {
@@ -985,7 +1652,8 @@ const resetForm = () => {
 }
 
 .modal-content {
-  background: white;
+  background: var(--modal-bg);
+  color: var(--text-color);
   padding: 30px;
   border-radius: 8px;
   min-width: 400px;
@@ -1012,5 +1680,215 @@ const resetForm = () => {
   height: 100%;
   background-color: #007bff;
   transition: width 0.3s ease;
+}
+
+.format-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+}
+
+.format-section label {
+  display: inline-block;
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.format-section select {
+  padding: 5px;
+  min-width: 150px;
+}
+
+.json-section {
+  margin-bottom: 20px;
+  padding: 20px;
+  border: 2px dashed #28a745;
+  border-radius: 5px;
+  background-color: var(--bg-color);
+}
+
+.json-input-section label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.json-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.clear-btn {
+  padding: 5px 10px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.clear-btn:hover {
+  background-color: #c82333;
+}
+
+.json-textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 12px;
+  margin-bottom: 10px;
+  resize: vertical;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+}
+
+.json-textarea:disabled {
+  background-color: var(--table-filter-bg);
+  color: var(--text-color);
+  opacity: 0.6;
+}
+
+.json-section button {
+  padding: 8px 16px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.json-section button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.json-input-container {
+  display: flex;
+  gap: 15px;
+}
+
+.json-textarea {
+  flex: 1;
+}
+
+.json-sample {
+  flex: 0 0 300px;
+  background-color: var(--input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.json-sample strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #495057;
+}
+
+.json-sample pre {
+  margin: 0;
+  font-size: 11px;
+  color: #6c757d;
+  white-space: pre-wrap;
+  line-height: 1.3;
+}
+
+.help-link {
+  color: #007bff;
+  text-decoration: none;
+  font-size: 12px;
+  margin-left: 10px;
+}
+
+.help-link:hover {
+  text-decoration: underline;
+}
+
+.query-modal {
+  min-width: 600px;
+  max-width: 800px;
+}
+
+.query-inputs {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.input-group {
+  flex: 1;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+}
+
+.query-output {
+  margin-bottom: 20px;
+}
+
+.query-output label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.query-textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 12px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  resize: vertical;
+}
+
+.copy-btn {
+  margin-top: 10px;
+  padding: 8px 16px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.copy-btn:hover {
+  background-color: #218838;
+}
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .header-row {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
 }
 </style>

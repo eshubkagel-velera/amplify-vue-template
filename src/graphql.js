@@ -1,9 +1,9 @@
 import { generateClient } from 'aws-amplify/api';
 // Create a client to interact with the GraphQL API
-const client = generateClient();
+
 // LOAN_APP operations
 export const getLoanApp = async (id) => {
-    return client.graphql({
+    return generateClient().graphql({
         query: `query GetLOAN_APP($id: Int!) {
       getLOAN_APP(LOAN_APP_ID: $id) {
         CHANGED_DATE
@@ -20,7 +20,7 @@ export const getLoanApp = async (id) => {
 };
 export const listLoanApps = async () => {
     try {
-        const result = await client.graphql({
+        const result = await generateClient().graphql({
             query: `query ListLOAN_APPS {
         listLOAN_APPS {
           items {
@@ -42,7 +42,7 @@ export const listLoanApps = async () => {
     }
 };
 export const createLoanApp = async (input) => {
-    return client.graphql({
+    return generateClient().graphql({
         query: `mutation CreateLOAN_APP($input: CreateLOAN_APPInput!) {
       createLOAN_APP(input: $input) {
         CHANGED_DATE
@@ -58,7 +58,7 @@ export const createLoanApp = async (input) => {
     });
 };
 export const updateLoanApp = async (input) => {
-    return client.graphql({
+    return generateClient().graphql({
         query: `mutation UpdateLOAN_APP($input: UpdateLOAN_APPInput!) {
       updateLOAN_APP(input: $input) {
         CHANGED_DATE
@@ -74,7 +74,7 @@ export const updateLoanApp = async (input) => {
     });
 };
 export const deleteLoanApp = async (input) => {
-    return client.graphql({
+    return generateClient().graphql({
         query: `mutation DeleteLOAN_APP($input: DeleteLOAN_APPInput!) {
       deleteLOAN_APP(input: $input) {
         LOAN_APP_ID
@@ -85,7 +85,7 @@ export const deleteLoanApp = async (input) => {
 };
 // ORIGIN_PRODUCT operations
 export const getOriginProduct = async (id) => {
-    return client.graphql({
+    return generateClient().graphql({
         query: `query GetORIGIN_PRODUCT($id: Int!) {
       getORIGIN_PRODUCT(ORIGIN_PRODUCT_ID: $id) {
         CHANGED_BY_USER_ID
@@ -106,7 +106,7 @@ export const getOriginProduct = async (id) => {
 export const listOriginProducts = async () => {
     try {
         // Using the exact query format from the working curl command
-        const result = await client.graphql({
+        const result = await generateClient().graphql({
             query: `query ListOriginProduct {
         listORIGIN_PRODUCTS {
           nextToken
@@ -138,7 +138,7 @@ export const listOriginProducts = async () => {
 };
 export const createOriginProduct = async (input) => {
     try {
-        const result = await client.graphql({
+        const result = await generateClient().graphql({
             query: `mutation CreateORIGIN_PRODUCT($input: CreateORIGIN_PRODUCTInput!) {
         createORIGIN_PRODUCT(input: $input) {
           ORIGIN_PRODUCT_ID
@@ -167,7 +167,7 @@ export const createOriginProduct = async (input) => {
 };
 export const updateOriginProduct = async (input) => {
     try {
-        const result = await client.graphql({
+        const result = await generateClient().graphql({
             query: `mutation UpdateORIGIN_PRODUCT($input: UpdateORIGIN_PRODUCTInput!) {
         updateORIGIN_PRODUCT(input: $input) {
           ORIGIN_PRODUCT_ID
@@ -190,7 +190,7 @@ export const updateOriginProduct = async (input) => {
 };
 export const deleteOriginProduct = async (input) => {
     try {
-        const result = await client.graphql({
+        const result = await generateClient().graphql({
             query: `mutation DeleteORIGIN_PRODUCT($input: DeleteORIGIN_PRODUCTInput!) {
         deleteORIGIN_PRODUCT(input: $input) {
           ORIGIN_PRODUCT_ID
