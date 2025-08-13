@@ -61,7 +61,7 @@
 import { ref, onMounted, defineProps } from 'vue';
 import { generateClient } from 'aws-amplify/api';
 
-const client = generateClient();
+
 
 const props = defineProps({
   entityName: {
@@ -111,7 +111,7 @@ const getEntityId = (entity) => {
 
 const loadEntities = async () => {
   try {
-    const response = await client.graphql({
+    const response = await generateClient().graphql({
       query: props.listQuery
     });
     
@@ -136,7 +136,7 @@ const confirmDelete = (entity) => {
 const deleteEntity = async () => {
   try {
     const input = { [props.idField]: getEntityId(entityToDelete.value) };
-    await client.graphql({
+    await generateClient().graphql({
       query: props.deleteMutation,
       variables: { input }
     });
@@ -151,12 +151,12 @@ const deleteEntity = async () => {
 const submitForm = async () => {
   try {
     if (showEditForm.value) {
-      await client.graphql({
+      await generateClient().graphql({
         query: props.updateMutation,
         variables: { input: formData.value }
       });
     } else {
-      await client.graphql({
+      await generateClient().graphql({
         query: props.createMutation,
         variables: { input: formData.value }
       });

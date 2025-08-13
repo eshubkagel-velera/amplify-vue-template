@@ -1,12 +1,11 @@
 import { generateClient } from 'aws-amplify/api';
 import { type Schema } from './types';
 
-// Create a client to interact with the GraphQL API
-const client = generateClient<Schema>();
+
 
 // LOAN_APP operations
 export const getLoanApp = async (id: number) => {
-  return client.graphql({
+  return generateClient<Schema>().graphql({
     query: `query GetLOAN_APP($id: Int!) {
       getLOAN_APP(LOAN_APP_ID: $id) {
         CHANGED_DATE
@@ -24,7 +23,7 @@ export const getLoanApp = async (id: number) => {
 
 export const listLoanApps = async () => {
   try {
-    const result = await client.graphql({
+    const result = await generateClient<Schema>().graphql({
       query: `query ListLOAN_APPS {
         listLOAN_APPS {
           items {
@@ -46,7 +45,7 @@ export const listLoanApps = async () => {
 };
 
 export const createLoanApp = async (input: any) => {
-  return client.graphql({
+  return generateClient<Schema>().graphql({
     query: `mutation CreateLOAN_APP($input: CreateLOAN_APPInput!) {
       createLOAN_APP(input: $input) {
         CHANGED_DATE
@@ -63,7 +62,7 @@ export const createLoanApp = async (input: any) => {
 };
 
 export const updateLoanApp = async (input: any) => {
-  return client.graphql({
+  return generateClient<Schema>().graphql({
     query: `mutation UpdateLOAN_APP($input: UpdateLOAN_APPInput!) {
       updateLOAN_APP(input: $input) {
         CHANGED_DATE
@@ -80,7 +79,7 @@ export const updateLoanApp = async (input: any) => {
 };
 
 export const deleteLoanApp = async (input: any) => {
-  return client.graphql({
+  return generateClient<Schema>().graphql({
     query: `mutation DeleteLOAN_APP($input: DeleteLOAN_APPInput!) {
       deleteLOAN_APP(input: $input) {
         LOAN_APP_ID
@@ -92,7 +91,7 @@ export const deleteLoanApp = async (input: any) => {
 
 // ORIGIN_PRODUCT operations
 export const getOriginProduct = async (id: number) => {
-  return client.graphql({
+  return generateClient<Schema>().graphql({
     query: `query GetORIGIN_PRODUCT($id: Int!) {
       getORIGIN_PRODUCT(ORIGIN_PRODUCT_ID: $id) {
         CHANGED_BY_USER_ID
@@ -114,7 +113,7 @@ export const getOriginProduct = async (id: number) => {
 export const listOriginProducts = async () => {
   try {
     // Using the exact query format from the working curl command
-    const result = await client.graphql({
+    const result = await generateClient<Schema>().graphql({
       query: `query ListOriginProduct {
         listOrigin_products {
           nextToken
@@ -148,7 +147,7 @@ export const listOriginProducts = async () => {
 
 export const createOriginProduct = async (input: any) => {
   try {
-    const result = await client.graphql({
+    const result = await generateClient<Schema>().graphql({
       query: `mutation CreateORIGIN_PRODUCT($input: CreateORIGIN_PRODUCTInput!) {
         createORIGIN_PRODUCT(input: $input) {
           ORIGIN_PRODUCT_ID
@@ -179,7 +178,7 @@ export const createOriginProduct = async (input: any) => {
 
 export const updateOriginProduct = async (input: any) => {
   try {
-    const result = await client.graphql({
+    const result = await generateClient<Schema>().graphql({
       query: `mutation UpdateORIGIN_PRODUCT($input: UpdateORIGIN_PRODUCTInput!) {
         updateORIGIN_PRODUCT(input: $input) {
           ORIGIN_PRODUCT_ID
@@ -204,7 +203,7 @@ export const updateOriginProduct = async (input: any) => {
 
 export const deleteOriginProduct = async (input: any) => {
   try {
-    const result = await client.graphql({
+    const result = await generateClient<Schema>().graphql({
       query: `mutation DeleteORIGIN_PRODUCT($input: DeleteORIGIN_PRODUCTInput!) {
         deleteORIGIN_PRODUCT(input: $input) {
           ORIGIN_PRODUCT_ID
@@ -228,44 +227,51 @@ export const deleteOriginProduct = async (input: any) => {
 
 // Batch operations
 export const createServiceParamMappingBatch = async (inputs: any[]) => {
-  return client.graphql({
-    query: `mutation CreateSERVICE_PARAM_MAPPINGBatch($inputs: [CreateSERVICE_PARAM_MAPPINGInput!]!) {
-      createSERVICE_PARAM_MAPPINGBatch(inputs: $inputs) {
-        items {
+  const results = [];
+  
+  for (const input of inputs) {
+    const result = await generateClient<Schema>().graphql({
+      query: `mutation CreateSERVICE_PARAM_MAPPING($input: CreateSERVICE_PARAM_MAPPINGInput!) {
+        createSERVICE_PARAM_MAPPING(input: $input) {
           SERVICE_PARAM_MAPPING_ID
-          SERVICE_PARAM_ID
-          STEP_TYPE_ID
           ORIGIN_PRODUCT_ID
-          RESOURCE_NAME
-          MAPPING_TYPE
-          MAPPING_VALUE
+          SOURCE_SERVICE_PARAM_ID
+          TARGET_SERVICE_PARAM_ID
+          CREATED_BY_USER_ID
           CREATED_DATE
         }
-        errors
-      }
-    }`,
-    variables: { inputs }
-  });
+      }`,
+      variables: { input }
+    });
+    results.push(result.data.createSERVICE_PARAM_MAPPING);
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+  
+  return { data: { createSERVICE_PARAM_MAPPINGBatch: { items: results } } };
 };
 
 export const createServiceExprMappingBatch = async (inputs: any[]) => {
-  return client.graphql({
-    query: `mutation CreateSERVICE_EXPR_MAPPINGBatch($inputs: [CreateSERVICE_EXPR_MAPPINGInput!]!) {
-      createSERVICE_EXPR_MAPPINGBatch(inputs: $inputs) {
-        items {
+  const results = [];
+  
+  for (const input of inputs) {
+    const result = await generateClient<Schema>().graphql({
+      query: `mutation CreateSERVICE_EXPR_MAPPING($input: CreateSERVICE_EXPR_MAPPINGInput!) {
+        createSERVICE_EXPR_MAPPING(input: $input) {
           SERVICE_EXPR_MAPPING_ID
-          SERVICE_PARAM_ID
-          STEP_TYPE_ID
-          ORIGIN_PRODUCT_ID
-          RESOURCE_NAME
-          EXPRESSION_TEXT
+          SERVICE_PARAM_MAPPING_ID
+          SOURCE_EXPR
+          TARGET_EXPR
+          CREATED_BY_USER_ID
           CREATED_DATE
         }
-        errors
-      }
-    }`,
-    variables: { inputs }
-  });
+      }`,
+      variables: { input }
+    });
+    results.push(result.data.createSERVICE_EXPR_MAPPING);
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+  
+  return { data: { createSERVICE_EXPR_MAPPINGBatch: { items: results } } };
 };
 
 export const createServiceBatch = async (inputs: any[]) => {
@@ -276,7 +282,7 @@ export const createServiceBatch = async (inputs: any[]) => {
     const batch = inputs.slice(i, i + BATCH_SIZE);
     
     try {
-      const result = await client.graphql({
+      const result = await generateClient<Schema>().graphql({
         query: `mutation CreateSERVICEBatch($inputs: [CreateSERVICEInput!]!) {
           createSERVICEBatch(inputs: $inputs) {
             items {
@@ -315,7 +321,7 @@ export const createServiceParamBatch = async (inputs: any[]) => {
     const batch = inputs.slice(i, i + BATCH_SIZE);
     
     try {
-      const result = await client.graphql({
+      const result = await generateClient<Schema>().graphql({
         query: `mutation CreateSERVICE_PARAMBatch($inputs: [CreateSERVICE_PARAMInput!]!) {
           createSERVICE_PARAMBatch(inputs: $inputs) {
             items {

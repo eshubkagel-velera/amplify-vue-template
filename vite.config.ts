@@ -1,23 +1,23 @@
-import { fileURLToPath, URL } from 'node:url'
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
 
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-
-// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [
-    vue(),
-  ],
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
-    }
+  plugins: [vue()],
+  server: {
+    port: 3000
   },
   define: {
     global: 'globalThis',
-    'process.env': {}
+    'process.env': {},
+    process: { env: {} }
+  },
+  resolve: {
+    alias: {
+      path: 'path-browserify',
+      util: 'util'
+    }
   },
   optimizeDeps: {
-    include: ['buffer']
+    include: ['buffer', 'path-browserify', 'util', 'process']
   }
-})
+});
