@@ -10,7 +10,9 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      'path': 'path-browserify',
+      'util': 'util'
     }
   },
   define: {
@@ -19,5 +21,15 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['buffer']
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'aws-amplify': ['aws-amplify'],
+          'vue-vendor': ['vue']
+        }
+      }
+    }
   }
 })

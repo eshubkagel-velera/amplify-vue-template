@@ -2,11 +2,27 @@
   <div class="entity-manager">
     <h2>{{ entityName }} Manager</h2>
     
-    <!-- Entity List -->
-    <div class="entity-list">
+    <!-- Service Filter for SERVICE_PARAM -->
+    <div v-if="entityName === 'SERVICE_PARAM'" class="service-filter">
+      <label for="serviceFilter">Filter by Service:</label>
+      <select id="serviceFilter" v-model="selectedServiceFilter" @change="filterByService">
+        <option value="">-- Select a Service --</option>
+        <option v-for="service in serviceOptions" :key="service.value" :value="service.value">
+          {{ service.label }}
+        </option>
+      </select>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="action-buttons">
       <button @click="loadEntities" class="btn-primary">Refresh</button>
       <button @click="showCreateModal = true" class="btn-success">Add New</button>
       <button @click="confirmBulkDelete" :disabled="selectedEntities.length === 0" class="btn-danger">Delete Selected ({{ selectedEntities.length }})</button>
+      <span class="record-count">{{ entities.length }} records</span>
+    </div>
+    
+    <!-- Entity List -->
+    <div class="entity-list">
       
       <table v-if="entities.length > 0">
         <thead>
@@ -43,10 +59,13 @@
             <td class="checkbox-col">
               <input type="checkbox" :value="getEntityId(entity)" v-model="selectedEntities" />
             </td>
-            <td v-for="field in fields" :key="field">{{ entity[field] }}</td>
+            <td v-for="field in fields" :key="field">
+              {{ field.includes('DATE') ? formatDate(entity[field]) : entity[field] }}
+            </td>
             <td>
               <button @click="editEntity(entity)">Edit</button>
               <button v-if="props.entityName === 'ORIGIN_PRODUCT'" @click="openMapping(entity)" class="btn-success" style="margin-left: 5px;">Mapping</button>
+              <button v-if="props.entityName === 'ORIGIN_PRODUCT'" @click="openRedirectUrls(entity)" class="btn-info" style="margin-left: 5px;">Redirect URLs</button>
             </td>
           </tr>
         </tbody>
@@ -61,8 +80,24 @@
         <form @submit.prevent="submitForm">
           <div v-for="field in formFields" :key="field.name" class="form-group">
             <label :for="field.name">{{ field.name }}</label>
+            <div v-if="field.name === 'VENDOR_NAME' && props.entityName === 'ORIGIN_PRODUCT'">
+              <input 
+                :id="field.name" 
+                v-model="formData[field.name]" 
+                type="text"
+                :required="field.required"
+                :disabled="field.disabled"
+                list="vendor-names-create"
+                placeholder="Select or enter vendor name"
+              />
+              <datalist id="vendor-names-create">
+                <option v-for="vendor in vendorNames" :key="vendor" :value="vendor">
+                  {{ vendor }}
+                </option>
+              </datalist>
+            </div>
             <select 
-              v-if="field.type === 'select'"
+              v-else-if="field.type === 'select'"
               :id="field.name" 
               v-model="formData[field.name]" 
               :required="field.required"
@@ -77,7 +112,7 @@
               v-else
               :id="field.name" 
               v-model="formData[field.name]" 
-              :type="field.type" 
+              :type="field.name.includes('DATE') ? 'date' : field.type" 
               :required="field.required"
               :disabled="field.disabled || field.name === 'CREATED_DATE' || field.name === 'MODIFIED_DATE'"
             />
@@ -95,10 +130,26 @@
       <div class="modal-content">
         <h3>Edit {{ entityName }}</h3>
         <form @submit.prevent="submitForm">
-          <div v-for="field in formFields" :key="field.name" class="form-group">
+          <div v-for="field in formFields" :key="field.name" class="form-group" v-show="!(props.entityName === 'ORIGIN_PRODUCT' && (field.name === 'CREATED_DATE' || field.name === 'CREATED_BY_USER_ID'))">
             <label :for="field.name">{{ field.name }}</label>
+            <div v-if="field.name === 'VENDOR_NAME' && props.entityName === 'ORIGIN_PRODUCT'">
+              <input 
+                :id="field.name" 
+                v-model="formData[field.name]" 
+                type="text"
+                :required="field.required"
+                :disabled="field.disabled"
+                list="vendor-names-edit"
+                placeholder="Select or enter vendor name"
+              />
+              <datalist id="vendor-names-edit">
+                <option v-for="vendor in vendorNames" :key="vendor" :value="vendor">
+                  {{ vendor }}
+                </option>
+              </datalist>
+            </div>
             <select 
-              v-if="field.type === 'select'"
+              v-else-if="field.type === 'select'"
               :id="field.name" 
               v-model="formData[field.name]" 
               :required="field.required"
@@ -113,9 +164,27 @@
               v-else
               :id="field.name" 
               v-model="formData[field.name]" 
-              :type="field.type" 
+              :type="field.name.includes('DATE') ? 'date' : field.type" 
               :required="field.required"
               :disabled="field.disabled || field.name === 'CREATED_DATE' || field.name === 'MODIFIED_DATE'"
+            />
+          </div>
+          <!-- Show CHANGED fields for ORIGIN_PRODUCT -->
+          <div v-if="props.entityName === 'ORIGIN_PRODUCT'" class="form-group">
+            <label for="CHANGED_DATE">CHANGED_DATE</label>
+            <input 
+              id="CHANGED_DATE" 
+              v-model="formData.CHANGED_DATE" 
+              type="date"
+              disabled
+            />
+          </div>
+          <div v-if="props.entityName === 'ORIGIN_PRODUCT'" class="form-group">
+            <label for="CHANGED_BY_USER_ID">CHANGED_BY_USER_ID</label>
+            <input 
+              id="CHANGED_BY_USER_ID" 
+              v-model="formData.CHANGED_BY_USER_ID" 
+              type="number"
             />
           </div>
           <div class="form-actions">
@@ -139,6 +208,17 @@
       </div>
     </div>
     
+    <!-- Success Modal -->
+    <div v-if="showSuccessModal" class="modal-overlay">
+      <div class="modal-content">
+        <h3>Success</h3>
+        <p>{{ successMessage }}</p>
+        <div class="form-actions">
+          <button @click="showSuccessModal = false" class="btn-primary">OK</button>
+        </div>
+      </div>
+    </div>
+    
     <!-- Error Modal -->
     <div v-if="showErrorModal" class="modal-overlay">
       <div class="modal-content">
@@ -154,6 +234,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, defineProps, watch } from 'vue';
+import { generateClient } from 'aws-amplify/api';
+import { listServiceParams } from '../graphql/queries.js';
 
 const props = defineProps({
   entityName: {
@@ -199,6 +281,8 @@ const showEditModal = ref(false);
 const showDeleteModal = ref(false);
 const showErrorModal = ref(false);
 const errorMessage = ref('');
+const showSuccessModal = ref(false);
+const successMessage = ref('');
 const selectedEntities = ref([]);
 const allSelected = ref(false);
 const isResizing = ref(false);
@@ -207,40 +291,75 @@ const isDeleting = ref(false);
 const deleteProgress = ref({ current: 0, total: 0 });
 const sortField = ref('');
 const sortDirection = ref('asc');
+const selectedServiceFilter = ref('');
+const serviceOptions = ref([]);
+const allEntities = ref([]);
+const vendorNames = ref([]);
 
 const getEntityId = (entity) => {
   return entity[props.idField];
 };
 
+const formatDate = (dateValue) => {
+  if (!dateValue) return '';
+  const date = new Date(dateValue);
+  if (isNaN(date.getTime())) return dateValue;
+  return date.toISOString().split('T')[0];
+};
+
 const loadEntities = async () => {
+  // For SERVICE_PARAM, don't load anything until service is selected
+  if (props.entityName === 'SERVICE_PARAM' && !selectedServiceFilter.value) {
+    allEntities.value = [];
+    entities.value = [];
+    filteredEntities.value = [];
+    return;
+  }
+  
   try {
-    const response = await props.loadFunction();
+    let allItems = [];
+    let nextToken = null;
     const listName = `list${props.entityName}S`;
     
+    const response = await props.loadFunction({ limit: 1000 });
+    
     if (response.data && response.data[listName] && response.data[listName].items) {
-      entities.value = response.data[listName].items;
-      filteredEntities.value = response.data[listName].items;
-    } else {
-      entities.value = [];
-      filteredEntities.value = [];
+      allItems = response.data[listName].items;
     }
+    
+    allEntities.value = allItems;
+    entities.value = allItems;
+    filteredEntities.value = allItems;
   } catch (error) {
     console.error(`Error loading ${props.entityName}:`, error);
     errorMessage.value = error.message || `Failed to load ${props.entityName} records`;
     showErrorModal.value = true;
+    allEntities.value = [];
     entities.value = [];
     filteredEntities.value = [];
   }
 };
 
 const editEntity = (entity) => {
-  formData.value = { ...entity };
+  const formattedEntity = { ...entity };
+  // Format date fields for form display
+  Object.keys(formattedEntity).forEach(key => {
+    if (key.includes('DATE') && formattedEntity[key]) {
+      formattedEntity[key] = formatDate(formattedEntity[key]);
+    }
+  });
+  formData.value = formattedEntity;
   showEditModal.value = true;
 };
 
 const openMapping = (entity) => {
   // Emit event to parent to navigate to mapping page
   window.dispatchEvent(new CustomEvent('openMapping', { detail: { productId: entity.ORIGIN_PRODUCT_ID } }));
+};
+
+const openRedirectUrls = (entity) => {
+  // Emit event to parent to navigate to redirect URLs page
+  window.dispatchEvent(new CustomEvent('openRedirectUrls', { detail: { productId: entity.ORIGIN_PRODUCT_ID } }));
 };
 
 const confirmBulkDelete = () => {
@@ -292,9 +411,9 @@ const toggleSelectAll = () => {
 watch(showCreateModal, (newVal) => {
   if (newVal) {
     const today = new Date();
+    const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
-    const year = today.getFullYear();
     formData.value = {
       ...formData.value,
       CREATED_DATE: `${year}-${month}-${day}`
@@ -337,11 +456,13 @@ const submitForm = async () => {
     console.log('Submitting form data:', cleanedFormData);
     
     if (showEditModal.value) {
-      // Set MODIFIED_DATE for updates (if supported)
+      // Set CHANGED_DATE for updates (if supported)
       if (!skipDateFields) {
-        cleanedFormData.MODIFIED_DATE = currentDate;
+        cleanedFormData.CHANGED_DATE = currentDate;
       }
       await props.updateFunction(cleanedFormData);
+      successMessage.value = `${props.entityName} updated successfully!`;
+      showSuccessModal.value = true;
     } else {
       // Set CREATED_DATE for new records (if supported)
       if (!skipDateFields && !cleanedFormData.CREATED_DATE) {
@@ -349,16 +470,34 @@ const submitForm = async () => {
       }
       // Don't add any automatic fields for STEP_SERVICE_MAPPING
       await props.createFunction(cleanedFormData);
+      successMessage.value = `${props.entityName} created successfully!`;
+      showSuccessModal.value = true;
     }
     cancelForm();
     await loadEntities();
   } catch (error) {
     console.error(`Error saving ${props.entityName}:`, error);
+    console.error('Full error object:', JSON.stringify(error, null, 2));
+    
+    // Check if record was actually created despite the error
+    const hasData = error.data && Object.keys(error.data).length > 0;
+    const isTemplateError = error.errors && error.errors.some(e => 
+      e.message && e.message.includes('Template missing required SQL statement')
+    );
+    
+    if (hasData && isTemplateError) {
+      // Record was created successfully despite template error
+      cancelForm();
+      await loadEntities();
+      return;
+    }
+    
     let errorMsg = error.message || `Failed to save ${props.entityName} record`;
     
     // Extract GraphQL error details
     if (error.errors && error.errors.length > 0) {
-      errorMsg = error.errors.map(e => e.message).join(', ');
+      console.error('GraphQL errors:', error.errors);
+      errorMsg = error.errors.map(e => e.message).join('\n');
     }
     
     errorMessage.value = errorMsg;
@@ -442,6 +581,55 @@ const stopResize = () => {
   document.removeEventListener('mouseup', stopResize);
 };
 
+const filterByService = async () => {
+  if (props.entityName !== 'SERVICE_PARAM') return;
+  
+  if (selectedServiceFilter.value) {
+    try {
+      const client = generateClient();
+      
+      let allItems = [];
+      let nextToken = null;
+      
+      do {
+        const variables = {
+          filter: { SERVICE_ID: { eq: parseInt(selectedServiceFilter.value) } },
+          limit: 1000
+        };
+        if (nextToken) {
+          variables.nextToken = nextToken;
+        }
+        
+        const response = await client.graphql({
+          query: listServiceParams,
+          variables
+        });
+        
+        if (response.data?.listSERVICE_PARAMS?.items) {
+          allItems.push(...response.data.listSERVICE_PARAMS.items);
+          nextToken = response.data.listSERVICE_PARAMS.nextToken;
+        } else {
+          nextToken = null;
+        }
+      } while (nextToken);
+      
+      allEntities.value = allItems;
+      entities.value = allItems;
+      filteredEntities.value = allItems;
+    } catch (error) {
+      console.error('Error loading service parameters:', error);
+      entities.value = [];
+      filteredEntities.value = [];
+    }
+  } else {
+    allEntities.value = [];
+    entities.value = [];
+    filteredEntities.value = [];
+  }
+  
+  applyFilters();
+};
+
 // Watch for entityName changes and reload data
 watch(() => props.entityName, async () => {
   filters.value = {};
@@ -465,6 +653,11 @@ watch(() => props.entityName, async () => {
     await loadStepServiceMappingOptions();
   }
   
+  // Load vendor names for ORIGIN_PRODUCT entity
+  if (props.entityName === 'ORIGIN_PRODUCT') {
+    await loadVendorNames();
+  }
+  
   loadEntities();
 });
 
@@ -484,36 +677,66 @@ const handleEscapeKey = (event) => {
 
 const loadServiceOptions = async () => {
   try {
-    const response = await fetch('https://fi5pjed64nf4ran34tusrlvi7u.appsync-api.us-east-2.amazonaws.com/graphql', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': 'da2-qfwm2qhugrbilizrqickmeg5oi'
-      },
-      body: JSON.stringify({
-        query: `
-          query ListServices {
-            listSERVICES {
-              items {
-                SERVICE_ID
-                URI
+    const [servicesResponse, providersResponse] = await Promise.all([
+      fetch('https://fi5pjed64nf4ran34tusrlvi7u.appsync-api.us-east-2.amazonaws.com/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': 'da2-qfwm2qhugrbilizrqickmeg5oi'
+        },
+        body: JSON.stringify({
+          query: `
+            query ListServices {
+              listSERVICES {
+                items {
+                  SERVICE_ID
+                  URI
+                  SERVICE_PROVIDER_ID
+                }
               }
             }
-          }
-        `
+          `
+        })
+      }),
+      fetch('https://fi5pjed64nf4ran34tusrlvi7u.appsync-api.us-east-2.amazonaws.com/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': 'da2-qfwm2qhugrbilizrqickmeg5oi'
+        },
+        body: JSON.stringify({
+          query: `
+            query ListServiceProviders {
+              listSERVICE_PROVIDERS {
+                items {
+                  SERVICE_PROVIDER_ID
+                  SERVICE_PROVIDER_NAME
+                }
+              }
+            }
+          `
+        })
       })
+    ]);
+    
+    const servicesResult = await servicesResponse.json();
+    const providersResult = await providersResponse.json();
+    const services = servicesResult.data.listSERVICES.items;
+    const providers = providersResult.data.listSERVICE_PROVIDERS.items;
+    
+    // Update service options for dropdown filter
+    serviceOptions.value = services.map(service => {
+      const provider = providers.find(p => p.SERVICE_PROVIDER_ID === service.SERVICE_PROVIDER_ID);
+      return {
+        value: service.SERVICE_ID,
+        label: `${service.SERVICE_ID}: ${service.URI} - ${provider?.SERVICE_PROVIDER_NAME || 'Unknown'}`
+      };
     });
     
-    const result = await response.json();
-    const services = result.data.listSERVICES.items;
-    
-    // Update the SERVICE_ID field options
+    // Update the SERVICE_ID field options for forms
     const serviceIdField = props.formFields.find(f => f.name === 'SERVICE_ID');
     if (serviceIdField) {
-      serviceIdField.options = services.map(service => ({
-        value: service.SERVICE_ID,
-        label: `${service.SERVICE_ID} - ${service.URI}`
-      }));
+      serviceIdField.options = serviceOptions.value;
     }
   } catch (error) {
     console.error('Error loading service options:', error);
@@ -654,6 +877,25 @@ const loadStepServiceMappingOptions = async () => {
   }
 };
 
+const loadVendorNames = async () => {
+  try {
+    const response = await props.loadFunction({ limit: 1000 });
+    const listName = `list${props.entityName}S`;
+    
+    if (response.data && response.data[listName] && response.data[listName].items) {
+      const uniqueVendors = [...new Set(
+        response.data[listName].items
+          .map(item => item.VENDOR_NAME)
+          .filter(name => name && name.trim())
+      )].sort();
+      
+      vendorNames.value = uniqueVendors;
+    }
+  } catch (error) {
+    console.error('Error loading vendor names:', error);
+  }
+};
+
 onMounted(async () => {
   if (props.entityName === 'SERVICE_PARAM') {
     await loadServiceOptions();
@@ -663,6 +905,9 @@ onMounted(async () => {
   }
   if (props.entityName === 'STEP_SERVICE_MAPPING') {
     await loadStepServiceMappingOptions();
+  }
+  if (props.entityName === 'ORIGIN_PRODUCT') {
+    await loadVendorNames();
   }
   loadEntities();
   document.addEventListener('keydown', handleEscapeKey);
@@ -715,8 +960,8 @@ table {
 
 table thead {
   position: sticky;
-  top: 50px;
-  z-index: 10;
+  top: 0;
+  z-index: 1000;
 }
 
 th {
@@ -726,6 +971,7 @@ th {
   background-color: #f2f2f2;
   position: sticky;
   top: 0;
+  z-index: 1000;
 }
 
 .filter-row th {
@@ -733,6 +979,7 @@ th {
   padding: 4px;
   position: sticky;
   top: 41px;
+  z-index: 1000;
 }
 
 td {
@@ -859,5 +1106,44 @@ button {
 .sort-indicator {
   margin-left: 5px;
   font-weight: bold;
+}
+
+.service-filter {
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.service-filter label {
+  display: inline-block;
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.service-filter select {
+  padding: 5px;
+  min-width: 300px;
+}
+
+.record-count {
+  margin-left: 15px;
+  font-weight: bold;
+  color: #666;
+}
+
+.action-buttons {
+  padding: 10px 0;
+  background: white;
+  border-bottom: 1px solid #ddd;
+}
+
+.btn-info {
+  background-color: #17a2b8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
 }
 </style>

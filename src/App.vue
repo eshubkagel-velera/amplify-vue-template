@@ -3,7 +3,7 @@
     <header>
       <h1>GraphQL API Manager</h1>
       <nav>
-        <select v-model="currentView" @change="changeView" :disabled="showMappingManager">
+        <select v-model="currentView" @change="changeView" :disabled="showMappingManager || showRedirectUrlManager">
           <option value="import">Import Services</option>
           <option v-for="entity in entities" :key="entity.name" :value="entity.name">
             {{ entity.name }}
@@ -12,14 +12,20 @@
         <button v-if="showMappingManager" @click="closeMappingManager" class="btn-primary" style="margin-left: 10px;">
           Back to {{ currentView }}
         </button>
+        <button v-if="showRedirectUrlManager" @click="closeRedirectUrlManager" class="btn-primary" style="margin-left: 10px;">
+          Back to ORIGIN_PRODUCT
+        </button>
       </nav>
     </header>
     
     <main>
-      <MappingManager v-if="showMappingManager" :productId="selectedProductId" />
+      <MappingManagerStandalone v-if="showMappingManager" :productId="selectedProductId" />
+      <RedirectUrlStandalone v-else-if="showRedirectUrlManager" :productId="selectedProductId" />
+      <RedirectUrlStandalone v-else-if="currentView === 'REDIRECT_URL'" />
+      <MappingManagerStandalone v-else-if="currentView === 'SERVICE_PARAM_MAPPING'" />
       <ServiceImport v-else-if="currentView === 'import'" />
       <EntityManager
-        v-else-if="currentView && currentEntityConfig"
+        v-else-if="currentView && currentEntityConfig && currentView !== 'REDIRECT_URL' && currentView !== 'SERVICE_PARAM_MAPPING'"
         :entityName="currentEntityConfig!.name"
         :fields="currentEntityConfig!.fields"
         :formFields="currentEntityConfig!.formFields"
@@ -37,7 +43,8 @@
 import { ref, computed, onMounted } from 'vue';
 import EntityManager from './components/EntityManager.vue';
 import ServiceImport from './components/ServiceImport.vue';
-import MappingManager from './components/MappingManager.vue';
+import RedirectUrlStandalone from './components/RedirectUrlStandalone.vue';
+import MappingManagerStandalone from './components/MappingManagerStandalone.vue';
 import { generateClient } from 'aws-amplify/api';
 import { Amplify } from 'aws-amplify';
 import * as queries from './graphql/queries';
@@ -274,6 +281,7 @@ const listServiceParamMappingsView = async () => {
 
 const currentView = ref('import');
 const showMappingManager = ref(false);
+const showRedirectUrlManager = ref(false);
 const selectedProductId = ref(null);
 
 const entities = [
@@ -454,12 +462,33 @@ const handleOpenMapping = (event) => {
   showMappingManager.value = true;
 };
 
+const handleOpenRedirectUrls = (event) => {
+  selectedProductId.value = event.detail.productId;
+  showRedirectUrlManager.value = true;
+};
+
+const handleGoBackToProducts = () => {
+  showRedirectUrlManager.value = false;
+  selectedProductId.value = null;
+};
+
+const closeRedirectUrlManager = () => {
+  showRedirectUrlManager.value = false;
+  selectedProductId.value = null;
+};
+
 onMounted(() => {
   // Default to import view
   currentView.value = 'import';
   
   // Listen for mapping events
   window.addEventListener('openMapping', handleOpenMapping);
+  
+  // Listen for redirect URLs events
+  window.addEventListener('openRedirectUrls', handleOpenRedirectUrls);
+  
+  // Listen for go back events
+  window.addEventListener('goBackToProducts', handleGoBackToProducts);
 });
 </script>
 

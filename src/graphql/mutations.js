@@ -1,7 +1,6 @@
 export const createOriginProduct = `
   mutation CreateOriginProduct($input: CreateORIGIN_PRODUCTInput!) {
     createORIGIN_PRODUCT(input: $input) {
-      ORIGIN_PRODUCT_ID
       VENDOR_NAME
       PSCU_CLIENT_ID
       PRODUCT_ID
