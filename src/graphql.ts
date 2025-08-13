@@ -228,44 +228,51 @@ export const deleteOriginProduct = async (input: any) => {
 
 // Batch operations
 export const createServiceParamMappingBatch = async (inputs: any[]) => {
-  return client.graphql({
-    query: `mutation CreateSERVICE_PARAM_MAPPINGBatch($inputs: [CreateSERVICE_PARAM_MAPPINGInput!]!) {
-      createSERVICE_PARAM_MAPPINGBatch(inputs: $inputs) {
-        items {
+  const results = [];
+  
+  for (const input of inputs) {
+    const result = await client.graphql({
+      query: `mutation CreateSERVICE_PARAM_MAPPING($input: CreateSERVICE_PARAM_MAPPINGInput!) {
+        createSERVICE_PARAM_MAPPING(input: $input) {
           SERVICE_PARAM_MAPPING_ID
-          SERVICE_PARAM_ID
-          STEP_TYPE_ID
           ORIGIN_PRODUCT_ID
-          RESOURCE_NAME
-          MAPPING_TYPE
-          MAPPING_VALUE
+          SOURCE_SERVICE_PARAM_ID
+          TARGET_SERVICE_PARAM_ID
+          CREATED_BY_USER_ID
           CREATED_DATE
         }
-        errors
-      }
-    }`,
-    variables: { inputs }
-  });
+      }`,
+      variables: { input }
+    });
+    results.push(result.data.createSERVICE_PARAM_MAPPING);
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+  
+  return { data: { createSERVICE_PARAM_MAPPINGBatch: { items: results } } };
 };
 
 export const createServiceExprMappingBatch = async (inputs: any[]) => {
-  return client.graphql({
-    query: `mutation CreateSERVICE_EXPR_MAPPINGBatch($inputs: [CreateSERVICE_EXPR_MAPPINGInput!]!) {
-      createSERVICE_EXPR_MAPPINGBatch(inputs: $inputs) {
-        items {
+  const results = [];
+  
+  for (const input of inputs) {
+    const result = await client.graphql({
+      query: `mutation CreateSERVICE_EXPR_MAPPING($input: CreateSERVICE_EXPR_MAPPINGInput!) {
+        createSERVICE_EXPR_MAPPING(input: $input) {
           SERVICE_EXPR_MAPPING_ID
-          SERVICE_PARAM_ID
-          STEP_TYPE_ID
-          ORIGIN_PRODUCT_ID
-          RESOURCE_NAME
-          EXPRESSION_TEXT
+          SERVICE_PARAM_MAPPING_ID
+          SOURCE_EXPR
+          TARGET_EXPR
+          CREATED_BY_USER_ID
           CREATED_DATE
         }
-        errors
-      }
-    }`,
-    variables: { inputs }
-  });
+      }`,
+      variables: { input }
+    });
+    results.push(result.data.createSERVICE_EXPR_MAPPING);
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+  
+  return { data: { createSERVICE_EXPR_MAPPINGBatch: { items: results } } };
 };
 
 export const createServiceBatch = async (inputs: any[]) => {

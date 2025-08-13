@@ -1,17 +1,34 @@
 <template>
   <div class="mapping-manager">
-    <h2>Service Mapping Manager</h2>
+    <div class="header-row">
+      <h2>Service Mapping Manager</h2>
+      <ThemeToggle />
+    </div>
     
-    <!-- Product Info and Form Controls -->
-    <div class="top-section">
+    <!-- Product Information Box -->
+    <div class="bordered-section">
+      <div v-if="!props.productId">
+        <label for="productFilter">Select Product:</label>
+        <select id="productFilter" v-model="selectedProductId" @change="onProductChange">
+          <option value="">-- Select a Product --</option>
+          <option v-for="product in products" :key="product.ORIGIN_PRODUCT_ID" :value="product.ORIGIN_PRODUCT_ID">
+            {{ product.ORIGIN_PRODUCT_ID }}: {{ product.VENDOR_NAME }} - {{ product.PRODUCT_DESC }}
+          </option>
+        </select>
+      </div>
+      
       <div v-if="selectedProduct" class="product-info">
         <h3>Product Information</h3>
         <p><strong>Product ID:</strong> {{ selectedProduct.PRODUCT_ID }}</p>
         <p><strong>PSCU Client ID:</strong> {{ selectedProduct.PSCU_CLIENT_ID }}</p>
         <p><strong>Partner Code:</strong> {{ selectedProduct.PARTNER_CODE }}</p>
         <p><strong>Description:</strong> {{ selectedProduct.PRODUCT_DESC }}</p>
+        <p><strong>Total Mappings:</strong> {{ totalMappingCount }}</p>
       </div>
-
+    </div>
+    
+    <!-- Filter Dropdowns Box -->
+    <div v-if="selectedProductId || props.productId" class="bordered-section">
       <div class="form-controls">
         <div class="form-group">
           <label>Resource Name:</label>
@@ -34,16 +51,6 @@
         </div>
 
         <div class="form-group">
-          <label>Source Service:</label>
-          <select v-model="selectedSourceService" @change="onSourceServiceChange" :disabled="!selectedStepType">
-            <option value="">-- Select Source Service --</option>
-            <option v-for="service in allServices" :key="service.SERVICE_ID" :value="service">
-              {{ service.SERVICE_ID }}: {{ service.URI }}
-            </option>
-          </select>
-        </div>
-
-        <div class="form-group">
           <label>Target Service:</label>
           <select v-model="selectedTargetService" @change="onTargetServiceChange" :disabled="!selectedStepType">
             <option value="">-- Select Target Service --</option>
@@ -52,144 +59,170 @@
             </option>
           </select>
         </div>
+
+        <div class="form-group">
+          <label>Source Service:</label>
+          <select v-model="selectedSourceService" @change="onSourceServiceChange" :disabled="!selectedStepType">
+            <option value="">-- Select Source Service --</option>
+            <option v-for="service in allServices" :key="service.SERVICE_ID" :value="service">
+              {{ service.SERVICE_ID }}: {{ service.URI }}
+            </option>
+          </select>
+        </div>
       </div>
     </div>
 
-    <!-- Action Buttons -->
-    <div v-if="showActionButtons" class="action-buttons">
-      <button v-if="!mappingExists" @click="createMapping" :disabled="saving" class="btn-success">
-        {{ saving ? 'Creating...' : 'Create Mapping' }}
-      </button>
-      <button v-if="mappingExists" @click="updateMapping" :disabled="saving" class="btn-primary">
-        {{ saving ? 'Updating...' : 'Update Mapping' }}
-      </button>
-      <button v-if="mappingExists" @click="confirmDeleteMapping" class="btn-danger">
-        Delete Mapping
-      </button>
-      <button @click="addCustomMapping" class="btn-success">Add Custom Mapping</button>
+    <!-- Action Buttons and Target Parameters Row -->
+    <div v-if="showActionButtons || selectedTargetService" class="buttons-params-row">
+      <!-- Action Buttons -->
+      <div v-if="showActionButtons" class="action-buttons">
+        <button v-if="!mappingExists" @click="createMapping" :disabled="saving" class="btn-success">
+          {{ saving ? 'Saving...' : 'Save Mapping' }}
+        </button>
+        <button v-if="mappingExists" @click="updateMapping" :disabled="saving" class="btn-primary">
+          {{ saving ? 'Updating...' : 'Update Mapping' }}
+        </button>
+        <button v-if="mappingExists" @click="confirmDeleteMapping" class="btn-danger">
+          Delete Mapping
+        </button>
+        <button @click="addCustomMapping" class="btn-success">Add Custom Mapping</button>
+      </div>
+
+      <!-- Target Parameters Available -->
+      <div v-if="selectedTargetService" class="target-params-info">
+        <h3>Target Parameters Available: {{ mappings.length }}</h3>
+      </div>
     </div>
 
     <!-- Mapping Table -->
     <div v-if="showMappingTable" class="mapping-table-section">
-      <table class="mapping-table">
-        <thead>
-          <tr>
-            <th class="w-12">
-              <input type="checkbox" @change="toggleSelectAll" :checked="allSelected" />
-            </th>
-            <th class="resizable sortable" data-field="TARGET_PARAM_NAME" @click="sortBy('TARGET_PARAM_NAME')">
-              Target Param Name
-              <span v-if="sortField === 'TARGET_PARAM_NAME'" class="sort-indicator">
-                {{ sortDirection === 'asc' ? '↑' : '↓' }}
-              </span>
-              <div class="resize-handle" @mousedown="startResize($event, 'TARGET_PARAM_NAME')"></div>
-            </th>
-            <th class="resizable" data-field="TARGET_EXPR">
-              Target Expr
-              <div class="resize-handle" @mousedown="startResize($event, 'TARGET_EXPR')"></div>
-            </th>
-            <th class="resizable" data-field="SOURCE_PARAM_NAME">
-              Source Param Name
-              <div class="resize-handle" @mousedown="startResize($event, 'SOURCE_PARAM_NAME')"></div>
-            </th>
-            <th class="resizable" data-field="SOURCE_EXPR">
-              Source Expr
-              <div class="resize-handle" @mousedown="startResize($event, 'SOURCE_EXPR')"></div>
-            </th>
-            <th class="resizable nbr-column" data-field="SYSTEM_NBR">
-              System NBR
-              <div class="resize-handle" @mousedown="startResize($event, 'SYSTEM_NBR')"></div>
-            </th>
-            <th class="resizable nbr-column" data-field="PRIN_NBR">
-              Prin NBR
-              <div class="resize-handle" @mousedown="startResize($event, 'PRIN_NBR')"></div>
-            </th>
-            <th class="resizable nbr-column" data-field="AGENT_NBR">
-              Agent NBR
-              <div class="resize-handle" @mousedown="startResize($event, 'AGENT_NBR')"></div>
-            </th>
-            <th>Actions</th>
-          </tr>
-          <tr class="filter-row">
-            <th></th>
-            <th>
-              <input v-model="filters.TARGET_PARAM_NAME" @input="applyFilters" placeholder="Filter target param" class="filter-input" />
-            </th>
-            <th>
-              <input v-model="filters.TARGET_EXPR" @input="applyFilters" placeholder="Filter target expr" class="filter-input" />
-            </th>
-            <th>
-              <input v-model="filters.SOURCE_PARAM_NAME" @input="applyFilters" placeholder="Filter source param" class="filter-input" />
-            </th>
-            <th>
-              <input v-model="filters.SOURCE_EXPR" @input="applyFilters" placeholder="Filter source expr" class="filter-input" />
-            </th>
-            <th></th>
-            <th></th>
-            <th></th>
-            <th>
-              <button @click="clearFilters" class="clear-filters-btn">Clear</button>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(mapping, index) in filteredMappings" :key="index">
-            <td class="text-center">
-              <input type="checkbox" v-model="mapping.selected" />
-            </td>
-            <td>
-              <input v-if="mapping.isCustom" v-model="mapping.TARGET_PARAM_NAME" class="param-input" placeholder="Enter parameter name">
-              <span v-else>{{ mapping.TARGET_PARAM_NAME }}</span>
-            </td>
-            <td>
-              <input v-model="mapping.TARGET_EXPR" list="target-expr-options" class="expr-input" placeholder="Enter or select">
-              <datalist id="target-expr-options">
-                <option value="PASSTHRU">PASSTHRU</option>
-                <option value="TRUE">TRUE</option>
-                <option value="FALSE">FALSE</option>
-              </datalist>
-            </td>
-            <td>
-              <input v-model="mapping.SOURCE_PARAM_NAME" list="source-param-options" class="param-input" placeholder="Enter or select source param">
-              <datalist id="source-param-options">
-                <option v-for="param in sourceParams" :key="param.SERVICE_PARAM_ID" :value="param.PARAM_NAME">
-                  {{ param.SERVICE_PARAM_ID }}: {{ param.PARAM_NAME }}
-                </option>
-              </datalist>
-            </td>
-            <td>
-              <input v-model="mapping.SOURCE_EXPR" list="source-expr-options" class="expr-input" placeholder="Enter or select">
-              <datalist id="source-expr-options">
-                <option value="ALL">ALL</option>
-                <option value="NOT_AVAILABLE">NOT_AVAILABLE</option>
-              </datalist>
-            </td>
-            <td>
-              <input v-model="mapping.SYSTEM_NBR" list="system-nbr-options" class="nbr-input" placeholder="Enter or select">
-              <datalist id="system-nbr-options">
-                <option value="ALL">ALL</option>
-              </datalist>
-            </td>
-            <td>
-              <input v-model="mapping.PRIN_NBR" list="prin-nbr-options" class="nbr-input" placeholder="Enter or select">
-              <datalist id="prin-nbr-options">
-                <option value="ALL">ALL</option>
-              </datalist>
-            </td>
-            <td>
-              <input v-model="mapping.AGENT_NBR" list="agent-nbr-options" class="nbr-input" placeholder="Enter or select">
-              <datalist id="agent-nbr-options">
-                <option value="ALL">ALL</option>
-              </datalist>
-            </td>
-            <td>
-              <button v-if="mapping.isCustom" @click="removeCustomMapping(index)" class="btn-danger-small">
-                Delete
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="table-container">
+        <table class="mapping-table">
+          <thead>
+            <tr>
+              <th class="w-12">
+                <input type="checkbox" @change="toggleSelectAll" :checked="allSelected" />
+              </th>
+              <th class="resizable sortable" data-field="TARGET_PARAM_NAME" @click="sortBy('TARGET_PARAM_NAME')">
+                Target Param Name
+                <span v-if="sortField === 'TARGET_PARAM_NAME'" class="sort-indicator">
+                  {{ sortDirection === 'asc' ? '↑' : '↓' }}
+                </span>
+                <div class="resize-handle" @mousedown="startResize($event, 'TARGET_PARAM_NAME')"></div>
+              </th>
+              <th class="resizable" data-field="TARGET_EXPR">
+                Target Expr
+                <div class="resize-handle" @mousedown="startResize($event, 'TARGET_EXPR')"></div>
+              </th>
+              <th class="resizable" data-field="SOURCE_PARAM_NAME">
+                Source Param Name
+                <div class="resize-handle" @mousedown="startResize($event, 'SOURCE_PARAM_NAME')"></div>
+              </th>
+              <th class="resizable" data-field="SOURCE_EXPR">
+                Source Expr
+                <div class="resize-handle" @mousedown="startResize($event, 'SOURCE_EXPR')"></div>
+              </th>
+              <th class="resizable nbr-column" data-field="SYSTEM_NBR">
+                System NBR
+                <div class="resize-handle" @mousedown="startResize($event, 'SYSTEM_NBR')"></div>
+              </th>
+              <th class="resizable nbr-column" data-field="PRIN_NBR">
+                Prin NBR
+                <div class="resize-handle" @mousedown="startResize($event, 'PRIN_NBR')"></div>
+              </th>
+              <th class="resizable nbr-column" data-field="AGENT_NBR">
+                Agent NBR
+                <div class="resize-handle" @mousedown="startResize($event, 'AGENT_NBR')"></div>
+              </th>
+              <th>Actions</th>
+            </tr>
+            <tr class="filter-row">
+              <th></th>
+              <th>
+                <input v-model="filters.TARGET_PARAM_NAME" @input="applyFilters" placeholder="Filter target param" class="filter-input" />
+              </th>
+              <th>
+                <input v-model="filters.TARGET_EXPR" @input="applyFilters" placeholder="Filter target expr" class="filter-input" />
+              </th>
+              <th>
+                <input v-model="filters.SOURCE_PARAM_NAME" @input="applyFilters" placeholder="Filter source param" class="filter-input" />
+              </th>
+              <th>
+                <input v-model="filters.SOURCE_EXPR" @input="applyFilters" placeholder="Filter source expr" class="filter-input" />
+              </th>
+              <th>
+                <input v-model="filters.SYSTEM_NBR" @input="applyFilters" placeholder="Filter system" class="filter-input" />
+              </th>
+              <th>
+                <input v-model="filters.PRIN_NBR" @input="applyFilters" placeholder="Filter prin" class="filter-input" />
+              </th>
+              <th>
+                <input v-model="filters.AGENT_NBR" @input="applyFilters" placeholder="Filter agent" class="filter-input" />
+              </th>
+              <th>
+                <button @click="clearFilters" class="clear-filters-btn">Clear</button>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(mapping, index) in filteredMappings" :key="index">
+              <td class="text-center">
+                <input type="checkbox" v-model="mapping.selected" />
+              </td>
+              <td>
+                <input v-if="mapping.isCustom" v-model="mapping.TARGET_PARAM_NAME" class="full-width-input" placeholder="Enter parameter name">
+                <span v-else class="read-only-text">{{ mapping.TARGET_PARAM_NAME }}</span>
+              </td>
+              <td>
+                <input v-model="mapping.TARGET_EXPR" list="target-expr-options" class="full-width-input" placeholder="Enter or select">
+                <datalist id="target-expr-options">
+                  <option value="PASSTHRU">PASSTHRU</option>
+                  <option value="TRUE">TRUE</option>
+                  <option value="FALSE">FALSE</option>
+                </datalist>
+              </td>
+              <td>
+                <input v-model="mapping.SOURCE_PARAM_NAME" list="source-param-options" class="full-width-input" placeholder="Enter or select source param">
+                <datalist id="source-param-options">
+                  <option v-for="param in sourceParams" :key="param.SERVICE_PARAM_ID" :value="param.PARAM_NAME">
+                    {{ param.SERVICE_PARAM_ID }}: {{ param.PARAM_NAME }}
+                  </option>
+                </datalist>
+              </td>
+              <td>
+                <input v-model="mapping.SOURCE_EXPR" list="source-expr-options" class="full-width-input" placeholder="Enter or select">
+                <datalist id="source-expr-options">
+                  <option value="ALL">ALL</option>
+                  <option value="NOT_AVAILABLE">NOT_AVAILABLE</option>
+                </datalist>
+              </td>
+              <td>
+                <input v-model="mapping.SYSTEM_NBR" list="system-nbr-options" class="full-width-input" placeholder="Enter or select">
+                <datalist id="system-nbr-options">
+                  <option value="ALL">ALL</option>
+                </datalist>
+              </td>
+              <td>
+                <input v-model="mapping.PRIN_NBR" list="prin-nbr-options" class="full-width-input" placeholder="Enter or select">
+                <datalist id="prin-nbr-options">
+                  <option value="ALL">ALL</option>
+                </datalist>
+              </td>
+              <td>
+                <input v-model="mapping.AGENT_NBR" list="agent-nbr-options" class="full-width-input" placeholder="Enter or select">
+                <datalist id="agent-nbr-options">
+                  <option value="ALL">ALL</option>
+                </datalist>
+              </td>
+              <td>
+                <button v-if="mapping.isCustom" @click="removeCustomMapping(index)" class="btn-danger-small">
+                  Delete
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Delete Confirmation Modal -->
@@ -212,7 +245,7 @@
         <h3>Error</h3>
         <p>{{ errorMessage }}</p>
         <div class="form-actions">
-          <button @click="showErrorModal = false" class="btn-primary">OK</button>
+          <button @click="clearError" class="btn-primary">OK</button>
         </div>
       </div>
     </div>
@@ -243,22 +276,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, defineProps } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { generateClient } from 'aws-amplify/api';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
 import { createServiceParamMappingBatch, createServiceExprMappingBatch } from '../graphql.ts';
+import ThemeToggle from './ThemeToggle.vue';
+import { useErrorHandler } from '../composables/useErrorHandler';
+import type { OriginProduct, Service, ServiceParam } from '../types';
 
 const props = defineProps({
   productId: {
     type: Number,
-    required: true
+    required: false,
+    default: null
   }
 });
 
 const client = generateClient();
 
 // Reactive data
+const products = ref([]);
+const selectedProductId = ref('');
 const selectedProduct = ref(null);
 const resourceNames = ref([]);
 const stepTypes = ref([]);
@@ -267,6 +306,7 @@ const targetServices = ref([]);
 const sourceParams = ref([]);
 const mappings = ref([]);
 const filteredMappings = ref([]);
+const totalMappingCount = ref(0);
 
 const selectedResourceName = ref('');
 const selectedStepType = ref(null);
@@ -277,10 +317,9 @@ const mappingExists = ref(false);
 const saving = ref(false);
 const deleting = ref(false);
 const showDeleteModal = ref(false);
-const showErrorModal = ref(false);
+const { error: errorMessage, showErrorModal, handleError, clearError } = useErrorHandler();
 const showSuccessModal = ref(false);
 const showProgressModal = ref(false);
-const errorMessage = ref('');
 const successMessage = ref('');
 const progressMessage = ref('');
 const currentProgress = ref(0);
@@ -292,7 +331,10 @@ const filters = ref({
   TARGET_PARAM_NAME: '',
   TARGET_EXPR: '',
   SOURCE_PARAM_NAME: '',
-  SOURCE_EXPR: ''
+  SOURCE_EXPR: '',
+  SYSTEM_NBR: '',
+  PRIN_NBR: '',
+  AGENT_NBR: ''
 });
 const isResizing = ref(false);
 const resizeData = ref({ field: '', startX: 0, startWidth: 0 });
@@ -319,13 +361,43 @@ const progressPercentage = computed(() =>
 );
 
 // Methods
-const loadProductInfo = async () => {
+const loadProducts = async () => {
   try {
     const result = await client.graphql({ query: queries.listOriginProducts });
-    const product = result.data.listOrigin_products.items.find(p => p.ORIGIN_PRODUCT_ID === props.productId);
-    selectedProduct.value = product;
+    products.value = result.data.listOrigin_products.items;
   } catch (error) {
-    showError('Failed to load product information');
+    showError('Failed to load products');
+  }
+};
+
+const onProductChange = async () => {
+  if (selectedProductId.value) {
+    selectedProduct.value = products.value.find(p => p.ORIGIN_PRODUCT_ID === parseInt(selectedProductId.value));
+    await loadMappingCount();
+  } else {
+    selectedProduct.value = null;
+    totalMappingCount.value = 0;
+  }
+  // Reset form controls
+  selectedResourceName.value = '';
+  selectedStepType.value = null;
+  selectedSourceService.value = null;
+  selectedTargetService.value = null;
+  mappings.value = [];
+};
+
+const loadMappingCount = async () => {
+  try {
+    const productId = props.productId || parseInt(selectedProductId.value);
+    if (!productId) return;
+    
+    const result = await client.graphql({ query: queries.listServiceParamMappings });
+    const productMappings = result.data.listSERVICE_PARAM_MAPPINGS.items.filter(
+      mapping => mapping.ORIGIN_PRODUCT_ID === productId
+    );
+    totalMappingCount.value = productMappings.length;
+  } catch (error) {
+    console.error('Failed to load mapping count:', error);
   }
 };
 
@@ -412,10 +484,32 @@ const onTargetServiceChange = async () => {
 
 const loadSourceParams = async () => {
   try {
-    const result = await client.graphql({ query: queries.listServiceParams });
-    sourceParams.value = result.data.listSERVICE_PARAMS.items.filter(
-      param => param.SERVICE_ID === selectedSourceService.value.SERVICE_ID
-    );
+    let allParams = [];
+    let nextToken = null;
+    
+    do {
+      const variables = {
+        filter: { SERVICE_ID: { eq: selectedSourceService.value.SERVICE_ID } },
+        limit: 1000
+      };
+      if (nextToken) {
+        variables.nextToken = nextToken;
+      }
+      
+      const result = await client.graphql({ 
+        query: queries.listServiceParams,
+        variables
+      });
+      
+      if (result.data?.listSERVICE_PARAMS?.items) {
+        allParams.push(...result.data.listSERVICE_PARAMS.items);
+        nextToken = result.data.listSERVICE_PARAMS.nextToken;
+      } else {
+        nextToken = null;
+      }
+    } while (nextToken);
+    
+    sourceParams.value = allParams;
   } catch (error) {
     showError('Failed to load source parameters');
   }
@@ -451,9 +545,10 @@ const loadTargetParams = async () => {
 
 const checkMappingExists = async () => {
   try {
+    const productId = props.productId || parseInt(selectedProductId.value);
     const result = await client.graphql({ query: queries.listServiceParamMappings });
     const existingMappings = result.data.listSERVICE_PARAM_MAPPINGS.items.filter(mapping => 
-      mapping.ORIGIN_PRODUCT_ID === props.productId &&
+      mapping.ORIGIN_PRODUCT_ID === productId &&
       sourceParams.value.some(sp => sp.SERVICE_PARAM_ID === mapping.SOURCE_SERVICE_PARAM_ID) &&
       mappings.value.some(tm => tm.TARGET_SERVICE_PARAM_ID === mapping.TARGET_SERVICE_PARAM_ID)
     );
@@ -478,6 +573,7 @@ const loadExistingMappings = async (existingMappings) => {
       if (existing) {
         const expr = expressions.find(e => e.SERVICE_PARAM_MAPPING_ID === existing.SERVICE_PARAM_MAPPING_ID);
         const sourceParam = sourceParams.value.find(sp => sp.SERVICE_PARAM_ID === existing.SOURCE_SERVICE_PARAM_ID);
+        
         mapping.SOURCE_SERVICE_PARAM_ID = existing.SOURCE_SERVICE_PARAM_ID;
         mapping.SOURCE_PARAM_NAME = sourceParam?.PARAM_NAME || '';
         mapping.SYSTEM_NBR = existing.SYSTEM_NBR || 'ALL';
@@ -492,6 +588,7 @@ const loadExistingMappings = async (existingMappings) => {
       }
     });
   } catch (error) {
+    console.error('Error loading existing mappings:', error);
     showError('Failed to load existing mapping details');
   }
 };
@@ -571,7 +668,7 @@ const createMapping = async () => {
       }
       
       paramMappingInputs.push({
-        ORIGIN_PRODUCT_ID: props.productId,
+        ORIGIN_PRODUCT_ID: props.productId || parseInt(selectedProductId.value),
         SOURCE_SERVICE_PARAM_ID: sourceServiceParamId,
         TARGET_SERVICE_PARAM_ID: targetServiceParamId,
         SYSTEM_NBR: mapping.SYSTEM_NBR,
@@ -653,13 +750,9 @@ const updateMapping = async () => {
         // Update existing
         const paramMappingInput = {
           SERVICE_PARAM_MAPPING_ID: mapping.SERVICE_PARAM_MAPPING_ID,
-          ORIGIN_PRODUCT_ID: props.productId,
-          SOURCE_SERVICE_PARAM_ID: mapping.SOURCE_SERVICE_PARAM_ID,
-          TARGET_SERVICE_PARAM_ID: mapping.TARGET_SERVICE_PARAM_ID,
           SYSTEM_NBR: mapping.SYSTEM_NBR,
           PRIN_NBR: mapping.PRIN_NBR,
-          AGENT_NBR: mapping.AGENT_NBR,
-          MODIFIED_DATE: new Date().toISOString().split('T')[0]
+          AGENT_NBR: mapping.AGENT_NBR
         };
         
         await client.graphql({
@@ -672,10 +765,8 @@ const updateMapping = async () => {
           if (mapping.SERVICE_EXPR_MAPPING_ID) {
             const exprMappingInput = {
               SERVICE_EXPR_MAPPING_ID: mapping.SERVICE_EXPR_MAPPING_ID,
-              SERVICE_PARAM_MAPPING_ID: mapping.SERVICE_PARAM_MAPPING_ID,
               SOURCE_EXPR: mapping.SOURCE_EXPR,
-              TARGET_EXPR: mapping.TARGET_EXPR,
-              MODIFIED_DATE: new Date().toISOString().split('T')[0]
+              TARGET_EXPR: mapping.TARGET_EXPR
             };
             
             await client.graphql({
@@ -743,7 +834,7 @@ const updateMapping = async () => {
         }
         
         const paramMappingInput = {
-          ORIGIN_PRODUCT_ID: props.productId,
+          ORIGIN_PRODUCT_ID: props.productId || parseInt(selectedProductId.value),
           SOURCE_SERVICE_PARAM_ID: sourceServiceParamId,
           TARGET_SERVICE_PARAM_ID: targetServiceParamId,
           SYSTEM_NBR: mapping.SYSTEM_NBR,
@@ -794,9 +885,10 @@ const confirmDeleteMapping = () => {
 const deleteMapping = async () => {
   deleting.value = true;
   try {
+    const productId = props.productId || parseInt(selectedProductId.value);
     const result = await client.graphql({ query: queries.listServiceParamMappings });
     const mappingsToDelete = result.data.listSERVICE_PARAM_MAPPINGS.items.filter(mapping => 
-      mapping.ORIGIN_PRODUCT_ID === props.productId &&
+      mapping.ORIGIN_PRODUCT_ID === productId &&
       sourceParams.value.some(sp => sp.SERVICE_PARAM_ID === mapping.SOURCE_SERVICE_PARAM_ID) &&
       mappings.value.some(tm => tm.TARGET_SERVICE_PARAM_ID === mapping.TARGET_SERVICE_PARAM_ID)
     );
@@ -852,7 +944,10 @@ const applyFilters = () => {
     return (!filters.value.TARGET_PARAM_NAME || mapping.TARGET_PARAM_NAME.toLowerCase().includes(filters.value.TARGET_PARAM_NAME.toLowerCase())) &&
            (!filters.value.TARGET_EXPR || mapping.TARGET_EXPR.toLowerCase().includes(filters.value.TARGET_EXPR.toLowerCase())) &&
            (!filters.value.SOURCE_PARAM_NAME || mapping.SOURCE_PARAM_NAME.toLowerCase().includes(filters.value.SOURCE_PARAM_NAME.toLowerCase())) &&
-           (!filters.value.SOURCE_EXPR || mapping.SOURCE_EXPR.toLowerCase().includes(filters.value.SOURCE_EXPR.toLowerCase()));
+           (!filters.value.SOURCE_EXPR || mapping.SOURCE_EXPR.toLowerCase().includes(filters.value.SOURCE_EXPR.toLowerCase())) &&
+           (!filters.value.SYSTEM_NBR || mapping.SYSTEM_NBR.toLowerCase().includes(filters.value.SYSTEM_NBR.toLowerCase())) &&
+           (!filters.value.PRIN_NBR || mapping.PRIN_NBR.toLowerCase().includes(filters.value.PRIN_NBR.toLowerCase())) &&
+           (!filters.value.AGENT_NBR || mapping.AGENT_NBR.toLowerCase().includes(filters.value.AGENT_NBR.toLowerCase()));
   });
   
   if (sortField.value) {
@@ -872,7 +967,10 @@ const clearFilters = () => {
     TARGET_PARAM_NAME: '',
     TARGET_EXPR: '',
     SOURCE_PARAM_NAME: '',
-    SOURCE_EXPR: ''
+    SOURCE_EXPR: '',
+    SYSTEM_NBR: '',
+    PRIN_NBR: '',
+    AGENT_NBR: ''
   };
   applyFilters();
 };
@@ -887,10 +985,7 @@ const sortBy = (field) => {
   applyFilters();
 };
 
-const showError = (message) => {
-  errorMessage.value = message;
-  showErrorModal.value = true;
-};
+const showError = (message: string) => handleError({ message }, 'mapping operation');
 
 const startResize = (event, field) => {
   isResizing.value = true;
@@ -907,7 +1002,8 @@ const startResize = (event, field) => {
 const doResize = (event) => {
   if (!isResizing.value) return;
   const diff = event.clientX - resizeData.value.startX;
-  const newWidth = Math.max(50, resizeData.value.startWidth + diff);
+  const minWidth = resizeData.value.field === 'TARGET_PARAM_NAME' ? 80 : 50;
+  const newWidth = Math.max(minWidth, resizeData.value.startWidth + diff);
   const th = document.querySelector(`th[data-field="${resizeData.value.field}"]`);
   if (th) {
     th.style.width = newWidth + 'px';
@@ -922,11 +1018,17 @@ const stopResize = () => {
 
 onMounted(async () => {
   await Promise.all([
-    loadProductInfo(),
+    loadProducts(),
     loadResourceNames(),
     loadStepTypes(),
     loadAllServices()
   ]);
+  
+  // If productId prop is provided, set up product info
+  if (props.productId) {
+    selectedProductId.value = props.productId.toString();
+    await onProductChange();
+  }
 });
 </script>
 
@@ -936,43 +1038,58 @@ onMounted(async () => {
   height: 100%;
   padding: 20px;
   overflow: auto;
+  background-color: var(--bg-color);
+  color: var(--text-color);
 }
 
-.top-section {
-  display: block;
+.bordered-section {
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 20px;
+  width: fit-content;
+  background-color: var(--bg-color);
+}
+
+.bordered-section label {
+  display: inline-block;
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.bordered-section select {
+  padding: 8px;
+  min-width: 400px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+}
+
+.product-info {
+  margin-top: 15px;
+}
+
+.buttons-params-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
   margin-bottom: 20px;
 }
 
-.product-info {
-  display: inline-block;
-  vertical-align: top;
-}
-
-.form-controls {
-  display: inline-block;
-  vertical-align: top;
-  margin-left: 20px;
-}
-
-.product-info {
-  background: #f8f9fa;
-  padding: 15px;
-  border-radius: 5px;
-  flex: 1;
-  min-width: 300px;
+.target-params-info {
+  width: fit-content;
 }
 
 .form-controls {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 15px;
-  width: 250px;
+  flex-wrap: wrap;
 }
 
-@media (max-width: 768px) {
-  .top-section {
-    flex-direction: column;
-  }
+.form-controls .form-group {
+  min-width: 200px;
 }
 
 .form-group {
@@ -987,12 +1104,11 @@ onMounted(async () => {
 
 .form-group select {
   padding: 8px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
-}
-
-.action-buttons {
-  margin-bottom: 20px;
+  min-width: 200px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
 }
 
 .action-buttons button {
@@ -1000,31 +1116,49 @@ onMounted(async () => {
 }
 
 .mapping-table-section {
+  margin-bottom: 20px;
+}
+
+.table-container {
+  max-height: 600px;
   overflow: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--bg-color);
 }
 
 .mapping-table {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 20px;
+  table-layout: fixed;
 }
 
 .mapping-table th,
 .mapping-table td {
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   padding: 8px;
   text-align: left;
+  background-color: var(--bg-color);
+  color: var(--text-color);
 }
 
 .mapping-table th {
-  background-color: #f2f2f2;
+  background-color: var(--table-header-bg);
   position: sticky;
   top: 0;
+  z-index: 10;
+  height: 45px;
+  vertical-align: middle;
 }
 
 .filter-row th {
-  background-color: #e9ecef;
+  background-color: var(--table-filter-bg);
   padding: 4px;
+  position: sticky;
+  top: 45px;
+  z-index: 10;
+  height: 35px;
 }
 
 .filter-input {
@@ -1045,14 +1179,23 @@ onMounted(async () => {
   cursor: pointer;
 }
 
-.expr-input,
-.param-select,
-.param-input,
-.nbr-input {
+.full-width-input {
   width: 100%;
   padding: 4px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   border-radius: 3px;
+  box-sizing: border-box;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+}
+
+.read-only-text {
+  display: block;
+  width: 100%;
+  padding: 4px;
+  word-wrap: break-word;
+  white-space: normal;
+  line-height: 1.4;
 }
 
 .sortable {
@@ -1061,7 +1204,7 @@ onMounted(async () => {
 }
 
 .sortable:hover {
-  background-color: #e9ecef;
+  background-color: var(--table-filter-bg);
 }
 
 .sort-indicator {
@@ -1070,7 +1213,7 @@ onMounted(async () => {
 }
 
 .w-12 {
-  width: 3rem;
+  width: 3%;
 }
 
 .text-center {
@@ -1096,9 +1239,37 @@ onMounted(async () => {
   background: #007bff;
 }
 
+th[data-field="TARGET_PARAM_NAME"],
+td:nth-child(2) {
+  width: 30%;
+}
+
+th[data-field="SOURCE_PARAM_NAME"],
+td:nth-child(4) {
+  width: 30%;
+}
+
+th[data-field="TARGET_EXPR"],
+td:nth-child(3) {
+  width: 10%;
+}
+
+th[data-field="SOURCE_EXPR"],
+td:nth-child(5) {
+  width: 10%;
+}
+
 .nbr-column {
-  width: 80px;
-  min-width: 60px;
+  width: 5%;
+}
+
+th:last-child {
+  width: 7%;
+}
+
+td input {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .btn-danger-small {
@@ -1125,7 +1296,8 @@ onMounted(async () => {
 }
 
 .modal-content {
-  background: white;
+  background: var(--modal-bg);
+  color: var(--text-color);
   padding: 30px;
   border-radius: 8px;
   min-width: 400px;
@@ -1152,5 +1324,20 @@ onMounted(async () => {
   height: 100%;
   background-color: #007bff;
   transition: width 0.3s ease;
+}
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .header-row {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
 }
 </style>

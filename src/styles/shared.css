@@ -1,0 +1,362 @@
+/* Shared Component Styles */
+
+/* CSS Custom Properties for Theming */
+:root {
+  --bg-color: #ffffff;
+  --text-color: #333333;
+  --border-color: #ccc;
+  --table-header-bg: #f2f2f2;
+  --table-filter-bg: #e9ecef;
+  --modal-bg: #ffffff;
+  --input-bg: #ffffff;
+}
+
+[data-theme="dark"] {
+  --bg-color: #0d1117;
+  --text-color: #f0f6fc;
+  --border-color: #30363d;
+  --table-header-bg: #161b22;
+  --table-filter-bg: #21262d;
+  --modal-bg: #161b22;
+  --input-bg: #21262d;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-color: #0d1117;
+    --text-color: #f0f6fc;
+    --border-color: #30363d;
+    --table-header-bg: #161b22;
+    --table-filter-bg: #21262d;
+    --modal-bg: #161b22;
+    --input-bg: #21262d;
+  }
+}
+
+body {
+  background-color: var(--bg-color) !important;
+  color: var(--text-color) !important;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+* {
+  transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
+
+/* Container Layout */
+.component-container {
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  overflow: auto;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+/* Bordered Sections */
+.bordered-section {
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 20px;
+  width: fit-content;
+  background-color: var(--bg-color);
+}
+
+.bordered-section.full-width {
+  width: auto;
+}
+
+/* Action Buttons Container */
+.action-buttons {
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 20px;
+  width: fit-content;
+  background-color: var(--bg-color);
+}
+
+/* Information Boxes */
+.info-box {
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 20px;
+  background-color: var(--bg-color);
+}
+
+.info-box h3 {
+  margin-top: 0;
+  color: var(--text-color);
+}
+
+.info-box p {
+  margin: 5px 0;
+  color: var(--text-color);
+}
+
+/* Filter Sections */
+.filter-section {
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 20px;
+  width: fit-content;
+  background-color: var(--bg-color);
+}
+
+.filter-section label {
+  display: inline-block;
+  margin-right: 10px;
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.filter-section select {
+  padding: 5px;
+  min-width: 300px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+/* Table Containers */
+.table-section {
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 20px;
+  background-color: var(--bg-color);
+}
+
+.table-container {
+  max-height: 600px;
+  overflow: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--bg-color);
+}
+
+.table-container table {
+  min-width: 800px;
+}
+
+.table-container th,
+.table-container td {
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+.table-container th {
+  background-color: var(--table-header-bg);
+}
+
+.filter-row th {
+  background-color: var(--table-filter-bg);
+}
+
+/* Button Styles */
+.btn-primary {
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.btn-primary:hover {
+  background: #0056b3;
+}
+
+.btn-primary:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.btn-success {
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.btn-success:hover {
+  background: #218838;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.btn-danger {
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #c82333;
+}
+
+.btn-danger:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.btn-info {
+  background-color: #17a2b8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: var(--modal-bg);
+  color: var(--text-color);
+  padding: 30px;
+  border-radius: 8px;
+  min-width: 400px;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.form-actions {
+  margin-top: 15px;
+  text-align: center;
+}
+
+/* Form Elements */
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.form-group input,
+.form-group select,
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  box-sizing: border-box;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+}
+
+/* Ensure all input elements have proper theming */
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  background-color: var(--input-bg) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+/* Checkbox and radio buttons */
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: #007bff;
+}
+
+/* Record Count */
+.record-count {
+  margin-left: 15px;
+  font-weight: bold;
+  color: #666;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .component-container {
+    padding: 10px;
+  }
+  
+  .bordered-section {
+    width: 100%;
+    padding: 10px;
+  }
+  
+  .action-buttons {
+    width: 100%;
+    padding: 10px;
+  }
+  
+  .action-buttons button {
+    width: 100%;
+    margin: 5px 0;
+  }
+  
+  .table-container {
+    overflow-x: auto;
+    max-height: 400px;
+  }
+  
+  .modal-content {
+    min-width: 90vw;
+    max-width: 95vw;
+    margin: 10px;
+    padding: 20px;
+  }
+  
+  .form-group {
+    margin-bottom: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .component-container {
+    padding: 5px;
+  }
+  
+  .bordered-section,
+  .action-buttons {
+    padding: 8px;
+  }
+  
+  .modal-content {
+    padding: 15px;
+  }
+}
