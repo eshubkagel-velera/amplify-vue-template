@@ -27,8 +27,8 @@
     <div v-if="selectedProductId || props.productId" class="bordered-section">
       <div class="action-buttons">
         <button @click="loadRedirectUrls" class="btn-primary">Refresh</button>
-        <button @click="showCreateModal = true" class="btn-success">Add New Redirect URL</button>
-        <button @click="confirmBulkDelete" :disabled="selectedUrls.length === 0" class="btn-danger">Delete Selected ({{ selectedUrls.length }})</button>
+        <button @click="showCreateModal = true" class="btn-success" :disabled="props.readonly">{{ props.readonly ? 'View Only Mode' : 'Add New Redirect URL' }}</button>
+        <button @click="confirmBulkDelete" :disabled="selectedUrls.length === 0 || props.readonly" class="btn-danger">Delete Selected ({{ selectedUrls.length }})</button>
         <button v-if="props.productId" @click="goBack" class="btn-secondary">Back to Products</button>
         <span class="record-count">{{ redirectUrls.length }} redirect URLs</span>
       </div>
@@ -119,7 +119,7 @@
               <td><span class="read-only-text">{{ formatDate(url.CHANGED_DATE) }}</span></td>
               <td><span class="read-only-text">{{ url.CHANGED_BY_USER_ID }}</span></td>
               <td>
-                <button @click="editUrl(url)">Edit</button>
+                <button @click="editUrl(url)">{{ props.readonly ? 'View' : 'Edit' }}</button>
               </td>
             </tr>
           </tbody>
@@ -195,7 +195,7 @@
             <input id="CHANGED_BY_USER_ID" v-model="formData.CHANGED_BY_USER_ID" type="number" />
           </div>
           <div class="form-actions">
-            <button type="submit">Update</button>
+            <button type="submit" :disabled="props.readonly">{{ props.readonly ? 'View Only' : 'Update' }}</button>
             <button type="button" @click="cancelForm">Cancel</button>
           </div>
         </form>
@@ -242,6 +242,10 @@ const props = defineProps({
     type: Number,
     required: false,
     default: null
+  },
+  readonly: {
+    type: Boolean,
+    default: false
   }
 });
 
@@ -330,6 +334,7 @@ const editUrl = (url) => {
 };
 
 const submitForm = async () => {
+  if (props.readonly) return;
   try {
     const today = new Date().toISOString().split('T')[0];
     let cleanedFormData = { ...formData.value };

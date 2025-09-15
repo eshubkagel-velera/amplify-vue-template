@@ -26,6 +26,8 @@
       :hideFilters="true"
       :parentId="stepTypeId"
       :parentField="'STEP_TYPE_ID'"
+      :readonly="props.readonly || false"
+      :canDelete="!props.readonly"
     />
   </div>
 </template>
@@ -41,6 +43,7 @@ import type { StepType } from '../types';
 
 const props = defineProps<{
   stepTypeId: number;
+  readonly?: boolean;
 }>();
 
 

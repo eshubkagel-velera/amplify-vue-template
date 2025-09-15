@@ -1,7 +1,8 @@
 <template>
   <div id="app">
-    <header>
-      <h1>GraphQL API Manager</h1>
+    <AuthWrapper>
+      <header>
+        <h1>GraphQL API Manager</h1>
       <nav>
         <select v-model="currentView" @change="changeView" :disabled="showMappingManager || showRedirectUrlManager || showStepServicesManager || showServiceParamsManager || showServiceStepMappingManager">
           <option v-for="entity in sortedEntities" :key="entity.name" :value="entity.name">
@@ -28,14 +29,14 @@
     </header>
     
     <main>
-      <MappingManagerStandalone v-if="showMappingManager" :productId="selectedProductId" />
-      <RedirectUrlStandalone v-else-if="showRedirectUrlManager" :productId="selectedProductId" />
-      <StepServiceMappingStandalone v-else-if="showStepServicesManager" :stepTypeId="selectedStepTypeId" />
-      <ServiceParamsStandalone v-else-if="showServiceParamsManager" :serviceId="selectedServiceId" />
-      <ServiceStepMappingStandalone v-else-if="showServiceStepMappingManager" :serviceId="selectedServiceId" />
-      <RedirectUrlStandalone v-else-if="currentView === 'REDIRECT_URL'" />
-      <MappingManagerStandalone v-else-if="currentView === 'SERVICE_PARAM_MAPPING'" />
-      <ServiceImport v-else-if="currentView === 'import'" />
+      <MappingManagerStandalone v-if="showMappingManager" :productId="selectedProductId" :readonly="isReadonly" />
+      <RedirectUrlStandalone v-else-if="showRedirectUrlManager" :productId="selectedProductId" :readonly="isReadonly" />
+      <StepServiceMappingStandalone v-else-if="showStepServicesManager" :stepTypeId="selectedStepTypeId" :readonly="isReadonly" />
+      <ServiceParamsStandalone v-else-if="showServiceParamsManager" :serviceId="selectedServiceId" :readonly="isReadonly" />
+      <ServiceStepMappingStandalone v-else-if="showServiceStepMappingManager" :serviceId="selectedServiceId" :readonly="isReadonly" />
+      <RedirectUrlStandalone v-else-if="currentView === 'REDIRECT_URL'" :readonly="isReadonly" />
+      <MappingManagerStandalone v-else-if="currentView === 'SERVICE_PARAM_MAPPING'" :readonly="isReadonly" />
+      <ServiceImport v-else-if="currentView === 'import'" :readonly="isReadonly" />
       <EntityManager
         v-else-if="currentView && currentEntityConfig && currentView !== 'REDIRECT_URL' && currentView !== 'SERVICE_PARAM_MAPPING'"
         :entityName="currentEntityConfig!.name"
@@ -48,13 +49,18 @@
         :deleteFunction="currentEntityConfig!.deleteFunction"
         @openServiceParams="handleOpenServiceParams"
         @openServiceStepMapping="handleOpenServiceStepMapping"
+        :readonly="isReadonly"
+        :canDelete="canDelete"
       />
-    </main>
+      </main>
+    </AuthWrapper>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import AuthWrapper from './components/AuthWrapper.vue';
+import { useAuth } from './composables/useAuth';
 import EntityManager from './components/EntityManager.vue';
 import ServiceImport from './components/ServiceImport.vue';
 import RedirectUrlStandalone from './components/RedirectUrlStandalone.vue';
@@ -63,9 +69,12 @@ import ServiceParamsStandalone from './components/ServiceParamsStandalone.vue';
 import StepServiceMappingStandalone from './components/StepServiceMappingStandalone.vue';
 import ServiceStepMappingStandalone from './components/ServiceStepMappingStandalone.vue';
 
-import { getClient } from './client.js';
+import { getClient, getUserPoolClient } from './client.js';
 import * as queries from './graphql/queries';
 import * as mutations from './graphql/mutations';
+
+// Use auth composable for permission checking
+const { isAdmin, isDeployment, isDeveloper, isReadonly, canEdit, canDelete } = useAuth();
 
 // Initialize client lazily to ensure Amplify is configured first
 let client: any = null;
@@ -77,23 +86,63 @@ const getClientInstance = () => {
   return client;
 };
 
+// All the GraphQL operations and entity configurations
 const listOriginProducts = async () => {
   const result = await getClientInstance().graphql({ query: queries.listOriginProducts });
   return { data: { listORIGIN_PRODUCTS: result.data.listOrigin_products } };
 };
 
 const createOriginProduct = async (input: any) => {
-  return await getClientInstance().graphql({ query: mutations.createOriginProduct, variables: { input } });
+  if (!canEdit.value) throw new Error('Permission denied: Read-only access');
+  return await getUserPoolClient().graphql({ query: mutations.createOriginProduct, variables: { input } });
 };
 
 const updateOriginProduct = async (input: any) => {
-  return await getClientInstance().graphql({ query: mutations.updateOriginProduct, variables: { input } });
+  if (!canEdit.value) throw new Error('Permission denied: Read-only access');
+  return await getUserPoolClient().graphql({ query: mutations.updateOriginProduct, variables: { input } });
 };
 
 const deleteOriginProduct = async (input: any) => {
-  return await getClientInstance().graphql({ query: mutations.deleteOriginProduct, variables: { input } });
+  if (!canDelete.value) throw new Error('Permission denied: Delete requires admin or deployment role');
+  return await getUserPoolClient().graphql({ query: mutations.deleteOriginProduct, variables: { input } });
 };
 
+const listServices = async () => {
+  const [servicesResult, providersResult] = await Promise.all([
+    getClientInstance().graphql({ query: queries.listServices }),
+    getClientInstance().graphql({ query: queries.listServiceProviders })
+  ]);
+  
+  const services = servicesResult.data.listSERVICES.items;
+  const providers = providersResult.data.listSERVICE_PROVIDERS.items;
+  
+  const enhancedServices = services.map(service => {
+    const provider = providers.find(p => p.SERVICE_PROVIDER_ID === service.SERVICE_PROVIDER_ID);
+    return {
+      ...service,
+      'Service Provider': provider ? `${provider.SERVICE_PROVIDER_ID}: ${provider.SERVICE_PROVIDER_NAME}` : service.SERVICE_PROVIDER_ID
+    };
+  });
+  
+  return { data: { listSERVICES: { items: enhancedServices } } };
+};
+
+const createService = async (input: any) => {
+  if (!canEdit.value) throw new Error('Permission denied: Read-only access');
+  return await getUserPoolClient().graphql({ query: mutations.createService, variables: { input } });
+};
+
+const updateService = async (input: any) => {
+  if (!canEdit.value) throw new Error('Permission denied: Read-only access');
+  return await getUserPoolClient().graphql({ query: mutations.updateService, variables: { input } });
+};
+
+const deleteService = async (input: any) => {
+  if (!canDelete.value) throw new Error('Permission denied: Delete requires admin or deployment role');
+  return await getUserPoolClient().graphql({ query: mutations.deleteService, variables: { input } });
+};
+
+// Add all missing entity operations
 const listRedirectUrls = async () => {
   const result = await getClientInstance().graphql({ query: queries.listRedirectUrls });
   return { data: { listREDIRECT_URLS: result.data.listRedirect_urls } };
@@ -117,58 +166,18 @@ const listServiceProviders = async () => {
 };
 
 const createServiceProvider = async (input: any) => {
-  return await getClientInstance().graphql({ query: mutations.createServiceProvider, variables: { input } });
+  if (!canEdit.value) throw new Error('Permission denied: Read-only access');
+  return await getUserPoolClient().graphql({ query: mutations.createServiceProvider, variables: { input } });
 };
 
 const updateServiceProvider = async (input: any) => {
-  return await getClientInstance().graphql({ query: mutations.updateServiceProvider, variables: { input } });
+  if (!canEdit.value) throw new Error('Permission denied: Read-only access');
+  return await getUserPoolClient().graphql({ query: mutations.updateServiceProvider, variables: { input } });
 };
 
 const deleteServiceProvider = async (input: any) => {
-  return await getClientInstance().graphql({ query: mutations.deleteServiceProvider, variables: { input } });
-};
-
-const listServices = async () => {
-  const [servicesResult, providersResult] = await Promise.all([
-    getClientInstance().graphql({ query: queries.listServices }),
-    getClientInstance().graphql({ query: queries.listServiceProviders })
-  ]);
-  
-  const services = servicesResult.data.listSERVICES.items;
-  const providers = providersResult.data.listSERVICE_PROVIDERS.items;
-  
-  // Add Service Provider display field
-  const enhancedServices = services.map(service => {
-    const provider = providers.find(p => p.SERVICE_PROVIDER_ID === service.SERVICE_PROVIDER_ID);
-    return {
-      ...service,
-      'Service Provider': provider ? `${provider.SERVICE_PROVIDER_ID}: ${provider.SERVICE_PROVIDER_NAME}` : service.SERVICE_PROVIDER_ID
-    };
-  });
-  
-  return { data: { listSERVICES: { items: enhancedServices } } };
-};
-
-const createService = async (input: any) => {
-  return await getClientInstance().graphql({ query: mutations.createService, variables: { input } });
-};
-
-const updateService = async (input: any) => {
-  return await getClientInstance().graphql({ query: mutations.updateService, variables: { input } });
-};
-
-const deleteService = async (input: any) => {
-  // Check if service has associated parameters
-  const paramsResult = await getClientInstance().graphql({ query: queries.listServiceParams });
-  const hasParams = paramsResult.data.listSERVICE_PARAMS.items.some(
-    (param: any) => param.SERVICE_ID === input.SERVICE_ID
-  );
-  
-  if (hasParams) {
-    throw new Error('Cannot delete service: it has associated parameters');
-  }
-  
-  return await getClientInstance().graphql({ query: mutations.deleteService, variables: { input } });
+  if (!canDelete.value) throw new Error('Permission denied: Delete requires admin or deployment role');
+  return await getUserPoolClient().graphql({ query: mutations.deleteServiceProvider, variables: { input } });
 };
 
 const listServiceParams = async () => {
@@ -185,17 +194,6 @@ const updateServiceParam = async (input: any) => {
 };
 
 const deleteServiceParam = async (input: any) => {
-  // Check if parameter has associated mappings
-  const mappingsResult = await getClientInstance().graphql({ query: queries.listServiceParamMappings });
-  const hasMappings = mappingsResult.data.listSERVICE_PARAM_MAPPINGS.items.some(
-    (mapping: any) => mapping.SOURCE_SERVICE_PARAM_ID === input.SERVICE_PARAM_ID || 
-                     mapping.TARGET_SERVICE_PARAM_ID === input.SERVICE_PARAM_ID
-  );
-  
-  if (hasMappings) {
-    throw new Error('Cannot delete parameter: it has associated mappings');
-  }
-  
   return await getClientInstance().graphql({ query: mutations.deleteServiceParam, variables: { input } });
 };
 
@@ -215,8 +213,6 @@ const updateServiceParamMapping = async (input: any) => {
 const deleteServiceParamMapping = async (input: any) => {
   return await getClientInstance().graphql({ query: mutations.deleteServiceParamMapping, variables: { input } });
 };
-
-
 
 const listStepTypes = async () => {
   const result = await getClientInstance().graphql({ query: queries.listStepTypes });
@@ -246,7 +242,6 @@ const listStepServiceMappings = async () => {
   const stepTypes = stepTypesResult.data.listSTEP_TYPES.items;
   const services = servicesResult.data.listSERVICES.items;
   
-  // Add formatted display fields
   const enhancedMappings = mappings.map(mapping => {
     const stepType = stepTypes.find(st => st.STEP_TYPE_ID === mapping.STEP_TYPE_ID);
     const service = services.find(s => s.SERVICE_ID === mapping.SERVICE_ID);
@@ -271,8 +266,6 @@ const updateStepServiceMapping = async (input: any) => {
 const deleteStepServiceMapping = async (input: any) => {
   return await getClientInstance().graphql({ query: mutations.deleteStepServiceMapping, variables: { input } });
 };
-
-
 
 const currentView = ref('import');
 const showMappingManager = ref(false);
@@ -383,7 +376,6 @@ const entities = [
     updateFunction: updateServiceParamMapping,
     deleteFunction: deleteServiceParamMapping
   },
-
   {
     name: 'STEP_TYPE',
     fields: ['STEP_TYPE_ID', 'STEP_TYPE_NAME', 'STEP_TYPE_DESC', 'RESOURCE_NAME', 'CREATED_BY_USER_ID', 'CREATED_DATE', 'CHANGED_BY_USER_ID', 'CHANGED_DATE'],
@@ -413,8 +405,7 @@ const entities = [
     createFunction: createStepServiceMapping,
     updateFunction: updateStepServiceMapping,
     deleteFunction: deleteStepServiceMapping
-  },
-
+  }
 ];
 
 const sortedEntities = computed(() => {
@@ -425,8 +416,6 @@ const currentEntityConfig = computed(() => {
   return entities.find(entity => entity.name === currentView.value) || null;
 });
 
-
-
 const changeView = () => {
   console.log(`Changed to view: ${currentView.value}`);
 };
@@ -434,26 +423,6 @@ const changeView = () => {
 const closeMappingManager = () => {
   showMappingManager.value = false;
   selectedProductId.value = null;
-};
-
-const handleOpenMapping = (event) => {
-  selectedProductId.value = event.detail.productId;
-  showMappingManager.value = true;
-};
-
-const handleOpenRedirectUrls = (event) => {
-  selectedProductId.value = event.detail.productId;
-  showRedirectUrlManager.value = true;
-};
-
-const handleGoBackToProducts = () => {
-  showRedirectUrlManager.value = false;
-  selectedProductId.value = null;
-};
-
-const handleOpenStepServices = (event) => {
-  selectedStepTypeId.value = event.detail.stepTypeId;
-  showStepServicesManager.value = true;
 };
 
 const closeRedirectUrlManager = () => {
@@ -487,25 +456,8 @@ const handleOpenServiceStepMapping = (event) => {
 };
 
 onMounted(() => {
-  // Default to import view
   currentView.value = 'import';
-  
-  // Listen for mapping events
-  window.addEventListener('openMapping', handleOpenMapping);
-  
-  // Listen for redirect URLs events
-  window.addEventListener('openRedirectUrls', handleOpenRedirectUrls);
-  
-  // Listen for go back events
-  window.addEventListener('goBackToProducts', handleGoBackToProducts);
-  
-  // Listen for step services events
-  window.addEventListener('openStepServices', handleOpenStepServices);
-  
-  // Listen for service params events
   window.addEventListener('openServiceParams', handleOpenServiceParams);
-  
-  // Listen for service step mapping events
   window.addEventListener('openServiceStepMapping', handleOpenServiceStepMapping);
 });
 </script>
@@ -513,11 +465,11 @@ onMounted(() => {
 <style>
 #app {
   font-family: Arial, sans-serif;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  min-height: 100vh;
   margin: 0;
-  padding: 0;
-  overflow: hidden;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 header {
@@ -525,6 +477,7 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 select {
@@ -535,8 +488,8 @@ select {
 main {
   background-color: #f9f9f9;
   width: 100%;
-  height: calc(100vh - 80px);
-  overflow: hidden;
+  min-height: calc(100vh - 120px);
+  overflow: auto;
   padding: 20px;
   box-sizing: border-box;
 }

@@ -1,10 +1,15 @@
 import { defineBackend } from '@aws-amplify/backend';
+import { auth } from './auth/resource';
+import { data } from './data/resource';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 
-// Define backend without version constraints
-const backend = defineBackend({});
+// Define backend with auth and data
+const backend = defineBackend({
+  auth,
+  data
+});
 
 const bucketStack = backend.createStack('CloudAssetsStack');
 const existingBucket = s3.Bucket.fromBucketName(bucketStack, 'HazelAmplifyBucket', 'hazel-amplify');

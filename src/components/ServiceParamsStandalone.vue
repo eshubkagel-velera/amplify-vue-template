@@ -26,6 +26,8 @@
       :hideFilters="true"
       :parentId="serviceId"
       :parentField="'SERVICE_ID'"
+      :readonly="props.readonly || false"
+      :canDelete="!props.readonly"
     />
   </div>
 </template>
@@ -41,6 +43,7 @@ import type { Service, ServiceParam } from '../types';
 
 const props = defineProps<{
   serviceId: number;
+  readonly?: boolean;
 }>();
 
 
