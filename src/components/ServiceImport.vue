@@ -116,21 +116,21 @@
           <button 
             v-if="!serviceExists" 
             @click="insertService" 
-            :disabled="saving || !selectedServiceProvider || (selectedServiceProvider === 'new' && !newServiceProviderName.trim())"
+            :disabled="saving || !selectedServiceProvider || (selectedServiceProvider === 'new' && !newServiceProviderName.trim()) || readonly"
             class="btn-success"
           >
-            {{ saving ? 'Inserting...' : 'Insert Service' }}
+            {{ readonly ? 'View Only Mode' : (saving ? 'Inserting...' : 'Insert Service') }}
           </button>
           <button 
             v-if="serviceExists" 
             @click="updateService" 
-            :disabled="saving"
+            :disabled="saving || readonly"
             class="btn-primary"
           >
-            {{ saving ? 'Updating...' : 'Update Parameters' }}
+            {{ readonly ? 'View Only Mode' : (saving ? 'Updating...' : 'Update Parameters') }}
           </button>
-          <button @click="addCustomParam('request')" class="btn-success">
-            Add Custom Parameter
+          <button @click="addCustomParam('request')" :disabled="readonly" class="btn-success">
+            {{ readonly ? 'View Only Mode' : 'Add Custom Parameter' }}
           </button>
         </div>
 
@@ -490,8 +490,17 @@ import ThemeToggle from './ThemeToggle.vue';
 // Initialize component
 loadServiceProviders();
 
+// Props
+const props = defineProps({
+  readonly: {
+    type: Boolean,
+    default: false
+  }
+});
+
 // Reactive data
 const selectedFile = ref<File | null>(null);
+const readonly = computed(() => props.readonly);
 const jsonFileInput = ref<HTMLInputElement | null>(null);
 const loading = ref(false);
 const saving = ref(false);
@@ -993,6 +1002,7 @@ const checkExistingParameters = async (reqParams: any[], respParams: any[]) => {
 
 // Add custom parameter
 const addCustomParam = (type: 'request' | 'response') => {
+  if (props.readonly) return;
   const newParam = {
     name: '',
     type: 'string',
@@ -1024,6 +1034,7 @@ const removeCustomParam = (index: number, type: 'request' | 'response') => {
 
 // Insert new service
 const insertService = async () => {
+  if (props.readonly) return;
   saving.value = true;
   
   try {
@@ -1142,6 +1153,7 @@ const insertService = async () => {
 
 // Update existing service parameters
 const updateService = async () => {
+  if (props.readonly) return;
   saving.value = true;
   
   try {

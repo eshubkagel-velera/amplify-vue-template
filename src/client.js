@@ -1,6 +1,7 @@
 import { generateClient } from 'aws-amplify/api';
 
 let client = null;
+let userPoolClient = null;
 
 export const getClient = () => {
   if (!client) {
@@ -14,4 +15,20 @@ export const getClient = () => {
     }
   }
   return client;
+};
+
+export const getUserPoolClient = () => {
+  if (!userPoolClient) {
+    console.log('🔐 Creating UserPool client...');
+    try {
+      userPoolClient = generateClient({
+        authMode: 'userPool'
+      });
+      console.log('✅ UserPool client created successfully');
+    } catch (error) {
+      console.error('❌ Failed to create UserPool client:', error);
+      throw error;
+    }
+  }
+  return userPoolClient;
 };

@@ -76,16 +76,16 @@
     <div v-if="showActionButtons || selectedTargetService" class="buttons-params-row">
       <!-- Action Buttons -->
       <div v-if="showActionButtons" class="action-buttons">
-        <button v-if="!mappingExists" @click="createMapping" :disabled="saving" class="btn-success">
-          {{ saving ? 'Saving...' : 'Save Mapping' }}
+        <button v-if="!mappingExists" @click="createMapping" :disabled="saving || props.readonly" class="btn-success">
+          {{ props.readonly ? 'View Only Mode' : (saving ? 'Saving...' : 'Save Mapping') }}
         </button>
-        <button v-if="mappingExists" @click="updateMapping" :disabled="saving" class="btn-primary">
-          {{ saving ? 'Updating...' : 'Update Mapping' }}
+        <button v-if="mappingExists" @click="updateMapping" :disabled="saving || props.readonly" class="btn-primary">
+          {{ props.readonly ? 'View Only Mode' : (saving ? 'Updating...' : 'Update Mapping') }}
         </button>
-        <button v-if="mappingExists" @click="confirmDeleteMapping" class="btn-danger">
-          Delete Mapping
+        <button v-if="mappingExists" @click="confirmDeleteMapping" :disabled="props.readonly" class="btn-danger">
+          {{ props.readonly ? 'View Only Mode' : 'Delete Mapping' }}
         </button>
-        <button @click="addCustomMapping" class="btn-success">Add Custom Mapping</button>
+        <button @click="addCustomMapping" :disabled="props.readonly" class="btn-success">{{ props.readonly ? 'View Only Mode' : 'Add Custom Mapping' }}</button>
       </div>
 
       <!-- Target Parameters Available -->
@@ -291,6 +291,10 @@ const props = defineProps({
     type: Number,
     required: false,
     default: null
+  },
+  readonly: {
+    type: Boolean,
+    default: false
   }
 });
 
@@ -721,6 +725,7 @@ const loadExistingMappings = async (existingMappings) => {
 };
 
 const addCustomMapping = () => {
+  if (props.readonly) return;
   const customMapping = {
     TARGET_SERVICE_PARAM_ID: null,
     TARGET_PARAM_NAME: '',
@@ -747,6 +752,7 @@ const removeCustomMapping = (index) => {
 };
 
 const createMapping = async () => {
+  if (props.readonly) return;
   saving.value = true;
   try {
     const selectedMappings = mappings.value.filter(m => m.selected);
@@ -918,6 +924,7 @@ const createMapping = async () => {
 };
 
 const updateMapping = async () => {
+  if (props.readonly) return;
   saving.value = true;
   try {
     const selectedMappings = mappings.value.filter(m => m.selected);

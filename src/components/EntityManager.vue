@@ -33,8 +33,8 @@
     <div class="bordered-section">
       <div class="action-buttons">
         <button @click="loadEntities" class="btn-primary">Refresh</button>
-        <button @click="showCreateModal = true" class="btn-success">Add New</button>
-        <button @click="confirmBulkDelete" :disabled="selectedEntities.length === 0" class="btn-danger">Delete Selected ({{ selectedEntities.length }})</button>
+        <button @click="showCreateModal = true" class="btn-success" :disabled="props.readonly">{{ props.readonly ? 'View Only Mode' : 'Add New' }}</button>
+        <button @click="confirmBulkDelete" :disabled="selectedEntities.length === 0 || !props.canDelete" class="btn-danger">Delete Selected ({{ selectedEntities.length }})</button>
         <span class="record-count">{{ entities.length }} records</span>
       </div>
     </div>
@@ -98,7 +98,7 @@
               </td>
               <td>
                 <button @click="editEntity(entity)" :aria-label="`Edit ${entityName} ${getEntityId(entity)}`">
-                  {{ (props.entityName === 'SERVICE_PARAM' && paramMappings.get(getEntityId(entity)) > 0) ? 'Copy & Edit' : 'Edit' }}
+                  {{ props.readonly ? 'View' : (props.entityName === 'SERVICE_PARAM' && paramMappings.get(getEntityId(entity)) > 0) ? 'Copy & Edit' : 'Edit' }}
                 </button>
                 <button v-if="props.entityName === 'SERVICE_PARAM' && paramMappings.get(getEntityId(entity)) > 0" @click="showParameterMappings(entity)" class="btn-info" style="margin-left: 5px;">Mappings ({{ paramMappings.get(getEntityId(entity)) }})</button>
                 <button v-if="props.entityName === 'ORIGIN_PRODUCT'" @click="openMapping(entity)" class="btn-success" style="margin-left: 5px;">Mapping</button>
@@ -230,7 +230,7 @@
             />
           </div>
           <div class="form-actions">
-            <button type="submit">Update</button>
+            <button type="submit" :disabled="props.readonly">{{ props.readonly ? 'View Only' : 'Update' }}</button>
             <button type="button" @click="cancelForm">Cancel</button>
           </div>
         </form>
@@ -310,7 +310,7 @@
 <script setup lang="ts">
 import '../styles/shared.css';
 import { ref, computed, onMounted, onUnmounted, defineProps, watch } from 'vue';
-import { getClient } from '../client.js';
+import { getClient, getUserPoolClient } from '../client.js';
 import { listServiceParams } from '../graphql/queries.js';
 import * as queries from '../graphql/queries.js';
 import LoadingSkeleton from './LoadingSkeleton.vue';
@@ -366,6 +366,14 @@ const props = defineProps({
   parentField: {
     type: String,
     default: null
+  },
+  readonly: {
+    type: Boolean,
+    default: false
+  },
+  canDelete: {
+    type: Boolean,
+    default: true
   }
 });
 
@@ -463,6 +471,19 @@ const loadEntities = async () => {
 };
 
 const editEntity = (entity) => {
+  if (props.readonly) {
+    // For readonly users, just show the modal in view mode
+    const formattedEntity = { ...entity };
+    Object.keys(formattedEntity).forEach(key => {
+      if (key.includes('DATE') && formattedEntity[key]) {
+        formattedEntity[key] = formatDate(formattedEntity[key]);
+      }
+    });
+    formData.value = formattedEntity;
+    showEditModal.value = true;
+    return;
+  }
+  
   const formattedEntity = { ...entity };
   // Format date fields for form display
   Object.keys(formattedEntity).forEach(key => {
@@ -592,6 +613,11 @@ watch(showCreateModal, (newVal) => {
 
 
 const submitForm = async () => {
+  // Prevent submission for readonly users
+  if (props.readonly && showEditModal.value) {
+    return;
+  }
+  
   try {
     const currentDate = getCurrentDateString();
     const entityConfig = getEntityConfig(props.entityName);
@@ -617,6 +643,9 @@ const submitForm = async () => {
     // Remove display fields that shouldn't be sent to GraphQL
     if (cleanedFormData.SERVICE_DISPLAY) {
       delete cleanedFormData.SERVICE_DISPLAY;
+    }
+    if (cleanedFormData['Service Provider']) {
+      delete cleanedFormData['Service Provider'];
     }
     
     console.log('Submitting form data:', cleanedFormData);
