@@ -664,6 +664,7 @@ const submitForm = async () => {
         if (!skipDateFields) {
           cleanedFormData.CHANGED_DATE = currentDate;
         }
+        const client = getClient();
         await props.updateFunction(cleanedFormData);
         successMessage.value = `${props.entityName} updated successfully!`;
         showSuccessModal.value = true;

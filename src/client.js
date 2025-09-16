@@ -7,7 +7,9 @@ export const getClient = () => {
   if (!client) {
     console.log('🔄 Creating Amplify client...');
     try {
-      client = generateClient();
+      client = generateClient({
+        authMode: 'apiKey'
+      });
       console.log('✅ Amplify client created successfully');
     } catch (error) {
       console.error('❌ Failed to create Amplify client:', error);

@@ -97,17 +97,17 @@ const listOriginProducts = async () => {
 
 const createOriginProduct = async (input: any) => {
   if (!canEdit.value) throw new Error('Permission denied: Read-only access');
-  return await getUserPoolClient().graphql({ query: mutations.createOriginProduct, variables: { input } });
+  return await getClientInstance().graphql({ query: mutations.createOriginProduct, variables: { input } });
 };
 
 const updateOriginProduct = async (input: any) => {
   if (!canEdit.value) throw new Error('Permission denied: Read-only access');
-  return await getUserPoolClient().graphql({ query: mutations.updateOriginProduct, variables: { input } });
+  return await getClientInstance().graphql({ query: mutations.updateOriginProduct, variables: { input } });
 };
 
 const deleteOriginProduct = async (input: any) => {
   if (!canDelete.value) throw new Error('Permission denied: Delete requires admin or deployment role');
-  return await getUserPoolClient().graphql({ query: mutations.deleteOriginProduct, variables: { input } });
+  return await getClientInstance().graphql({ query: mutations.deleteOriginProduct, variables: { input } });
 };
 
 const listServices = async () => {
@@ -132,17 +132,17 @@ const listServices = async () => {
 
 const createService = async (input: any) => {
   if (!canEdit.value) throw new Error('Permission denied: Read-only access');
-  return await getUserPoolClient().graphql({ query: mutations.createService, variables: { input } });
+  return await getClientInstance().graphql({ query: mutations.createService, variables: { input } });
 };
 
 const updateService = async (input: any) => {
   if (!canEdit.value) throw new Error('Permission denied: Read-only access');
-  return await getUserPoolClient().graphql({ query: mutations.updateService, variables: { input } });
+  return await getClientInstance().graphql({ query: mutations.updateService, variables: { input } });
 };
 
 const deleteService = async (input: any) => {
   if (!canDelete.value) throw new Error('Permission denied: Delete requires admin or deployment role');
-  return await getUserPoolClient().graphql({ query: mutations.deleteService, variables: { input } });
+  return await getClientInstance().graphql({ query: mutations.deleteService, variables: { input } });
 };
 
 // Add all missing entity operations
@@ -170,17 +170,17 @@ const listServiceProviders = async () => {
 
 const createServiceProvider = async (input: any) => {
   if (!canEdit.value) throw new Error('Permission denied: Read-only access');
-  return await getUserPoolClient().graphql({ query: mutations.createServiceProvider, variables: { input } });
+  return await getClientInstance().graphql({ query: mutations.createServiceProvider, variables: { input } });
 };
 
 const updateServiceProvider = async (input: any) => {
   if (!canEdit.value) throw new Error('Permission denied: Read-only access');
-  return await getUserPoolClient().graphql({ query: mutations.updateServiceProvider, variables: { input } });
+  return await getClientInstance().graphql({ query: mutations.updateServiceProvider, variables: { input } });
 };
 
 const deleteServiceProvider = async (input: any) => {
   if (!canDelete.value) throw new Error('Permission denied: Delete requires admin or deployment role');
-  return await getUserPoolClient().graphql({ query: mutations.deleteServiceProvider, variables: { input } });
+  return await getClientInstance().graphql({ query: mutations.deleteServiceProvider, variables: { input } });
 };
 
 const listServiceParams = async () => {
