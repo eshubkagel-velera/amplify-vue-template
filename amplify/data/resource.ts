@@ -13,10 +13,7 @@ const schema = a.schema({
       environment: a.string().default('dev')
     })
     .authorization((allow) => [
-      allow.groups(['admin']).to(['create', 'read', 'update', 'delete']),
-      allow.groups(['deployment']).to(['create', 'read', 'update', 'delete']),
-      allow.groups(['developer']).to(['create', 'read', 'update', 'delete']),
-      allow.groups(['readonly']).to(['read'])
+      allow.publicApiKey()
     ]),
 
   OriginProduct: a
@@ -33,9 +30,7 @@ const schema = a.schema({
       PARTNER_CODE: a.string()
     })
     .authorization((allow) => [
-      allow.groups(['admin', 'deployment', 'developer']).to(['create', 'read', 'update', 'delete']),
-      allow.groups(['readonly']).to(['read']),
-      allow.publicApiKey().to(['read'])
+      allow.publicApiKey()
     ]),
 
   ServiceProvider: a
@@ -48,9 +43,7 @@ const schema = a.schema({
       CHANGED_DATE: a.string()
     })
     .authorization((allow) => [
-      allow.groups(['admin', 'deployment', 'developer']).to(['create', 'read', 'update', 'delete']),
-      allow.groups(['readonly']).to(['read']),
-      allow.publicApiKey().to(['read'])
+      allow.publicApiKey()
     ]),
 
   Service: a
@@ -65,11 +58,7 @@ const schema = a.schema({
       environment: a.string().default('dev')
     })
     .authorization((allow) => [
-      allow.groups(['admin']).to(['create', 'read', 'update', 'delete']),
-      allow.groups(['deployment']).to(['create', 'read', 'update', 'delete']),
-      allow.groups(['developer']).to(['create', 'read', 'update', 'delete']),
-      allow.groups(['readonly']).to(['read']),
-      allow.publicApiKey().to(['read'])
+      allow.publicApiKey()
     ])
 });
 
