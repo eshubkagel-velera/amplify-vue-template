@@ -4,6 +4,19 @@ import App from './App.vue';
 
 console.log('🚀 Starting GraphQL API Manager');
 
+// Validate required environment variables
+const requiredEnvVars = {
+  VITE_APPSYNC_API_URL: import.meta.env.VITE_APPSYNC_API_URL,
+  VITE_APPSYNC_REGION: import.meta.env.VITE_APPSYNC_REGION,
+  VITE_APPSYNC_API_KEY: import.meta.env.VITE_APPSYNC_API_KEY
+};
+
+for (const [key, value] of Object.entries(requiredEnvVars)) {
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${key}`);
+  }
+}
+
 // Configure Amplify
 Amplify.configure({
   API: {

@@ -1,25 +1,30 @@
 import { ref } from 'vue';
 
+const sanitizeForLog = (input: string): string => {
+  return input.replace(/[\r\n\t]/g, ' ').substring(0, 200);
+};
+
 export const useErrorHandler = () => {
   const error = ref('');
   const showErrorModal = ref(false);
 
-  const handleError = (err: any, context = '') => {
-    console.error(`Error in ${context}:`, err);
-    error.value = err.message || err.errors?.[0]?.message || 'An unexpected error occurred';
+  const handleError = (err: Error | { message: string; errors?: any[] }, context = '') => {
+    const message = err.message || err.errors?.[0]?.message || 'An unexpected error occurred';
+    console.error(`Error in ${sanitizeForLog(context)}:`, sanitizeForLog(message));
+    error.value = message;
     showErrorModal.value = true;
   };
 
   const handleGraphQLError = (err: any, context: string) => {
-    console.error(`GraphQL error in ${context}:`, err);
     if (err.errors) {
-      console.error('GraphQL errors:', err.errors);
-      err.errors.forEach((e: any, index: number) => {
-        console.error(`Error ${index + 1}:`, e.message);
-      });
+      const errorMessages = err.errors.map((e: any) => sanitizeForLog(e.message || '')).join('; ');
+      console.error(`GraphQL error in ${sanitizeForLog(context)}:`, errorMessages);
+      error.value = errorMessages;
+    } else {
+      const message = sanitizeForLog(err.message || 'GraphQL operation failed');
+      console.error(`GraphQL error in ${sanitizeForLog(context)}:`, message);
+      error.value = message;
     }
-    const errorMsg = err.errors ? err.errors.map((e: any) => e.message).join('; ') : (err.message || err);
-    error.value = errorMsg;
     showErrorModal.value = true;
   };
 

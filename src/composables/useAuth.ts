@@ -5,11 +5,22 @@ const globalUserGroups = ref<string[]>([])
 
 export const useAuth = () => {
   const userGroups = globalUserGroups
+  const userGroupsSet = computed(() => new Set(userGroups.value))
   
-  const isAdmin = computed(() => userGroups.value.includes('admin'))
-  const isDeployment = computed(() => userGroups.value.includes('deployment'))
-  const isDeveloper = computed(() => userGroups.value.includes('developer'))
-  const isReadonly = computed(() => userGroups.value.includes('readonly'))
+  const roleFlags = computed(() => {
+    const groups = userGroupsSet.value
+    return {
+      isAdmin: groups.has('admin'),
+      isDeployment: groups.has('deployment'),
+      isDeveloper: groups.has('developer'),
+      isReadonly: groups.has('readonly')
+    }
+  })
+  
+  const isAdmin = computed(() => roleFlags.value.isAdmin)
+  const isDeployment = computed(() => roleFlags.value.isDeployment)
+  const isDeveloper = computed(() => roleFlags.value.isDeveloper)
+  const isReadonly = computed(() => roleFlags.value.isReadonly)
   
   const canEdit = computed(() => !isReadonly.value)
   const canDelete = computed(() => isAdmin.value || isDeployment.value)
