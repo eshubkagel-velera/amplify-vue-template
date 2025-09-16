@@ -503,29 +503,26 @@ const editEntity = (entity) => {
   showEditModal.value = true;
 };
 
+const emit = defineEmits(['openMapping', 'openRedirectUrls', 'openStepServices', 'openServiceParams', 'openServiceStepMapping']);
+
 const openMapping = (entity) => {
-  // Emit event to parent to navigate to mapping page
-  window.dispatchEvent(new CustomEvent('openMapping', { detail: { productId: entity.ORIGIN_PRODUCT_ID } }));
+  emit('openMapping', { productId: entity.ORIGIN_PRODUCT_ID });
 };
 
 const openRedirectUrls = (entity) => {
-  // Emit event to parent to navigate to redirect URLs page
-  window.dispatchEvent(new CustomEvent('openRedirectUrls', { detail: { productId: entity.ORIGIN_PRODUCT_ID } }));
+  emit('openRedirectUrls', { productId: entity.ORIGIN_PRODUCT_ID });
 };
 
 const openStepServices = (entity) => {
-  // Emit event to parent to navigate to step services page
-  window.dispatchEvent(new CustomEvent('openStepServices', { detail: { stepTypeId: entity.STEP_TYPE_ID } }));
+  emit('openStepServices', { stepTypeId: entity.STEP_TYPE_ID });
 };
 
 const openServiceParams = (entity) => {
-  // Emit event to parent to navigate to service parameters page
-  window.dispatchEvent(new CustomEvent('openServiceParams', { detail: { serviceId: entity.SERVICE_ID } }));
+  emit('openServiceParams', { serviceId: entity.SERVICE_ID });
 };
 
 const openServiceStepMapping = (entity) => {
-  // Emit event to parent to navigate to service step mappings page
-  window.dispatchEvent(new CustomEvent('openServiceStepMapping', { detail: { serviceId: entity.SERVICE_ID } }));
+  emit('openServiceStepMapping', { serviceId: entity.SERVICE_ID });
 };
 
 const confirmBulkDelete = () => {

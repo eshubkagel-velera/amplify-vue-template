@@ -47,6 +47,9 @@
         :createFunction="currentEntityConfig!.createFunction"
         :updateFunction="currentEntityConfig!.updateFunction"
         :deleteFunction="currentEntityConfig!.deleteFunction"
+        @openMapping="handleOpenMapping"
+        @openRedirectUrls="handleOpenRedirectUrls"
+        @openStepServices="handleOpenStepServices"
         @openServiceParams="handleOpenServiceParams"
         @openServiceStepMapping="handleOpenServiceStepMapping"
         :readonly="isReadonly"
@@ -445,20 +448,33 @@ const closeServiceStepMappingManager = () => {
   selectedServiceId.value = null;
 };
 
-const handleOpenServiceParams = (event) => {
-  selectedServiceId.value = event.detail.serviceId;
+const handleOpenMapping = (data) => {
+  selectedProductId.value = data.productId;
+  showMappingManager.value = true;
+};
+
+const handleOpenRedirectUrls = (data) => {
+  selectedProductId.value = data.productId;
+  showRedirectUrlManager.value = true;
+};
+
+const handleOpenStepServices = (data) => {
+  selectedStepTypeId.value = data.stepTypeId;
+  showStepServicesManager.value = true;
+};
+
+const handleOpenServiceParams = (data) => {
+  selectedServiceId.value = data.serviceId;
   showServiceParamsManager.value = true;
 };
 
-const handleOpenServiceStepMapping = (event) => {
-  selectedServiceId.value = event.detail.serviceId;
+const handleOpenServiceStepMapping = (data) => {
+  selectedServiceId.value = data.serviceId;
   showServiceStepMappingManager.value = true;
 };
 
 onMounted(() => {
   currentView.value = 'import';
-  window.addEventListener('openServiceParams', handleOpenServiceParams);
-  window.addEventListener('openServiceStepMapping', handleOpenServiceStepMapping);
 });
 </script>
 
