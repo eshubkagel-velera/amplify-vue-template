@@ -14,7 +14,8 @@ export default defineConfig({
   resolve: {
     alias: {
       path: 'path-browserify',
-      util: 'util'
+      util: 'util',
+      buffer: 'buffer'
     }
   },
   optimizeDeps: {
