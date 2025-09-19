@@ -9,10 +9,13 @@ import { insert, select, createMySQLStatement, toJsonObject } from '@aws-appsync
 export function request(ctx) {
     const { input } = ctx.args;
     const insertStatement = insert({
-        table: 'SERVICE',
+        table: `${dbName}.SERVICE`,
         values: input,
     });
-    const selectStatement = `SELECT SERVICE_ID, SERVICE_PROVIDER_ID, URI, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE FROM hazel_mapping_dev.SERVICE WHERE SERVICE_ID IN (SELECT MAX(SERVICE_ID) FROM hazel_mapping_dev.SERVICE)`;
+    const env = ctx.request.headers['x-environment'] || 'test';
+    const dbMap = { dev: 'hazel_mapping_dev', test: 'hazel_mapping_test', uat: 'hazel_mapping_uat', live: 'hazel_mapping_live' };
+    const dbName = dbMap[env] || 'hazel_mapping_test';
+    const selectStatement = `SELECT SERVICE_ID, SERVICE_PROVIDER_ID, URI, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE FROM ${dbName}.SERVICE WHERE SERVICE_ID IN (SELECT MAX(SERVICE_ID) FROM ${dbName}.SERVICE)`;
     return createMySQLStatement(insertStatement, selectStatement)
 }
 

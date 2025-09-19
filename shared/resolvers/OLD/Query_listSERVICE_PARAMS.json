@@ -1,0 +1,15 @@
+{
+    "resolver": {
+        "typeName": "Query",
+        "fieldName": "listService_params",
+        "dataSourceName": "hazel_mapping_dev",
+        "resolverArn": "arn:aws:appsync:us-east-2:794611117044:apis/rxlu3umb3bdhjgswtlwqbsd44m/types/Query/resolvers/listService_params",
+        "kind": "UNIT",
+        "maxBatchSize": 0,
+        "runtime": {
+            "name": "APPSYNC_JS",
+            "runtimeVersion": "1.0.0"
+        },
+        "code": "import { util } from '@aws-appsync/utils';\nimport { select, createMySQLStatement, toJsonObject } from '@aws-appsync/utils/rds';\n\n/**\n * Lists items in the table. Lists up to the provided `limit` and starts from the provided `nextToken` (optional).\n * @param {import('@aws-appsync/utils').Context} ctx the context\n * @returns {*} the request\n */\nexport function request(ctx) {\n    const { filter = {}, limit = 100, orderBy: _o = [], nextToken } = ctx.args;\n    const offset = nextToken ? +util.base64Decode(nextToken) : 0;\n    const orderBy = _o.map((x) => Object.entries(x)).flat().map(([ column, dir ]) => ({ column, dir }));\n    const statement = select({\n        table: 'service_params',\n        columns: '*',\n        limit,\n        offset,\n        where: filter,\n        orderBy,\n    });\n    return createMySQLStatement(statement)\n}\n\n/**\n * Returns the result or throws an error if the operation failed.\n * @param {import('@aws-appsync/utils').Context} ctx the context\n * @returns {*} the result\n */\nexport function response(ctx) {\n    const { args: { limit = 100, nextToken }, error, result } = ctx;\n    if (error) {\n        return util.appendError(\n            error.message,\n            error.type,\n            result\n        )\n    }\n    const offset = nextToken ? +util.base64Decode(nextToken) : 0;\n    const items = toJsonObject(result)[0];\n    const endOfResults = items?.length < limit;\n    const token = endOfResults ? null : util.base64Encode(`${offset + limit}`);\n    return {\n        items,\n        nextToken: token,\n    }\n}\n"
+    }
+}
