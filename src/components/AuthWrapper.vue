@@ -18,8 +18,11 @@
   </div>
   <div v-else>
     <div class="user-info">
-      <span>{{ user?.username }}</span>
-      <span class="user-groups">{{ userGroups.join(', ') }}</span>
+      <div class="user-details">
+        <span>{{ user?.username }}</span>
+        <span class="user-groups">{{ userGroups.join(', ') }}</span>
+      </div>
+      <div class="current-env">{{ currentEnvironment?.toUpperCase() }}</div>
       <button @click="handleSignOut">Sign Out</button>
     </div>
     <slot />
@@ -27,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useAuth } from '../composables/useAuth'
 
 const isAuthenticated = ref(false)
@@ -38,6 +41,7 @@ const password = ref('')
 const user = ref(null)
 const userGroups = ref([])
 const { setUserGroups } = useAuth()
+const currentEnvironment = computed(() => window.currentEnvironment || 'dev')
 
 const loadUserGroups = async () => {
   try {
@@ -181,9 +185,23 @@ onMounted(async () => {
   border-bottom: 1px solid #dee2e6;
 }
 
+.user-details {
+  display: flex;
+  flex-direction: column;
+}
+
 .user-groups {
   font-size: 0.8rem;
   color: #6c757d;
+}
+
+.current-env {
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: bold;
+  background: #28a745;
+  color: white;
 }
 
 .error {

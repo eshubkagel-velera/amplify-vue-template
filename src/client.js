@@ -2,10 +2,13 @@ import { generateClient } from 'aws-amplify/api';
 
 let client = null;
 let userPoolClient = null;
+let currentEnv = null;
 
 export const getClient = () => {
-  if (!client) {
-    console.log('🔄 Creating Amplify client...');
+  // Recreate client if environment changed
+  if (!client || currentEnv !== window.currentEnvironment) {
+    console.log(`🔄 Creating Amplify client for ${window.currentEnvironment}...`);
+    currentEnv = window.currentEnvironment;
     try {
       client = generateClient({
         authMode: 'apiKey'
@@ -20,8 +23,9 @@ export const getClient = () => {
 };
 
 export const getUserPoolClient = () => {
-  if (!userPoolClient) {
-    console.log('🔐 Creating UserPool client...');
+  // Recreate client if environment changed
+  if (!userPoolClient || currentEnv !== window.currentEnvironment) {
+    console.log(`🔐 Creating UserPool client for ${window.currentEnvironment}...`);
     try {
       userPoolClient = generateClient({
         authMode: 'userPool'

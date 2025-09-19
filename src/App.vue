@@ -2,7 +2,10 @@
   <div id="app">
     <AuthWrapper>
       <header>
-        <h1>GraphQL API Manager</h1>
+        <div class="header-top">
+          <h1>GraphQL API Manager</h1>
+          <EnvironmentSelector />
+        </div>
       <nav>
         <select v-model="currentView" @change="changeView" :disabled="showMappingManager || showRedirectUrlManager || showStepServicesManager || showServiceParamsManager || showServiceStepMappingManager">
           <option v-for="entity in sortedEntities" :key="entity.name" :value="entity.name">
@@ -63,6 +66,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import AuthWrapper from './components/AuthWrapper.vue';
+import EnvironmentSelector from './components/EnvironmentSelector.vue';
 import { useAuth } from './composables/useAuth';
 import EntityManager from './components/EntityManager.vue';
 import ServiceImport from './components/ServiceImport.vue';
@@ -488,8 +492,19 @@ onMounted(() => {
   box-sizing: border-box;
 }
 
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
 header {
   margin-bottom: 20px;
+}
+
+header nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
