@@ -404,7 +404,7 @@
 import { ref, computed } from 'vue';
 import { Buffer } from 'buffer';
 import SwaggerParser from '@apidevtools/swagger-parser';
-import { generateClient } from 'aws-amplify/api';
+import { callExternalApi } from '../client.js';
 import { useErrorHandler } from '../composables/useErrorHandler';
 import type { Service, ServiceParam, ServiceProvider } from '../types';
 
@@ -418,7 +418,7 @@ import * as mutations from '../graphql/mutations';
 // Load service providers on component mount
 const loadServiceProviders = async () => {
   try {
-    const result = await generateClient().graphql({ query: queries.listServiceProviders });
+    const result = await callExternalApi(window.currentEnvironment, queries.listServiceProviders);
     serviceProviders.value = result.data.listSERVICE_PROVIDERS.items;
   } catch (err) {
     console.error('Error loading service providers:', err);
@@ -446,10 +446,7 @@ const createServiceProviderIfNeeded = async () => {
       CREATED_DATE: new Date().toISOString().split('T')[0]
     };
     
-    const result = await generateClient().graphql({
-      query: mutations.createServiceProvider,
-      variables: { input: providerInput }
-    });
+    const result = await callExternalApi(window.currentEnvironment, mutations.createServiceProvider, { input: providerInput });
     
     const newProvider = result.data.createSERVICE_PROVIDER;
     serviceProviders.value.push(newProvider);
@@ -937,7 +934,7 @@ const checkServiceExists = async () => {
       serviceProviderId = parseInt(selectedServiceProvider.value);
     }
     
-    const result = await generateClient().graphql({ query: queries.listServices });
+    const result = await callExternalApi(window.currentEnvironment, queries.listServices);
     const services = result.data.listSERVICES.items;
     
     const existing = services.find((s: any) => 
@@ -969,10 +966,7 @@ const checkExistingParameters = async (reqParams: any[], respParams: any[]) => {
         variables.nextToken = nextToken;
       }
       
-      const result = await generateClient().graphql({ 
-        query: queries.listServiceParams,
-        variables
-      });
+      const result = await callExternalApi(window.currentEnvironment, queries.listServiceParams, variables);
       
       allExistingParams.push(...result.data.listSERVICE_PARAMS.items);
       nextToken = result.data.listSERVICE_PARAMS.nextToken;
@@ -1061,10 +1055,7 @@ const insertService = async () => {
         CREATED_DATE: new Date().toISOString().split('T')[0]
       };
       
-      const serviceResult = await generateClient().graphql({
-        query: mutations.createService,
-        variables: { input: serviceInput }
-      });
+      const serviceResult = await callExternalApi(window.currentEnvironment, mutations.createService, { input: serviceInput });
       
       serviceId = serviceResult.data.createSERVICE.SERVICE_ID;
     }
@@ -1082,10 +1073,7 @@ const insertService = async () => {
         variables.nextToken = nextToken;
       }
       
-      const result = await generateClient().graphql({ 
-        query: queries.listServiceParams,
-        variables
-      });
+      const result = await callExternalApi(window.currentEnvironment, queries.listServiceParams, variables);
       
       existingParams.push(...result.data.listSERVICE_PARAMS.items);
       nextToken = result.data.listSERVICE_PARAMS.nextToken;
@@ -1121,10 +1109,7 @@ const insertService = async () => {
       
       for (const paramInput of paramInputs) {
         try {
-          await generateClient().graphql({
-            query: mutations.createServiceParam,
-            variables: { input: paramInput }
-          });
+          await callExternalApi(window.currentEnvironment, mutations.createServiceParam, { input: paramInput });
           currentInsert.value++;
         } catch (err) {
           console.error('Failed to create parameter:', paramInput.PARAM_NAME, err);
@@ -1170,10 +1155,7 @@ const updateService = async () => {
         variables.nextToken = nextToken;
       }
       
-      const result = await generateClient().graphql({ 
-        query: queries.listServiceParams,
-        variables
-      });
+      const result = await callExternalApi(window.currentEnvironment, queries.listServiceParams, variables);
       
       existingParams.push(...result.data.listSERVICE_PARAMS.items);
       nextToken = result.data.listSERVICE_PARAMS.nextToken;
@@ -1208,10 +1190,7 @@ const updateService = async () => {
       
       for (const paramInput of paramInputs) {
         try {
-          await generateClient().graphql({
-            query: mutations.createServiceParam,
-            variables: { input: paramInput }
-          });
+          await callExternalApi(window.currentEnvironment, mutations.createServiceParam, { input: paramInput });
           currentInsert.value++;
         } catch (err) {
           console.error('Failed to create parameter:', paramInput.PARAM_NAME, err);

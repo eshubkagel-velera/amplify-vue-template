@@ -1,36 +1,40 @@
 import { generateClient } from 'aws-amplify/api';
 
 let client = null;
-let userPoolClient = null;
-let currentEnv = null;
 
 export const getClient = () => {
-  // Always recreate client to ensure it uses current environment config
-  console.log(`🔄 Creating Amplify client for ${window.currentEnvironment}...`);
-  try {
-    client = generateClient({
-      authMode: 'apiKey'
-    });
-    console.log('✅ Amplify client created successfully');
-    currentEnv = window.currentEnvironment;
-  } catch (error) {
-    console.error('❌ Failed to create Amplify client:', error);
-    throw error;
+  if (!client) {
+    console.log('🔄 Creating Amplify client...');
+    try {
+      client = generateClient({
+        authMode: 'apiKey'
+      });
+      console.log('✅ Amplify client created successfully');
+    } catch (error) {
+      console.error('❌ Failed to create Amplify client:', error);
+      throw error;
+    }
   }
   return client;
 };
 
-export const getUserPoolClient = () => {
-  // Always recreate client to ensure it uses current environment config
-  console.log(`🔐 Creating UserPool client for ${window.currentEnvironment}...`);
+// Helper function to make external API calls through backend
+export const callExternalApi = async (environment, query, variables = {}) => {
+  const client = getClient();
   try {
-    userPoolClient = generateClient({
-      authMode: 'userPool'
+    // Check if externalQuery is available (backend deployed)
+    if (!client.queries || !client.queries.externalQuery) {
+      throw new Error('Backend not deployed - externalQuery not available. Please deploy the Amplify backend first.');
+    }
+    
+    const result = await client.queries.externalQuery({
+      environment,
+      query,
+      variables: JSON.stringify(variables)
     });
-    console.log('✅ UserPool client created successfully');
+    return JSON.parse(result.data);
   } catch (error) {
-    console.error('❌ Failed to create UserPool client:', error);
+    console.error('External API call failed:', error);
     throw error;
   }
-  return userPoolClient;
 };

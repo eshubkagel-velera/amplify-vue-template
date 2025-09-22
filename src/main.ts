@@ -4,24 +4,18 @@ import App from './App.vue';
 
 console.log('🚀 Starting GraphQL API Manager');
 
-// Build environment configuration from environment variables
+// Simple environment configuration - no API keys needed in frontend
 const environments = {
   dev: {
-    endpoint: import.meta.env.VITE_DEV_APPSYNC_ENDPOINT || import.meta.env.VITE_APPSYNC_API_URL,
-    appId: import.meta.env.VITE_DEV_APPSYNC_API_ID || import.meta.env.VITE_APP_ID,
-    apiKey: import.meta.env.VITE_DEV_APPSYNC_API_KEY || import.meta.env.VITE_APPSYNC_API_KEY,
-    region: import.meta.env.VITE_APPSYNC_REGION || 'us-east-2',
     environment: 'dev',
+    region: import.meta.env.VITE_APPSYNC_REGION || 'us-east-2',
     userPoolId: import.meta.env.VITE_USER_POOL_ID,
     userPoolClientId: import.meta.env.VITE_USER_POOL_CLIENT_ID,
     oauthDomain: import.meta.env.VITE_OAUTH_DOMAIN
   },
   test: {
-    endpoint: import.meta.env.VITE_TEST_APPSYNC_ENDPOINT || import.meta.env.VITE_APPSYNC_API_URL,
-    appId: import.meta.env.VITE_TEST_APPSYNC_API_ID || import.meta.env.VITE_APP_ID,
-    apiKey: import.meta.env.VITE_TEST_APPSYNC_API_KEY || import.meta.env.VITE_APPSYNC_API_KEY,
-    region: import.meta.env.VITE_APPSYNC_REGION || 'us-east-2',
     environment: 'test',
+    region: import.meta.env.VITE_APPSYNC_REGION || 'us-east-2',
     userPoolId: import.meta.env.VITE_USER_POOL_ID,
     userPoolClientId: import.meta.env.VITE_USER_POOL_CLIENT_ID,
     oauthDomain: import.meta.env.VITE_OAUTH_DOMAIN
@@ -52,74 +46,55 @@ const environments = {
 window.currentEnvironment = localStorage.getItem('selectedEnvironment') || 'dev';
 window.environments = environments;
 
-// Configure Amplify with initial environment
-const configureAmplify = (envKey) => {
-  const config = environments[envKey];
-  if (!config) {
-    throw new Error(`Invalid environment: ${envKey}`);
-  }
-  
-  console.log(`🌍 Configuring for environment: ${envKey}`);
-  console.log('🔍 Environment variables:', {
-    endpoint: config.endpoint,
-    apiKey: config.apiKey ? `SET (${config.apiKey.substring(0, 8)}...)` : 'MISSING',
-    allEnvVars: Object.keys(import.meta.env),
-    devKey: import.meta.env.VITE_DEV_APPSYNC_API_KEY ? 'SET' : 'MISSING',
-    testKey: import.meta.env.VITE_TEST_APPSYNC_API_KEY ? 'SET' : 'MISSING',
-    uatKey: import.meta.env.VITE_UAT_APPSYNC_API_KEY ? 'SET' : 'MISSING',
-    prodKey: import.meta.env.VITE_PROD_APPSYNC_API_KEY ? 'SET' : 'MISSING'
-  });
-  console.log('🔍 Full env vars:', import.meta.env);
-  
-  if (!config.apiKey) {
-    console.error(`❌ No API key found for ${envKey} environment`);
-    console.error('Available env vars:', Object.keys(import.meta.env));
-  }
-  
-  const amplifyConfig = {
-    API: {
-      GraphQL: {
-        endpoint: config.endpoint,
-        region: config.region,
-        defaultAuthMode: 'apiKey',
-        apiKey: config.apiKey
-      }
-    }
-  };
-  
-  // Add Auth config if available
-  if (config.userPoolId && config.userPoolClientId) {
-    amplifyConfig.Auth = {
-      Cognito: {
-        userPoolId: config.userPoolId,
-        userPoolClientId: config.userPoolClientId,
-        region: config.region,
-        loginWith: {
-          oauth: {
-            domain: config.oauthDomain,
-            scopes: ['email', 'openid', 'profile'],
-            redirectSignIn: [window.location.origin + '/'],
-            redirectSignOut: [window.location.origin + '/'],
-            responseType: 'code'
-          }
+// Validate required environment variables
+const userPoolId = import.meta.env.VITE_USER_POOL_ID;
+const userPoolClientId = import.meta.env.VITE_USER_POOL_CLIENT_ID;
+
+if (!userPoolId) {
+  throw new Error('VITE_USER_POOL_ID environment variable is required');
+}
+if (!userPoolClientId) {
+  throw new Error('VITE_USER_POOL_CLIENT_ID environment variable is required');
+}
+
+// Configure Amplify with minimal config since backend deployment failed
+const amplifyConfig = {
+  Auth: {
+    Cognito: {
+      userPoolId,
+      userPoolClientId,
+      region: import.meta.env.VITE_APPSYNC_REGION || 'us-east-2',
+      loginWith: {
+        oauth: {
+          domain: import.meta.env.VITE_OAUTH_DOMAIN,
+          scopes: ['email', 'openid', 'profile'],
+          redirectSignIn: [window.location.origin + '/'],
+          redirectSignOut: [window.location.origin + '/'],
+          responseType: 'code'
         }
       }
-    };
+    }
+  },
+  API: {
+    GraphQL: {
+      endpoint: 'https://placeholder.appsync-api.us-east-2.amazonaws.com/graphql',
+      region: import.meta.env.VITE_APPSYNC_REGION || 'us-east-2',
+      defaultAuthMode: 'apiKey',
+      apiKey: 'placeholder-key'
+    }
   }
-  
-  Amplify.configure(amplifyConfig);
 };
 
-// Initial configuration
-configureAmplify(window.currentEnvironment);
+Amplify.configure(amplifyConfig);
+console.log(`🌍 Amplify configured with minimal config`);
 
-// Global function to switch environments
+
+
+// Global function to switch environments (now just updates current environment)
 window.switchEnvironment = (envKey) => {
   window.currentEnvironment = envKey;
   localStorage.setItem('selectedEnvironment', envKey);
-  configureAmplify(envKey);
   console.log(`✅ Switched to ${envKey} environment`);
-  // No page reload needed - auth session persists
 };
 
 console.log('✅ Amplify configured');
