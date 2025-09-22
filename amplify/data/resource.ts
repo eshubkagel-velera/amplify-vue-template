@@ -1,6 +1,18 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
 
 const schema = a.schema({
+  // External API query with validation
+  externalQuery: a
+    .query()
+    .arguments({
+      environment: a.string().required(),
+      query: a.string().required(),
+      variables: a.json()
+    })
+    .returns(a.json())
+    .handler(a.handler.function('externalApi'))
+    .authorization((allow) => [allow.publicApiKey()]),
+
   LoanApp: a
     .model({
       LOAN_APP_ID: a.id().required(),
