@@ -3,7 +3,7 @@
     <label for="env-select">Environment:</label>
     <select id="env-select" v-model="selectedEnvironment" @change="switchEnvironment">
       <option v-for="(config, key) in environments" :key="key" :value="key">
-        {{ key.toUpperCase() }} - {{ config.endpoint.split('.')[0].split('//')[1] }}
+        {{ key.toUpperCase() }} - {{ getDataSourceName(key) }}
       </option>
     </select>
     <span class="env-indicator" :class="`env-${selectedEnvironment}`">{{ selectedEnvironment.toUpperCase() }}</span>
@@ -20,6 +20,16 @@ onMounted(() => {
   environments.value = window.environments || {};
   selectedEnvironment.value = window.currentEnvironment || 'dev';
 });
+
+const getDataSourceName = (env) => {
+  const dataSourceMap = {
+    dev: 'hazel_mapping_dev',
+    test: 'hazel_mapping_test', 
+    uat: 'hazel_mapping_uat',
+    prod: 'hazel_mapping_live'
+  };
+  return dataSourceMap[env] || env;
+};
 
 const switchEnvironment = () => {
   if (window.switchEnvironment) {
