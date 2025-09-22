@@ -17,13 +17,8 @@
     </div>
   </div>
   <div v-else>
-    <div class="user-info">
-      <div class="user-details">
-        <span>{{ user?.username }}</span>
-        <span class="user-groups">{{ userGroups.join(', ') }}</span>
-      </div>
-      <div class="current-env">{{ currentEnvironment?.toUpperCase() }}</div>
-      <button @click="handleSignOut">Sign Out</button>
+    <div class="auth-header">
+      <button @click="handleSignOut" class="sign-out-btn">Sign Out</button>
     </div>
     <slot />
   </div>
@@ -176,32 +171,25 @@ onMounted(async () => {
   background: #28a745 !important;
 }
 
-.user-info {
+.auth-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
+  justify-content: flex-end;
+  padding: 10px;
   background: #f8f9fa;
   border-bottom: 1px solid #dee2e6;
 }
 
-.user-details {
-  display: flex;
-  flex-direction: column;
-}
-
-.user-groups {
-  font-size: 0.8rem;
-  color: #6c757d;
-}
-
-.current-env {
-  padding: 4px 8px;
-  border-radius: 3px;
-  font-size: 12px;
-  font-weight: bold;
-  background: #28a745;
+.sign-out-btn {
+  background: #dc3545;
   color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+.sign-out-btn:hover {
+  background: #c82333;
 }
 
 .error {

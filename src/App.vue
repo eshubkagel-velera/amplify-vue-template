@@ -3,16 +3,25 @@
     <AuthWrapper>
       <header>
         <div class="header-top">
-          <h1>GraphQL API Manager</h1>
+          <h1>Hazel Mapping Editor</h1>
+        </div>
+        <div class="controls-section">
+          <div class="user-info-section">
+            <label>User:</label>
+            <span class="user-info">{{ user?.email }} ({{ userGroups.join(', ') }})</span>
+          </div>
           <EnvironmentSelector />
+          <div class="screen-selector">
+            <label for="screen-select">Screen:</label>
+            <select id="screen-select" v-model="currentView" @change="changeView" :disabled="showMappingManager || showRedirectUrlManager || showStepServicesManager || showServiceParamsManager || showServiceStepMappingManager">
+              <option v-for="entity in sortedEntities" :key="entity.name" :value="entity.name">
+                {{ entity.name }}
+              </option>
+              <option value="import">Import Services</option>
+            </select>
+          </div>
         </div>
       <nav>
-        <select v-model="currentView" @change="changeView" :disabled="showMappingManager || showRedirectUrlManager || showStepServicesManager || showServiceParamsManager || showServiceStepMappingManager">
-          <option v-for="entity in sortedEntities" :key="entity.name" :value="entity.name">
-            {{ entity.name }}
-          </option>
-          <option value="import">Import Services</option>
-        </select>
         <button v-if="showMappingManager" @click="closeMappingManager" class="btn-primary" style="margin-left: 10px;">
           Back to {{ currentView }}
         </button>
@@ -68,6 +77,35 @@ import { ref, computed, onMounted } from 'vue';
 import AuthWrapper from './components/AuthWrapper.vue';
 import EnvironmentSelector from './components/EnvironmentSelector.vue';
 import { useAuth } from './composables/useAuth';
+
+// User info refs
+const user = ref(null);
+const userGroups = ref([]);
+
+// Load user info
+const loadUserInfo = async () => {
+  try {
+    const { fetchAuthSession, fetchUserAttributes } = await import('aws-amplify/auth');
+    const session = await fetchAuthSession();
+    const accessToken = session.tokens?.accessToken;
+    
+    // Get user attributes including email
+    const userAttributes = await fetchUserAttributes();
+    
+    if (accessToken?.payload) {
+      user.value = {
+        email: userAttributes.email || accessToken.payload.email || accessToken.payload.username,
+        username: accessToken.payload.username
+      };
+      
+      if (accessToken.payload['cognito:groups']) {
+        userGroups.value = accessToken.payload['cognito:groups'];
+      }
+    }
+  } catch (err) {
+    console.warn('Could not load user info:', err);
+  }
+};
 import EntityManager from './components/EntityManager.vue';
 import ServiceImport from './components/ServiceImport.vue';
 import RedirectUrlStandalone from './components/RedirectUrlStandalone.vue';
@@ -477,8 +515,9 @@ const handleOpenServiceStepMapping = (data) => {
   showServiceStepMappingManager.value = true;
 };
 
-onMounted(() => {
+onMounted(async () => {
   currentView.value = 'import';
+  await loadUserInfo();
 });
 </script>
 
@@ -494,10 +533,59 @@ onMounted(() => {
 
 .header-top {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   margin-bottom: 15px;
-  flex-wrap: wrap;
+}
+
+.controls-section {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 15px;
+  flex-direction: column;
+}
+
+.user-info-section,
+.environment-selector,
+.screen-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: var(--bg-color, #fff);
+  border: 1px solid var(--border-color, #dee2e6);
+  border-radius: 4px;
+  align-self: flex-end;
+  width: 450px;
+  height: 40px;
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+
+.user-info-section label,
+.screen-selector label {
+  font-weight: bold;
+  color: var(--text-color, #333);
+  min-width: 50px;
+}
+
+.user-info {
+  font-weight: normal;
+  color: var(--text-color, #333);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.screen-selector select {
+  padding: 5px 10px;
+  border: 1px solid var(--border-color, #dee2e6);
+  border-radius: 3px;
+  background: var(--input-bg, #fff);
+  color: var(--text-color, #333);
+  flex: 1;
 }
 
 header {

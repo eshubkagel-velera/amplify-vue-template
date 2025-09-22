@@ -1,17 +1,9 @@
 version: 1
-backend:
+frontend:
   phases:
     preBuild:
       commands:
-        - nvm install 22
-        - nvm use 22
-    build:
-      commands:
-        - rm -f package-lock.json
         - npm install
-        - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
-frontend:
-  phases:
     build:
       commands:
         - npm run build
@@ -21,5 +13,4 @@ frontend:
       - '**/*'
   cache:
     paths:
-      - .npm/**/*
       - node_modules/**/*

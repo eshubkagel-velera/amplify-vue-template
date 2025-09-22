@@ -20,6 +20,8 @@
     "deploy:test": "scripts\\deploy.bat test",
     "deploy:uat": "scripts\\deploy.bat uat",
     "deploy:prod": "scripts\\deploy.bat prod",
+    "setup-env": "bash scripts/set-env-vars.sh",
+    "cleanup-env": "bash scripts/cleanup-env-vars.sh",
     "sync": "scripts\\sync-environments.bat"
   },
   "dependencies": {
