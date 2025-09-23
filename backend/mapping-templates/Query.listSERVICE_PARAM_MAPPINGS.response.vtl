@@ -1,0 +1,27 @@
+#if($context.error)
+  $util.error($context.error.message, $context.error.type)
+#end
+
+#if($context.result.records)
+  [
+    #foreach($record in $context.result.records)
+      {
+        "SERVICE_PARAM_MAPPING_ID": #if($record[0].longValue)$record[0].longValue#else null#end,
+        "ORIGIN_PRODUCT_ID": #if($record[1].longValue)$record[1].longValue#else null#end,
+        "SYSTEM_NBR": #if($record[2].stringValue)"$record[2].stringValue"#else null#end,
+        "PRIN_NBR": #if($record[3].stringValue)"$record[3].stringValue"#else null#end,
+        "AGENT_NBR": #if($record[4].stringValue)"$record[4].stringValue"#else null#end,
+        "SOURCE_SERVICE_PARAM_ID": #if($record[5].longValue)$record[5].longValue#else null#end,
+        "TARGET_SERVICE_PARAM_ID": #if($record[6].longValue)$record[6].longValue#else null#end,
+        "PLASTIC_TYPE_ID": #if($record[7].stringValue)"$record[7].stringValue"#else null#end,
+        "COMMENT_TEXT": #if($record[8].stringValue)"$record[8].stringValue"#else null#end,
+        "CREATED_BY_USER_ID": #if($record[9].longValue)$record[9].longValue#else null#end,
+        "CREATED_DATE": #if($record[10].stringValue)"$record[10].stringValue"#else null#end,
+        "CHANGED_BY_USER_ID": #if($record[11].longValue)$record[11].longValue#else null#end,
+        "CHANGED_DATE": #if($record[12].stringValue)"$record[12].stringValue"#else null#end
+      }#if($foreach.hasNext),#end
+    #end
+  ]
+#else
+  []
+#end

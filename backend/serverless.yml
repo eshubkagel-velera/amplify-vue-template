@@ -1,0 +1,241 @@
+service: vue-appsync-api
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-2
+  stage: ${opt:stage, 'dev'}
+  deploymentBucket:
+    skipPolicySetup: true
+    name: hazel-mapping-serverless-deployment-bucket
+
+custom:
+  stages:
+    dev:
+      enabled: true
+      secretArn: arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-a11d98c5-d647-45a2-9978-f81be7aa3d60-iDsvX3
+      databaseName: hazel_mapping_dev
+      minCapacity: 1
+      maxCapacity: 2
+    test:
+      enabled: true
+      secretArn: arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-cb7e7e17-e3eb-4916-a783-a3fad3597623-NOkBYH
+      databaseName: hazel_mapping_test
+      minCapacity: 1
+      maxCapacity: 4
+    uat:
+      enabled: false
+      secretArn: arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-uat-placeholder
+      databaseName: hazel_mapping_uat
+    live:
+      enabled: false
+      secretArn: arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-live-placeholder
+      databaseName: hazel_mapping_live
+  
+  stageConfig: ${self:custom.stages.${self:provider.stage}}
+  appSync:
+    name: vue-appsync-api-${self:provider.stage}
+    authenticationType: API_KEY
+    apiKeys:
+      - name: default
+        description: Default API Key
+        expiresAfter: 365d
+    schema: schema.graphql
+    logging:
+      level: ALL
+      roleArn: !GetAtt AppSyncLoggingRole.Arn
+    dataSources:
+      - type: RELATIONAL_DATABASE
+        name: DevDataSource
+        config:
+          dbClusterIdentifier: hazel-mapping
+          databaseName: hazel_mapping_dev
+          awsSecretStoreArn: arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-a11d98c5-d647-45a2-9978-f81be7aa3d60-iDsvX3
+          serviceRoleArn: !GetAtt RDSServiceRole.Arn
+      - type: RELATIONAL_DATABASE
+        name: TestDataSource
+        config:
+          dbClusterIdentifier: hazel-mapping-test
+          databaseName: hazel_mapping_test
+          awsSecretStoreArn: arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-cb7e7e17-e3eb-4916-a783-a3fad3597623-NOkBYH
+          serviceRoleArn: !GetAtt RDSServiceRole.Arn
+    mappingTemplates:
+      # DEV environment operations
+      - dataSource: DevDataSource
+        type: Query
+        field: listCONFIG_PARAMS_DEV
+        request: Query.listCONFIG_PARAMS.request.vtl
+        response: Query.listCONFIG_PARAMS.response.vtl
+      - dataSource: DevDataSource
+        type: Query
+        field: listLOAN_APPS_DEV
+        request: Query.listLOAN_APPS.request.vtl
+        response: Query.listLOAN_APPS.response.vtl
+      - dataSource: DevDataSource
+        type: Query
+        field: listNEW_MEMBER_TOKENS_DEV
+        request: Query.listNEW_MEMBER_TOKENS.request.vtl
+        response: Query.listNEW_MEMBER_TOKENS.response.vtl
+      - dataSource: DevDataSource
+        type: Query
+        field: listORIGIN_PRODUCTS_DEV
+        request: Query.listORIGIN_PRODUCTS.request.vtl
+        response: Query.listORIGIN_PRODUCTS.response.vtl
+      
+      # TEST environment operations
+      - dataSource: TestDataSource
+        type: Query
+        field: listCONFIG_PARAMS_TEST
+        request: Query.listCONFIG_PARAMS.request.vtl
+        response: Query.listCONFIG_PARAMS.response.vtl
+      - dataSource: TestDataSource
+        type: Query
+        field: listLOAN_APPS_TEST
+        request: Query.listLOAN_APPS.request.vtl
+        response: Query.listLOAN_APPS.response.vtl
+      - dataSource: TestDataSource
+        type: Query
+        field: listNEW_MEMBER_TOKENS_TEST
+        request: Query.listNEW_MEMBER_TOKENS.request.vtl
+        response: Query.listNEW_MEMBER_TOKENS.response.vtl
+      - dataSource: TestDataSource
+        type: Query
+        field: listORIGIN_PRODUCTS_TEST
+        request: Query.listORIGIN_PRODUCTS.request.vtl
+        response: Query.listORIGIN_PRODUCTS.response.vtl
+      - dataSource: TestDataSource
+        type: Query
+        field: listSERVICE_PROVIDERS_TEST
+        request: Query.listSERVICE_PROVIDERS.request.vtl
+        response: Query.listSERVICE_PROVIDERS.response.vtl
+      - dataSource: DevDataSource
+        type: Query
+        field: listSERVICE_PROVIDERS_DEV
+        request: Query.listSERVICE_PROVIDERS.request.vtl
+        response: Query.listSERVICE_PROVIDERS.response.vtl
+      - dataSource: TestDataSource
+        type: Query
+        field: listSERVICES_TEST
+        request: Query.listSERVICES.request.vtl
+        response: Query.listSERVICES.response.vtl
+      - dataSource: DevDataSource
+        type: Query
+        field: listSERVICES_DEV
+        request: Query.listSERVICES.request.vtl
+        response: Query.listSERVICES.response.vtl
+      - dataSource: TestDataSource
+        type: Query
+        field: listREDIRECT_URLS_TEST
+        request: Query.listREDIRECT_URLS.request.vtl
+        response: Query.listREDIRECT_URLS.response.vtl
+      - dataSource: DevDataSource
+        type: Query
+        field: listREDIRECT_URLS_DEV
+        request: Query.listREDIRECT_URLS.request.vtl
+        response: Query.listREDIRECT_URLS.response.vtl
+      - dataSource: TestDataSource
+        type: Query
+        field: listSERVICE_PARAMS_TEST
+        request: Query.listSERVICE_PARAMS.request.vtl
+        response: Query.listSERVICE_PARAMS.response.vtl
+      - dataSource: DevDataSource
+        type: Query
+        field: listSERVICE_PARAMS_DEV
+        request: Query.listSERVICE_PARAMS.request.vtl
+        response: Query.listSERVICE_PARAMS.response.vtl
+      - dataSource: TestDataSource
+        type: Query
+        field: listSERVICE_PARAM_MAPPINGS_TEST
+        request: Query.listSERVICE_PARAM_MAPPINGS.request.vtl
+        response: Query.listSERVICE_PARAM_MAPPINGS.response.vtl
+      - dataSource: DevDataSource
+        type: Query
+        field: listSERVICE_PARAM_MAPPINGS_DEV
+        request: Query.listSERVICE_PARAM_MAPPINGS.request.vtl
+        response: Query.listSERVICE_PARAM_MAPPINGS.response.vtl
+      
+      # REDIRECT_URL mutations for DEV
+      - dataSource: DevDataSource
+        type: Mutation
+        field: createREDIRECT_URL_DEV
+        request: Mutation.createREDIRECT_URL.request.vtl
+        response: Mutation.createREDIRECT_URL.response.vtl
+      - dataSource: DevDataSource
+        type: Mutation
+        field: updateREDIRECT_URL_DEV
+        request: Mutation.updateREDIRECT_URL.request.vtl
+        response: Mutation.updateREDIRECT_URL.response.vtl
+      - dataSource: DevDataSource
+        type: Mutation
+        field: deleteREDIRECT_URL_DEV
+        request: Mutation.deleteREDIRECT_URL.request.vtl
+        response: Mutation.deleteREDIRECT_URL.response.vtl
+      
+      # REDIRECT_URL mutations for TEST
+      - dataSource: TestDataSource
+        type: Mutation
+        field: createREDIRECT_URL_TEST
+        request: Mutation.createREDIRECT_URL.request.vtl
+        response: Mutation.createREDIRECT_URL.response.vtl
+      - dataSource: TestDataSource
+        type: Mutation
+        field: updateREDIRECT_URL_TEST
+        request: Mutation.updateREDIRECT_URL.request.vtl
+        response: Mutation.updateREDIRECT_URL.response.vtl
+      - dataSource: TestDataSource
+        type: Mutation
+        field: deleteREDIRECT_URL_TEST
+        request: Mutation.deleteREDIRECT_URL.request.vtl
+        response: Mutation.deleteREDIRECT_URL.response.vtl
+
+
+plugins:
+  - serverless-appsync-plugin
+
+resources:
+  Resources:
+    AppSyncLoggingRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: appsync.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: CloudWatchLogsAccess
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                  Resource: '*'
+    RDSServiceRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: appsync.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: RDSDataAccess
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - rds-data:*
+                    - secretsmanager:GetSecretValue
+                    - kms:Decrypt
+                    - kms:DescribeKey
+                  Resource: 
+                    - "*"
+

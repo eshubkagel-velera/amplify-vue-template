@@ -1,0 +1,795 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "The AWS CloudFormation template for this Serverless application",
+  "Resources": {
+    "AppSyncLoggingRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "appsync.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "CloudWatchLogsAccess",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "RDSServiceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "appsync.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "RDSDataAccess",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "rds-data:*",
+                    "secretsmanager:GetSecretValue",
+                    "kms:Decrypt",
+                    "kms:DescribeKey"
+                  ],
+                  "Resource": [
+                    "*"
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "GraphQlApi": {
+      "Type": "AWS::AppSync::GraphQLApi",
+      "Properties": {
+        "Name": "vue-appsync-api-dev",
+        "AuthenticationType": "API_KEY",
+        "AdditionalAuthenticationProviders": [],
+        "XrayEnabled": false
+      }
+    },
+    "GraphQlApiKeydefault": {
+      "Type": "AWS::AppSync::ApiKey",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "Description": "Default API Key",
+        "Expires": 1790114400
+      }
+    },
+    "GraphQlSchema": {
+      "Type": "AWS::AppSync::GraphQLSchema",
+      "Properties": {
+        "Definition": "schema {\n  query: Query\n  mutation: Mutation\n  subscription: Subscription\n}\n\ntype CONFIG_PARAM {\n  CHANGED_DATE: String\n  CONFIG_NAME: String!\n  CONFIG_PARAM_ID: Int!\n  CONFIG_VALUE: String!\n  CREATED_DATE: String\n  DESCRIPTION: String\n}\n\ntype LOAN_APP {\n  CHANGED_DATE: String\n  CREATED_DATE: String!\n  EXEC_ID: String\n  LOAN_APP_ID: Int!\n  ORIGIN_LOAN_APP_ID: String!\n  ORIGIN_PRODUCT_ID: Int!\n  PROCESS_FLAG: String!\n}\n\ntype NEW_MEMBER_TOKEN {\n  CARD_NBR: String\n  CHANGED_DATE: String\n  CREATED_DATE: String!\n  DOB: String\n  EMAIL_ADDRESS_TEXT: String\n  FIRST_NAME: String\n  HOME_PHONE_NBR: String\n  LAST_NAME: String\n  LOAN_APP_ID: Int!\n  MEMBER_NBR: String\n  MOBILE_PHONE_NBR: String\n  NEW_MEMBER_TOKEN_ID: Int!\n  PERSON_NBR: String\n  TAX_ID: String\n  TOKEN_USED_FLAG: String!\n  TOKEN_VALUE: String\n  ZIP_CODE: String\n}\n\ntype ORIGIN_PRODUCT {\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  ORIGIN_PRODUCT_ID: Int!\n  PARTNER_CODE: String\n  PRODUCT_DESC: String!\n  PRODUCT_ID: String!\n  PSCU_CLIENT_ID: Int!\n  VENDOR_NAME: String!\n}\n\ninput CreateCONFIG_PARAMInput {\n  CHANGED_DATE: String\n  CONFIG_NAME: String!\n  CONFIG_PARAM_ID: Int!\n  CONFIG_VALUE: String!\n  CREATED_DATE: String\n  DESCRIPTION: String\n}\n\ninput CreateLOAN_APPInput {\n  CHANGED_DATE: String\n  CREATED_DATE: String!\n  EXEC_ID: String\n  LOAN_APP_ID: Int!\n  ORIGIN_LOAN_APP_ID: String!\n  ORIGIN_PRODUCT_ID: Int!\n  PROCESS_FLAG: String!\n}\n\ninput CreateNEW_MEMBER_TOKENInput {\n  CARD_NBR: String\n  CHANGED_DATE: String\n  CREATED_DATE: String!\n  DOB: String\n  EMAIL_ADDRESS_TEXT: String\n  FIRST_NAME: String\n  HOME_PHONE_NBR: String\n  LAST_NAME: String\n  LOAN_APP_ID: Int!\n  MEMBER_NBR: String\n  MOBILE_PHONE_NBR: String\n  NEW_MEMBER_TOKEN_ID: Int!\n  PERSON_NBR: String\n  TAX_ID: String\n  TOKEN_USED_FLAG: String!\n  TOKEN_VALUE: String\n  ZIP_CODE: String\n}\n\ninput CreateORIGIN_PRODUCTInput {\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  ORIGIN_PRODUCT_ID: Int!\n  PARTNER_CODE: String\n  PRODUCT_DESC: String!\n  PRODUCT_ID: String!\n  PSCU_CLIENT_ID: Int!\n  VENDOR_NAME: String!\n}\n\ninput CreateREDIRECT_URLInput {\n  ORIGIN_PRODUCT_ID: Int!\n  URL_TYPE_CODE: String!\n  URL: String!\n  RESPONSE_TEXT: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n}\n\ninput UpdateREDIRECT_URLInput {\n  REDIRECT_URL_ID: Int!\n  ORIGIN_PRODUCT_ID: Int!\n  URL_TYPE_CODE: String!\n  URL: String!\n  RESPONSE_TEXT: String\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ninput DeleteREDIRECT_URLInput {\n  REDIRECT_URL_ID: Int!\n}\n\ntype Query {\n  \n    listCONFIG_PARAMS_DEV: [CONFIG_PARAM]\n  listLOAN_APPS_DEV: [LOAN_APP]\n  listNEW_MEMBER_TOKENS_DEV: [NEW_MEMBER_TOKEN]\n  listORIGIN_PRODUCTS_DEV: [ORIGIN_PRODUCT]\n  \n    listCONFIG_PARAMS_TEST: [CONFIG_PARAM]\n  listLOAN_APPS_TEST: [LOAN_APP]\n  listNEW_MEMBER_TOKENS_TEST: [NEW_MEMBER_TOKEN]\n  listORIGIN_PRODUCTS_TEST: [ORIGIN_PRODUCT]\n  listSERVICE_PROVIDERS_TEST: [SERVICE_PROVIDER]\n  listSERVICES_TEST: [SERVICE]\n  listSERVICE_PARAMS_TEST: [SERVICE_PARAM]\n  listSERVICE_PARAM_MAPPINGS_TEST: [SERVICE_PARAM_MAPPING]\n  listSERVICE_EXPR_MAPPINGS_TEST: [SERVICE_EXPR_MAPPING]\n  listSTEP_TYPES_TEST: [STEP_TYPE]\n  listSTEP_SERVICE_MAPPINGS_TEST: [STEP_SERVICE_MAPPING]\n  listREDIRECT_URLS_TEST: [REDIRECT_URL]\n  \n    listSERVICE_PROVIDERS_DEV: [SERVICE_PROVIDER]\n  listSERVICES_DEV: [SERVICE]\n  listSERVICE_PARAMS_DEV: [SERVICE_PARAM]\n  listSERVICE_PARAM_MAPPINGS_DEV: [SERVICE_PARAM_MAPPING]\n  listSERVICE_EXPR_MAPPINGS_DEV: [SERVICE_EXPR_MAPPING]\n  listSTEP_TYPES_DEV: [STEP_TYPE]\n  listSTEP_SERVICE_MAPPINGS_DEV: [STEP_SERVICE_MAPPING]\n  listREDIRECT_URLS_DEV: [REDIRECT_URL]\n}\n\ntype Mutation {\n  createCONFIG_PARAM(input: CreateCONFIG_PARAMInput!): CONFIG_PARAM\n  createLOAN_APP(input: CreateLOAN_APPInput!): LOAN_APP\n  createNEW_MEMBER_TOKEN(input: CreateNEW_MEMBER_TOKENInput!): NEW_MEMBER_TOKEN\n  createORIGIN_PRODUCT(input: CreateORIGIN_PRODUCTInput!): ORIGIN_PRODUCT\n  createREDIRECT_URL_DEV(input: CreateREDIRECT_URLInput!): REDIRECT_URL\n  updateREDIRECT_URL_DEV(input: UpdateREDIRECT_URLInput!): REDIRECT_URL\n  deleteREDIRECT_URL_DEV(input: DeleteREDIRECT_URLInput!): REDIRECT_URL\n  createREDIRECT_URL_TEST(input: CreateREDIRECT_URLInput!): REDIRECT_URL\n  updateREDIRECT_URL_TEST(input: UpdateREDIRECT_URLInput!): REDIRECT_URL\n  deleteREDIRECT_URL_TEST(input: DeleteREDIRECT_URLInput!): REDIRECT_URL\n}\n\ntype SERVICE_PROVIDER {\n  SERVICE_PROVIDER_ID: Int!\n  SERVICE_PROVIDER_NAME: String!\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ntype SERVICE {\n  SERVICE_ID: Int!\n  SERVICE_PROVIDER_ID: Int!\n  URI: String!\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ntype SERVICE_PARAM {\n  SERVICE_PARAM_ID: Int!\n  SERVICE_ID: Int!\n  PARAM_NAME: String!\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ntype SERVICE_PARAM_MAPPING {\n  SERVICE_PARAM_MAPPING_ID: Int!\n  ORIGIN_PRODUCT_ID: Int!\n  SYSTEM_NBR: String\n  PRIN_NBR: String\n  AGENT_NBR: String\n  SOURCE_SERVICE_PARAM_ID: Int!\n  TARGET_SERVICE_PARAM_ID: Int!\n  PLASTIC_TYPE_ID: Int\n  COMMENT_TEXT: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ntype SERVICE_EXPR_MAPPING {\n  SERVICE_EXPR_MAPPING_ID: Int!\n  SERVICE_PARAM_MAPPING_ID: Int!\n  SOURCE_EXPR: String!\n  TARGET_EXPR: String!\n  COMMENT_TEXT: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ntype STEP_TYPE {\n  STEP_TYPE_ID: Int!\n  STEP_TYPE_NAME: String!\n  STEP_TYPE_DESC: String\n  RESOURCE_NAME: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ntype STEP_SERVICE_MAPPING {\n  STEP_SERVICE_MAPPING_ID: Int!\n  STEP_TYPE_ID: Int!\n  SERVICE_ID: Int!\n  SEQUENCE_NBR: Int!\n}\n\ntype REDIRECT_URL {\n  REDIRECT_URL_ID: Int!\n  ORIGIN_PRODUCT_ID: Int!\n  URL_TYPE_CODE: String!\n  URL: String!\n  RESPONSE_TEXT: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ntype Subscription {\n  onCreateCONFIG_PARAM: CONFIG_PARAM\n  onCreateLOAN_APP: LOAN_APP\n  onCreateNEW_MEMBER_TOKEN: NEW_MEMBER_TOKEN\n  onCreateORIGIN_PRODUCT: ORIGIN_PRODUCT\n}",
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        }
+      }
+    },
+    "GraphQlDsDevDataSource": {
+      "Type": "AWS::AppSync::DataSource",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "Name": "DevDataSource",
+        "Type": "RELATIONAL_DATABASE",
+        "ServiceRoleArn": {
+          "Fn::GetAtt": [
+            "RDSServiceRole",
+            "Arn"
+          ]
+        },
+        "RelationalDatabaseConfig": {
+          "RdsHttpEndpointConfig": {
+            "AwsRegion": "us-east-2",
+            "DbClusterIdentifier": {
+              "Fn::Join": [
+                ":",
+                [
+                  "arn",
+                  "aws",
+                  "rds",
+                  "us-east-2",
+                  {
+                    "Ref": "AWS::AccountId"
+                  },
+                  "cluster",
+                  "hazel-mapping"
+                ]
+              ]
+            },
+            "DatabaseName": "hazel_mapping_dev",
+            "AwsSecretStoreArn": "arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-a11d98c5-d647-45a2-9978-f81be7aa3d60-iDsvX3"
+          },
+          "RelationalDatabaseSourceType": "RDS_HTTP_ENDPOINT"
+        }
+      }
+    },
+    "GraphQlDsTestDataSource": {
+      "Type": "AWS::AppSync::DataSource",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "Name": "TestDataSource",
+        "Type": "RELATIONAL_DATABASE",
+        "ServiceRoleArn": {
+          "Fn::GetAtt": [
+            "RDSServiceRole",
+            "Arn"
+          ]
+        },
+        "RelationalDatabaseConfig": {
+          "RdsHttpEndpointConfig": {
+            "AwsRegion": "us-east-2",
+            "DbClusterIdentifier": {
+              "Fn::Join": [
+                ":",
+                [
+                  "arn",
+                  "aws",
+                  "rds",
+                  "us-east-2",
+                  {
+                    "Ref": "AWS::AccountId"
+                  },
+                  "cluster",
+                  "hazel-mapping-test"
+                ]
+              ]
+            },
+            "DatabaseName": "hazel_mapping_test",
+            "AwsSecretStoreArn": "arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-cb7e7e17-e3eb-4916-a783-a3fad3597623-NOkBYH"
+          },
+          "RelationalDatabaseSourceType": "RDS_HTTP_ENDPOINT"
+        }
+      }
+    },
+    "GraphQlResolverQuerylistCONFIGPARAMSDEV": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listCONFIG_PARAMS_DEV",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM CONFIG_PARAM\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\r\n#if($ctx.error)\r\n    $utils.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n$utils.toJson($utils.rds.toJsonObject($ctx.result)[0])",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsDevDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistLOANAPPSDEV": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listLOAN_APPS_DEV",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM LOAN_APP\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\r\n#if($ctx.error)\r\n    $utils.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n$utils.toJson($utils.rds.toJsonObject($ctx.result)[0])",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsDevDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistNEWMEMBERTOKENSDEV": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listNEW_MEMBER_TOKENS_DEV",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM NEW_MEMBER_TOKEN\"\n  ]\n}",
+        "ResponseMappingTemplate": "$util.toJson($context.result.sqlStatementResults[0])",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsDevDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistORIGINPRODUCTSDEV": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listORIGIN_PRODUCTS_DEV",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT ORIGIN_PRODUCT_ID, VENDOR_NAME, PRODUCT_ID, PRODUCT_DESC, PSCU_CLIENT_ID, PARTNER_CODE, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE FROM ORIGIN_PRODUCT\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n$utils.toJson($utils.rds.toJsonObject($ctx.result)[0])",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsDevDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistCONFIGPARAMSTEST": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listCONFIG_PARAMS_TEST",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM CONFIG_PARAM\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\r\n#if($ctx.error)\r\n    $utils.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n$utils.toJson($utils.rds.toJsonObject($ctx.result)[0])",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsTestDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistLOANAPPSTEST": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listLOAN_APPS_TEST",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM LOAN_APP\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\r\n#if($ctx.error)\r\n    $utils.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n$utils.toJson($utils.rds.toJsonObject($ctx.result)[0])",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsTestDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistNEWMEMBERTOKENSTEST": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listNEW_MEMBER_TOKENS_TEST",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM NEW_MEMBER_TOKEN\"\n  ]\n}",
+        "ResponseMappingTemplate": "$util.toJson($context.result.sqlStatementResults[0])",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsTestDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistORIGINPRODUCTSTEST": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listORIGIN_PRODUCTS_TEST",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT ORIGIN_PRODUCT_ID, VENDOR_NAME, PRODUCT_ID, PRODUCT_DESC, PSCU_CLIENT_ID, PARTNER_CODE, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE FROM ORIGIN_PRODUCT\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n$utils.toJson($utils.rds.toJsonObject($ctx.result)[0])",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsTestDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistSERVICEPROVIDERSTEST": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listSERVICE_PROVIDERS_TEST",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT SERVICE_PROVIDER_ID, SERVICE_PROVIDER_NAME, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE FROM SERVICE_PROVIDER\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\r\n#if($ctx.error)\r\n    $utils.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n$utils.toJson($utils.rds.toJsonObject($ctx.result)[0])",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsTestDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistSERVICEPROVIDERSDEV": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listSERVICE_PROVIDERS_DEV",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT SERVICE_PROVIDER_ID, SERVICE_PROVIDER_NAME, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE FROM SERVICE_PROVIDER\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\r\n#if($ctx.error)\r\n    $utils.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n$utils.toJson($utils.rds.toJsonObject($ctx.result)[0])",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsDevDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistSERVICESTEST": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listSERVICES_TEST",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM SERVICE\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\r\n#if($ctx.error)\r\n    $utils.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n$utils.toJson($utils.rds.toJsonObject($ctx.result)[0])",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsTestDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistSERVICESDEV": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listSERVICES_DEV",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM SERVICE\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\r\n#if($ctx.error)\r\n    $utils.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n$utils.toJson($utils.rds.toJsonObject($ctx.result)[0])",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsDevDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistREDIRECTURLSTEST": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listREDIRECT_URLS_TEST",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT REDIRECT_URL_ID, ORIGIN_PRODUCT_ID, URL_TYPE_CODE, URL, RESPONSE_TEXT, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE FROM REDIRECT_URL\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n$utils.toJson($utils.rds.toJsonObject($ctx.result)[0])",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsTestDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistREDIRECTURLSDEV": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listREDIRECT_URLS_DEV",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT REDIRECT_URL_ID, ORIGIN_PRODUCT_ID, URL_TYPE_CODE, URL, RESPONSE_TEXT, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE FROM REDIRECT_URL\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n$utils.toJson($utils.rds.toJsonObject($ctx.result)[0])",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsDevDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistSERVICEPARAMSTEST": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listSERVICE_PARAMS_TEST",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT SERVICE_PARAM_ID, SERVICE_ID, PARAM_NAME, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE FROM SERVICE_PARAM LIMIT 100\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($context.error)\n  $util.error($context.error.message, $context.error.type)\n#end\n\n#if($context.result.records)\n  [\n    #foreach($record in $context.result.records)\n      {\n        \"SERVICE_PARAM_ID\": #if($record[0].longValue)$record[0].longValue#else null#end,\n        \"SERVICE_ID\": #if($record[1].longValue)$record[1].longValue#else null#end,\n        \"PARAM_NAME\": #if($record[2].stringValue)\"$record[2].stringValue\"#else null#end,\n        \"CREATED_BY_USER_ID\": #if($record[3].longValue)$record[3].longValue#else null#end,\n        \"CREATED_DATE\": #if($record[4].stringValue)\"$record[4].stringValue\"#else null#end,\n        \"CHANGED_BY_USER_ID\": #if($record[5].longValue)$record[5].longValue#else null#end,\n        \"CHANGED_DATE\": #if($record[6].stringValue)\"$record[6].stringValue\"#else null#end\n      }#if($foreach.hasNext),#end\n    #end\n  ]\n#else\n  []\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsTestDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistSERVICEPARAMSDEV": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listSERVICE_PARAMS_DEV",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT SERVICE_PARAM_ID, SERVICE_ID, PARAM_NAME, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE FROM SERVICE_PARAM LIMIT 100\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($context.error)\n  $util.error($context.error.message, $context.error.type)\n#end\n\n#if($context.result.records)\n  [\n    #foreach($record in $context.result.records)\n      {\n        \"SERVICE_PARAM_ID\": #if($record[0].longValue)$record[0].longValue#else null#end,\n        \"SERVICE_ID\": #if($record[1].longValue)$record[1].longValue#else null#end,\n        \"PARAM_NAME\": #if($record[2].stringValue)\"$record[2].stringValue\"#else null#end,\n        \"CREATED_BY_USER_ID\": #if($record[3].longValue)$record[3].longValue#else null#end,\n        \"CREATED_DATE\": #if($record[4].stringValue)\"$record[4].stringValue\"#else null#end,\n        \"CHANGED_BY_USER_ID\": #if($record[5].longValue)$record[5].longValue#else null#end,\n        \"CHANGED_DATE\": #if($record[6].stringValue)\"$record[6].stringValue\"#else null#end\n      }#if($foreach.hasNext),#end\n    #end\n  ]\n#else\n  []\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsDevDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistSERVICEPARAMMAPPINGSTEST": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listSERVICE_PARAM_MAPPINGS_TEST",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT SERVICE_PARAM_MAPPING_ID, ORIGIN_PRODUCT_ID, SYSTEM_NBR, PRIN_NBR, AGENT_NBR, SOURCE_SERVICE_PARAM_ID, TARGET_SERVICE_PARAM_ID, PLASTIC_TYPE_ID, COMMENT_TEXT, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE FROM SERVICE_PARAM_MAPPING LIMIT 100\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($context.error)\n  $util.error($context.error.message, $context.error.type)\n#end\n\n#if($context.result.records)\n  [\n    #foreach($record in $context.result.records)\n      {\n        \"SERVICE_PARAM_MAPPING_ID\": #if($record[0].longValue)$record[0].longValue#else null#end,\n        \"ORIGIN_PRODUCT_ID\": #if($record[1].longValue)$record[1].longValue#else null#end,\n        \"SYSTEM_NBR\": #if($record[2].stringValue)\"$record[2].stringValue\"#else null#end,\n        \"PRIN_NBR\": #if($record[3].stringValue)\"$record[3].stringValue\"#else null#end,\n        \"AGENT_NBR\": #if($record[4].stringValue)\"$record[4].stringValue\"#else null#end,\n        \"SOURCE_SERVICE_PARAM_ID\": #if($record[5].longValue)$record[5].longValue#else null#end,\n        \"TARGET_SERVICE_PARAM_ID\": #if($record[6].longValue)$record[6].longValue#else null#end,\n        \"PLASTIC_TYPE_ID\": #if($record[7].stringValue)\"$record[7].stringValue\"#else null#end,\n        \"COMMENT_TEXT\": #if($record[8].stringValue)\"$record[8].stringValue\"#else null#end,\n        \"CREATED_BY_USER_ID\": #if($record[9].longValue)$record[9].longValue#else null#end,\n        \"CREATED_DATE\": #if($record[10].stringValue)\"$record[10].stringValue\"#else null#end,\n        \"CHANGED_BY_USER_ID\": #if($record[11].longValue)$record[11].longValue#else null#end,\n        \"CHANGED_DATE\": #if($record[12].stringValue)\"$record[12].stringValue\"#else null#end\n      }#if($foreach.hasNext),#end\n    #end\n  ]\n#else\n  []\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsTestDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistSERVICEPARAMMAPPINGSDEV": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listSERVICE_PARAM_MAPPINGS_DEV",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT SERVICE_PARAM_MAPPING_ID, ORIGIN_PRODUCT_ID, SYSTEM_NBR, PRIN_NBR, AGENT_NBR, SOURCE_SERVICE_PARAM_ID, TARGET_SERVICE_PARAM_ID, PLASTIC_TYPE_ID, COMMENT_TEXT, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE FROM SERVICE_PARAM_MAPPING LIMIT 100\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($context.error)\n  $util.error($context.error.message, $context.error.type)\n#end\n\n#if($context.result.records)\n  [\n    #foreach($record in $context.result.records)\n      {\n        \"SERVICE_PARAM_MAPPING_ID\": #if($record[0].longValue)$record[0].longValue#else null#end,\n        \"ORIGIN_PRODUCT_ID\": #if($record[1].longValue)$record[1].longValue#else null#end,\n        \"SYSTEM_NBR\": #if($record[2].stringValue)\"$record[2].stringValue\"#else null#end,\n        \"PRIN_NBR\": #if($record[3].stringValue)\"$record[3].stringValue\"#else null#end,\n        \"AGENT_NBR\": #if($record[4].stringValue)\"$record[4].stringValue\"#else null#end,\n        \"SOURCE_SERVICE_PARAM_ID\": #if($record[5].longValue)$record[5].longValue#else null#end,\n        \"TARGET_SERVICE_PARAM_ID\": #if($record[6].longValue)$record[6].longValue#else null#end,\n        \"PLASTIC_TYPE_ID\": #if($record[7].stringValue)\"$record[7].stringValue\"#else null#end,\n        \"COMMENT_TEXT\": #if($record[8].stringValue)\"$record[8].stringValue\"#else null#end,\n        \"CREATED_BY_USER_ID\": #if($record[9].longValue)$record[9].longValue#else null#end,\n        \"CREATED_DATE\": #if($record[10].stringValue)\"$record[10].stringValue\"#else null#end,\n        \"CHANGED_BY_USER_ID\": #if($record[11].longValue)$record[11].longValue#else null#end,\n        \"CHANGED_DATE\": #if($record[12].stringValue)\"$record[12].stringValue\"#else null#end\n      }#if($foreach.hasNext),#end\n    #end\n  ]\n#else\n  []\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsDevDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationcreateREDIRECTURLDEV": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "createREDIRECT_URL_DEV",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"INSERT INTO REDIRECT_URL (ORIGIN_PRODUCT_ID, URL_TYPE_CODE, URL, RESPONSE_TEXT, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:ORIGIN_PRODUCT_ID, :URL_TYPE_CODE, :URL, :RESPONSE_TEXT, :CREATED_BY_USER_ID, :CREATED_DATE)\"\n  ],\n  \"variableMap\": {\n    \":ORIGIN_PRODUCT_ID\": $util.toJson($ctx.args.input.ORIGIN_PRODUCT_ID),\n    \":URL_TYPE_CODE\": $util.toJson($ctx.args.input.URL_TYPE_CODE),\n    \":URL\": $util.toJson($ctx.args.input.URL),\n    \":RESPONSE_TEXT\": $util.toJson($ctx.args.input.RESPONSE_TEXT),\n    \":CREATED_BY_USER_ID\": $util.toJson($ctx.args.input.CREATED_BY_USER_ID),\n    \":CREATED_DATE\": $util.toJson($ctx.args.input.CREATED_DATE)\n  }\n}",
+        "ResponseMappingTemplate": "#if($ctx.error)\n  $util.error($ctx.error.message, $ctx.error.type)\n#end\n\n{\n  \"REDIRECT_URL_ID\": 999,\n  \"ORIGIN_PRODUCT_ID\": $ctx.args.input.ORIGIN_PRODUCT_ID,\n  \"URL_TYPE_CODE\": \"$ctx.args.input.URL_TYPE_CODE\",\n  \"URL\": \"$ctx.args.input.URL\",\n  \"RESPONSE_TEXT\": \"$ctx.args.input.RESPONSE_TEXT\",\n  \"CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\n  \"CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\",\n  \"CHANGED_BY_USER_ID\": null,\n  \"CHANGED_DATE\": null\n}",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsDevDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationupdateREDIRECTURLDEV": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "updateREDIRECT_URL_DEV",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"UPDATE REDIRECT_URL SET ORIGIN_PRODUCT_ID = :ORIGIN_PRODUCT_ID, URL_TYPE_CODE = :URL_TYPE_CODE, URL = :URL, RESPONSE_TEXT = :RESPONSE_TEXT, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE REDIRECT_URL_ID = :REDIRECT_URL_ID\"\n  ],\n  \"variableMap\": {\n    \":REDIRECT_URL_ID\": $util.toJson($ctx.args.input.REDIRECT_URL_ID),\n    \":ORIGIN_PRODUCT_ID\": $util.toJson($ctx.args.input.ORIGIN_PRODUCT_ID),\n    \":URL_TYPE_CODE\": $util.toJson($ctx.args.input.URL_TYPE_CODE),\n    \":URL\": $util.toJson($ctx.args.input.URL),\n    \":RESPONSE_TEXT\": $util.toJson($ctx.args.input.RESPONSE_TEXT),\n    \":CHANGED_BY_USER_ID\": $util.toJson($ctx.args.input.CHANGED_BY_USER_ID),\n    \":CHANGED_DATE\": $util.toJson($ctx.args.input.CHANGED_DATE)\n  }\n}",
+        "ResponseMappingTemplate": "#if($ctx.error)\n  $util.error($ctx.error.message, $ctx.error.type)\n#end\n\n{\n  \"REDIRECT_URL_ID\": $ctx.args.input.REDIRECT_URL_ID,\n  \"ORIGIN_PRODUCT_ID\": $ctx.args.input.ORIGIN_PRODUCT_ID,\n  \"URL_TYPE_CODE\": \"$ctx.args.input.URL_TYPE_CODE\",\n  \"URL\": \"$ctx.args.input.URL\",\n  \"RESPONSE_TEXT\": \"$ctx.args.input.RESPONSE_TEXT\",\n  \"CREATED_BY_USER_ID\": 1,\n  \"CREATED_DATE\": \"2024-01-01\",\n  \"CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\n  \"CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\n}",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsDevDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationdeleteREDIRECTURLDEV": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "deleteREDIRECT_URL_DEV",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM REDIRECT_URL WHERE REDIRECT_URL_ID = :REDIRECT_URL_ID\"\n  ],\n  \"variableMap\": {\n    \":REDIRECT_URL_ID\": $util.toJson($ctx.args.input.REDIRECT_URL_ID)\n  }\n}",
+        "ResponseMappingTemplate": "#if($ctx.error)\n  $util.error($ctx.error.message, $ctx.error.type)\n#end\n\n{\n  \"REDIRECT_URL_ID\": $ctx.args.input.REDIRECT_URL_ID,\n  \"ORIGIN_PRODUCT_ID\": 1,\n  \"URL_TYPE_CODE\": \"DELETED\",\n  \"URL\": \"DELETED\",\n  \"RESPONSE_TEXT\": null,\n  \"CREATED_BY_USER_ID\": 1,\n  \"CREATED_DATE\": \"2024-01-01\",\n  \"CHANGED_BY_USER_ID\": null,\n  \"CHANGED_DATE\": null\n}",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsDevDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationcreateREDIRECTURLTEST": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "createREDIRECT_URL_TEST",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"INSERT INTO REDIRECT_URL (ORIGIN_PRODUCT_ID, URL_TYPE_CODE, URL, RESPONSE_TEXT, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:ORIGIN_PRODUCT_ID, :URL_TYPE_CODE, :URL, :RESPONSE_TEXT, :CREATED_BY_USER_ID, :CREATED_DATE)\"\n  ],\n  \"variableMap\": {\n    \":ORIGIN_PRODUCT_ID\": $util.toJson($ctx.args.input.ORIGIN_PRODUCT_ID),\n    \":URL_TYPE_CODE\": $util.toJson($ctx.args.input.URL_TYPE_CODE),\n    \":URL\": $util.toJson($ctx.args.input.URL),\n    \":RESPONSE_TEXT\": $util.toJson($ctx.args.input.RESPONSE_TEXT),\n    \":CREATED_BY_USER_ID\": $util.toJson($ctx.args.input.CREATED_BY_USER_ID),\n    \":CREATED_DATE\": $util.toJson($ctx.args.input.CREATED_DATE)\n  }\n}",
+        "ResponseMappingTemplate": "#if($ctx.error)\n  $util.error($ctx.error.message, $ctx.error.type)\n#end\n\n{\n  \"REDIRECT_URL_ID\": 999,\n  \"ORIGIN_PRODUCT_ID\": $ctx.args.input.ORIGIN_PRODUCT_ID,\n  \"URL_TYPE_CODE\": \"$ctx.args.input.URL_TYPE_CODE\",\n  \"URL\": \"$ctx.args.input.URL\",\n  \"RESPONSE_TEXT\": \"$ctx.args.input.RESPONSE_TEXT\",\n  \"CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\n  \"CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\",\n  \"CHANGED_BY_USER_ID\": null,\n  \"CHANGED_DATE\": null\n}",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsTestDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationupdateREDIRECTURLTEST": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "updateREDIRECT_URL_TEST",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"UPDATE REDIRECT_URL SET ORIGIN_PRODUCT_ID = :ORIGIN_PRODUCT_ID, URL_TYPE_CODE = :URL_TYPE_CODE, URL = :URL, RESPONSE_TEXT = :RESPONSE_TEXT, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE REDIRECT_URL_ID = :REDIRECT_URL_ID\"\n  ],\n  \"variableMap\": {\n    \":REDIRECT_URL_ID\": $util.toJson($ctx.args.input.REDIRECT_URL_ID),\n    \":ORIGIN_PRODUCT_ID\": $util.toJson($ctx.args.input.ORIGIN_PRODUCT_ID),\n    \":URL_TYPE_CODE\": $util.toJson($ctx.args.input.URL_TYPE_CODE),\n    \":URL\": $util.toJson($ctx.args.input.URL),\n    \":RESPONSE_TEXT\": $util.toJson($ctx.args.input.RESPONSE_TEXT),\n    \":CHANGED_BY_USER_ID\": $util.toJson($ctx.args.input.CHANGED_BY_USER_ID),\n    \":CHANGED_DATE\": $util.toJson($ctx.args.input.CHANGED_DATE)\n  }\n}",
+        "ResponseMappingTemplate": "#if($ctx.error)\n  $util.error($ctx.error.message, $ctx.error.type)\n#end\n\n{\n  \"REDIRECT_URL_ID\": $ctx.args.input.REDIRECT_URL_ID,\n  \"ORIGIN_PRODUCT_ID\": $ctx.args.input.ORIGIN_PRODUCT_ID,\n  \"URL_TYPE_CODE\": \"$ctx.args.input.URL_TYPE_CODE\",\n  \"URL\": \"$ctx.args.input.URL\",\n  \"RESPONSE_TEXT\": \"$ctx.args.input.RESPONSE_TEXT\",\n  \"CREATED_BY_USER_ID\": 1,\n  \"CREATED_DATE\": \"2024-01-01\",\n  \"CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\n  \"CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\n}",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsTestDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationdeleteREDIRECTURLTEST": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "deleteREDIRECT_URL_TEST",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM REDIRECT_URL WHERE REDIRECT_URL_ID = :REDIRECT_URL_ID\"\n  ],\n  \"variableMap\": {\n    \":REDIRECT_URL_ID\": $util.toJson($ctx.args.input.REDIRECT_URL_ID)\n  }\n}",
+        "ResponseMappingTemplate": "#if($ctx.error)\n  $util.error($ctx.error.message, $ctx.error.type)\n#end\n\n{\n  \"REDIRECT_URL_ID\": $ctx.args.input.REDIRECT_URL_ID,\n  \"ORIGIN_PRODUCT_ID\": 1,\n  \"URL_TYPE_CODE\": \"DELETED\",\n  \"URL\": \"DELETED\",\n  \"RESPONSE_TEXT\": null,\n  \"CREATED_BY_USER_ID\": 1,\n  \"CREATED_DATE\": \"2024-01-01\",\n  \"CHANGED_BY_USER_ID\": null,\n  \"CHANGED_DATE\": null\n}",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsTestDataSource",
+            "Name"
+          ]
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "ServerlessDeploymentBucketName": {
+      "Value": "hazel-mapping-serverless-deployment-bucket",
+      "Export": {
+        "Name": "sls-vue-appsync-api-dev-ServerlessDeploymentBucketName"
+      }
+    },
+    "GraphQlApiKeydefault": {
+      "Value": {
+        "Fn::GetAtt": [
+          "GraphQlApiKeydefault",
+          "ApiKey"
+        ]
+      }
+    },
+    "GraphQlApiId": {
+      "Value": {
+        "Fn::GetAtt": [
+          "GraphQlApi",
+          "ApiId"
+        ]
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}-GraphQlApiId"
+        }
+      }
+    },
+    "GraphQlApiUrl": {
+      "Value": {
+        "Fn::GetAtt": [
+          "GraphQlApi",
+          "GraphQLUrl"
+        ]
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}-GraphQlApiUrl"
+        }
+      }
+    }
+  }
+}
