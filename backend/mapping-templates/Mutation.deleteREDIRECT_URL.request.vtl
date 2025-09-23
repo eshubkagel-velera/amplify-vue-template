@@ -1,0 +1,9 @@
+{
+  "version": "2018-05-29",
+  "statements": [
+    "DELETE FROM REDIRECT_URL WHERE REDIRECT_URL_ID = :REDIRECT_URL_ID"
+  ],
+  "variableMap": {
+    ":REDIRECT_URL_ID": $util.toJson($ctx.args.input.REDIRECT_URL_ID)
+  }
+}
