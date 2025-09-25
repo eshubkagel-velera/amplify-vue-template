@@ -42,6 +42,9 @@ export function response(ctx) {
             result
         )
     }
-    return toJsonObject(result)[1][0]
+    console.log('SERVICE update result:', JSON.stringify(result));
+    const jsonResult = toJsonObject(result);
+    console.log('JSON result:', JSON.stringify(jsonResult));
+    return jsonResult[1] && jsonResult[1][0] ? jsonResult[1][0] : null;
 }
 

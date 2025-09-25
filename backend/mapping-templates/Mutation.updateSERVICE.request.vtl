@@ -1,0 +1,16 @@
+{
+  "version": "2018-05-29",
+  "statements": [
+    "UPDATE SERVICE SET SERVICE_PROVIDER_ID = :SERVICE_PROVIDER_ID, URI = :URI, SECRET_NAME = :SECRET_NAME, REQUEST_TYPE = :REQUEST_TYPE, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE SERVICE_ID = :SERVICE_ID",
+    "SELECT * FROM SERVICE WHERE SERVICE_ID = :SERVICE_ID"
+  ],
+  "variableMap": {
+    ":SERVICE_ID": $util.toJson($ctx.args.input.SERVICE_ID),
+    ":SERVICE_PROVIDER_ID": $util.toJson($ctx.args.input.SERVICE_PROVIDER_ID),
+    ":URI": $util.toJson($ctx.args.input.URI),
+    ":SECRET_NAME": $util.toJson($ctx.args.input.SECRET_NAME),
+    ":REQUEST_TYPE": $util.toJson($ctx.args.input.REQUEST_TYPE),
+    ":CHANGED_BY_USER_ID": $util.toJson($ctx.args.input.CHANGED_BY_USER_ID),
+    ":CHANGED_DATE": $util.toJson($ctx.args.input.CHANGED_DATE)
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "version": "2018-05-29",
+  "statements": [
+    "DELETE FROM SERVICE WHERE SERVICE_ID = :SERVICE_ID"
+  ],
+  "variableMap": {
+    ":SERVICE_ID": $util.toJson($ctx.args.input.SERVICE_ID)
+  }
+}

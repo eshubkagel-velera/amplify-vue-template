@@ -265,7 +265,7 @@
                 ]
               },
               "Description": "Auto-generated api key",
-              "Expires": 1790362800
+              "Expires": 1790366400
             }
           },
           "GraphQlSchema": {
@@ -1244,7 +1244,7 @@
     "isDashboardMonitoringPreconfigured": false
   },
   "package": {
-    "artifactDirectoryName": "serverless/vue-appsync-api/dev/1758829298568-2025-09-25T19:41:38.568Z",
+    "artifactDirectoryName": "serverless/vue-appsync-api/dev/1758830911395-2025-09-25T20:08:31.395Z",
     "artifact": ""
   }
 }

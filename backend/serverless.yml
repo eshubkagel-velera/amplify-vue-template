@@ -161,6 +161,125 @@ custom:
         field: deleteREDIRECT_URL
         request: Mutation.deleteREDIRECT_URL.request.vtl
         response: Mutation.deleteREDIRECT_URL.response.vtl
+      
+      # SERVICE_PROVIDER mutations
+      - dataSource: StageDataSource
+        type: Mutation
+        field: createSERVICE_PROVIDER
+        request: Mutation.createSERVICE_PROVIDER.request.vtl
+        response: Mutation.createSERVICE_PROVIDER.response.vtl
+      - dataSource: StageDataSource
+        type: Mutation
+        field: updateSERVICE_PROVIDER
+        request: Mutation.updateSERVICE_PROVIDER.request.vtl
+        response: Mutation.updateSERVICE_PROVIDER.response.vtl
+      - dataSource: StageDataSource
+        type: Mutation
+        field: deleteSERVICE_PROVIDER
+        request: Mutation.deleteSERVICE_PROVIDER.request.vtl
+        response: Mutation.deleteSERVICE_PROVIDER.response.vtl
+      
+      # SERVICE mutations
+      - dataSource: StageDataSource
+        type: Mutation
+        field: createSERVICE
+        request: Mutation.createSERVICE.request.vtl
+        response: Mutation.createSERVICE.response.vtl
+      - dataSource: StageDataSource
+        type: Mutation
+        field: updateSERVICE
+        request: Mutation.updateSERVICE.request.vtl
+        response: Mutation.updateSERVICE.response.vtl
+      - dataSource: StageDataSource
+        type: Mutation
+        field: deleteSERVICE
+        request: Mutation.deleteSERVICE.request.vtl
+        response: Mutation.deleteSERVICE.response.vtl
+      
+      # SERVICE_PARAM mutations
+      - dataSource: StageDataSource
+        type: Mutation
+        field: createSERVICE_PARAM
+        request: Mutation.createSERVICE_PARAM.request.vtl
+        response: Mutation.createSERVICE_PARAM.response.vtl
+      - dataSource: StageDataSource
+        type: Mutation
+        field: updateSERVICE_PARAM
+        request: Mutation.updateSERVICE_PARAM.request.vtl
+        response: Mutation.updateSERVICE_PARAM.response.vtl
+      - dataSource: StageDataSource
+        type: Mutation
+        field: deleteSERVICE_PARAM
+        request: Mutation.deleteSERVICE_PARAM.request.vtl
+        response: Mutation.deleteSERVICE_PARAM.response.vtl
+      
+      # SERVICE_PARAM_MAPPING mutations
+      - dataSource: StageDataSource
+        type: Mutation
+        field: createSERVICE_PARAM_MAPPING
+        request: Mutation.createSERVICE_PARAM_MAPPING.request.vtl
+        response: Mutation.createSERVICE_PARAM_MAPPING.response.vtl
+      - dataSource: StageDataSource
+        type: Mutation
+        field: updateSERVICE_PARAM_MAPPING
+        request: Mutation.updateSERVICE_PARAM_MAPPING.request.vtl
+        response: Mutation.updateSERVICE_PARAM_MAPPING.response.vtl
+      - dataSource: StageDataSource
+        type: Mutation
+        field: deleteSERVICE_PARAM_MAPPING
+        request: Mutation.deleteSERVICE_PARAM_MAPPING.request.vtl
+        response: Mutation.deleteSERVICE_PARAM_MAPPING.response.vtl
+      
+      # SERVICE_EXPR_MAPPING mutations
+      - dataSource: StageDataSource
+        type: Mutation
+        field: createSERVICE_EXPR_MAPPING
+        request: Mutation.createSERVICE_EXPR_MAPPING.request.vtl
+        response: Mutation.createSERVICE_EXPR_MAPPING.response.vtl
+      - dataSource: StageDataSource
+        type: Mutation
+        field: updateSERVICE_EXPR_MAPPING
+        request: Mutation.updateSERVICE_EXPR_MAPPING.request.vtl
+        response: Mutation.updateSERVICE_EXPR_MAPPING.response.vtl
+      - dataSource: StageDataSource
+        type: Mutation
+        field: deleteSERVICE_EXPR_MAPPING
+        request: Mutation.deleteSERVICE_EXPR_MAPPING.request.vtl
+        response: Mutation.deleteSERVICE_EXPR_MAPPING.response.vtl
+      
+      # STEP_TYPE mutations
+      - dataSource: StageDataSource
+        type: Mutation
+        field: createSTEP_TYPE
+        request: Mutation.createSTEP_TYPE.request.vtl
+        response: Mutation.createSTEP_TYPE.response.vtl
+      - dataSource: StageDataSource
+        type: Mutation
+        field: updateSTEP_TYPE
+        request: Mutation.updateSTEP_TYPE.request.vtl
+        response: Mutation.updateSTEP_TYPE.response.vtl
+      - dataSource: StageDataSource
+        type: Mutation
+        field: deleteSTEP_TYPE
+        request: Mutation.deleteSTEP_TYPE.request.vtl
+        response: Mutation.deleteSTEP_TYPE.response.vtl
+      
+      # STEP_SERVICE_MAPPING mutations
+      - dataSource: StageDataSource
+        type: Mutation
+        field: createSTEP_SERVICE_MAPPING
+        request: Mutation.createSTEP_SERVICE_MAPPING.request.vtl
+        response: Mutation.createSTEP_SERVICE_MAPPING.response.vtl
+      - dataSource: StageDataSource
+        type: Mutation
+        field: updateSTEP_SERVICE_MAPPING
+        request: Mutation.updateSTEP_SERVICE_MAPPING.request.vtl
+        response: Mutation.updateSTEP_SERVICE_MAPPING.response.vtl
+      - dataSource: StageDataSource
+        type: Mutation
+        field: deleteSTEP_SERVICE_MAPPING
+        request: Mutation.deleteSTEP_SERVICE_MAPPING.request.vtl
+        response: Mutation.deleteSTEP_SERVICE_MAPPING.response.vtl
 
 
 plugins:
