@@ -34,7 +34,10 @@ const getDataSourceName = (env) => {
 const switchEnvironment = () => {
   if (window.switchEnvironment) {
     window.switchEnvironment(selectedEnvironment.value);
-    // No reload needed - same auth session across environments
+    // Trigger data refresh across all components
+    window.dispatchEvent(new CustomEvent('environmentChanged', { 
+      detail: { environment: selectedEnvironment.value } 
+    }));
   }
 };
 </script>

@@ -1137,8 +1137,23 @@ const loadVendorNames = async () => {
 };
 
 // Listen for environment changes via custom event
-const handleEnvironmentChange = () => {
-  // Only reload if we're currently showing data (not empty due to filters)
+const handleEnvironmentChange = async () => {
+  // Reload dropdown options first
+  if (props.entityName === 'SERVICE_PARAM') {
+    await loadServiceOptionsLocal();
+  }
+  if (props.entityName === 'SERVICE') {
+    await loadServiceProviderOptions();
+  }
+  if (props.entityName === 'STEP_SERVICE_MAPPING') {
+    await loadStepServiceMappingOptions();
+    await loadStepTypeFilterOptions();
+  }
+  if (props.entityName === 'ORIGIN_PRODUCT') {
+    await loadVendorNames();
+  }
+  
+  // Then reload entity data
   if (props.entityName !== 'SERVICE_PARAM' || selectedServiceFilter.value || props.parentId) {
     if (props.entityName !== 'STEP_SERVICE_MAPPING' || selectedStepFilter.value || props.parentId) {
       loadEntities();

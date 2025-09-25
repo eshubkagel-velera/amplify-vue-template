@@ -1,0 +1,15 @@
+{
+  "version": "2018-05-29",
+  "statements": [
+    "INSERT INTO SERVICE (SERVICE_PROVIDER_ID, URI, SECRET_NAME, REQUEST_TYPE, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:SERVICE_PROVIDER_ID, :URI, :SECRET_NAME, :REQUEST_TYPE, :CREATED_BY_USER_ID, :CREATED_DATE)",
+    "SELECT * FROM SERVICE WHERE SERVICE_ID = LAST_INSERT_ID()"
+  ],
+  "variableMap": {
+    ":SERVICE_PROVIDER_ID": $util.toJson($ctx.args.input.SERVICE_PROVIDER_ID),
+    ":URI": $util.toJson($ctx.args.input.URI),
+    ":SECRET_NAME": $util.toJson($ctx.args.input.SECRET_NAME),
+    ":REQUEST_TYPE": $util.toJson($ctx.args.input.REQUEST_TYPE),
+    ":CREATED_BY_USER_ID": $util.toJson($ctx.args.input.CREATED_BY_USER_ID),
+    ":CREATED_DATE": $util.toJson($ctx.args.input.CREATED_DATE)
+  }
+}
