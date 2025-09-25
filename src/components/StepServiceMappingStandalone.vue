@@ -11,6 +11,7 @@
       <p><strong>Resource Name:</strong> {{ stepTypeInfo.RESOURCE_NAME }}</p>
     </div>
     <EntityManager
+      :key="stepTypeId"
       entityName="STEP_SERVICE_MAPPING"
       :fields="['STEP_SERVICE_MAPPING_ID', 'SERVICE', 'SEQUENCE_NBR']"
       :formFields="[
@@ -40,6 +41,7 @@ import { generateClient } from 'aws-amplify/api';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
 import type { StepType } from '../types';
+import { fetchAllPages } from '../utils/pagination';
 
 const props = defineProps<{
   stepTypeId: number;
@@ -49,18 +51,18 @@ const props = defineProps<{
 
 const stepTypeInfo = ref<StepType | null>(null);
 
-const loadStepServiceMappings = async () => {
-  const [mappingsResult, servicesResult] = await Promise.all([
-    generateClient().graphql({ query: queries.listStepServiceMappings }),
-    generateClient().graphql({ query: queries.listServices })
+const loadStepServiceMappings = async (params = {}) => {
+  const client = generateClient();
+  const [mappings, services] = await Promise.all([
+    fetchAllPages(client, queries.listStepServiceMappings, {}, 'listSTEP_SERVICE_MAPPINGS'),
+    fetchAllPages(client, queries.listServices, {}, 'listSERVICES')
   ]);
   
-  const mappings = mappingsResult.data.listSTEP_SERVICE_MAPPINGS.items.filter(
+  const filteredMappings = mappings.filter(
     (mapping: any) => mapping.STEP_TYPE_ID === props.stepTypeId
   );
-  const services = servicesResult.data.listSERVICES.items;
   
-  const enhancedMappings = mappings.map(mapping => {
+  const enhancedMappings = filteredMappings.map(mapping => {
     const service = services.find(s => s.SERVICE_ID === mapping.SERVICE_ID);
     return {
       ...mapping,
@@ -68,13 +70,14 @@ const loadStepServiceMappings = async () => {
     };
   });
   
-  return { data: { listSTEP_SERVICE_MAPPINGS: { items: enhancedMappings } } };
+  return { data: { listSTEP_SERVICE_MAPPINGS: enhancedMappings } };
 };
 
 const loadStepTypeInfo = async () => {
   try {
-    const result = await generateClient().graphql({ query: queries.listStepTypes });
-    const stepType = result.data.listSTEP_TYPES.items.find(st => st.STEP_TYPE_ID === props.stepTypeId);
+    const client = generateClient();
+    const stepTypes = await fetchAllPages(client, queries.listStepTypes, {}, 'listSTEP_TYPES');
+    const stepType = stepTypes.find(st => st.STEP_TYPE_ID === props.stepTypeId);
     if (stepType) {
       stepTypeInfo.value = stepType;
     }

@@ -1,24 +1,27 @@
 <template>
   <div id="app">
-    <AuthWrapper>
+    <AuthLogin v-if="!isAuthenticated" @authenticated="handleAuthenticated" />
+    <div v-else>
       <header>
-        <div class="header-top">
-          <h1>Hazel Mapping Editor</h1>
-        </div>
         <div class="controls-section">
-          <div class="user-info-section">
-            <label>User:</label>
-            <span class="user-info">{{ user?.email }} ({{ userGroups.join(', ') }})</span>
+          <div class="header-title">
+            <h1>Hazel Mapping Editor</h1>
           </div>
-          <EnvironmentSelector />
-          <div class="screen-selector">
-            <label for="screen-select">Screen:</label>
-            <select id="screen-select" v-model="currentView" @change="changeView" :disabled="showMappingManager || showRedirectUrlManager || showStepServicesManager || showServiceParamsManager || showServiceStepMappingManager">
-              <option v-for="entity in sortedEntities" :key="entity.name" :value="entity.name">
-                {{ entity.name }}
-              </option>
-              <option value="import">Import Services</option>
-            </select>
+          <div class="controls-right">
+            <div class="user-info-section">
+              <label>User:</label>
+              <span class="user-info">{{ user?.email }} ({{ userGroups.join(', ') }})</span>
+            </div>
+            <EnvironmentSelector />
+            <div class="screen-selector">
+              <label for="screen-select">Screen:</label>
+              <select id="screen-select" v-model="currentView" @change="changeView" :disabled="showMappingManager || showRedirectUrlManager || showStepServicesManager || showServiceParamsManager || showServiceStepMappingManager">
+                <option v-for="entity in sortedEntities" :key="entity.name" :value="entity.name">
+                  {{ entity.name }}
+                </option>
+                <option value="import">Import Services</option>
+              </select>
+            </div>
           </div>
         </div>
       <nav>
@@ -68,15 +71,68 @@
         :canDelete="canDelete"
       />
       </main>
-    </AuthWrapper>
+      <div style="position: fixed; top: 10px; right: 10px; display: flex; gap: 10px;">
+        <ThemeToggle />
+        <button @click="signOut" class="btn-danger">
+          Sign Out
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import AuthWrapper from './components/AuthWrapper.vue';
+import { ref, computed, onMounted, watch } from 'vue';
+import AuthLogin from './components/AuthLogin.vue';
 import EnvironmentSelector from './components/EnvironmentSelector.vue';
 import { useAuth } from './composables/useAuth';
+import { getCurrentUser, signOut as cognitoSignOut } from 'aws-amplify/auth';
+
+// Authentication state
+const isAuthenticated = ref(false);
+let inactivityTimer = null;
+
+const checkAuthState = async () => {
+  try {
+    await getCurrentUser();
+    isAuthenticated.value = true;
+    startInactivityTimer();
+  } catch {
+    isAuthenticated.value = false;
+  }
+};
+
+const startInactivityTimer = () => {
+  clearTimeout(inactivityTimer);
+  inactivityTimer = setTimeout(async () => {
+    console.log('Auto-logout due to inactivity');
+    await signOut();
+  }, 30 * 60 * 1000); // 30 minutes
+};
+
+const resetInactivityTimer = () => {
+  if (isAuthenticated.value) {
+    startInactivityTimer();
+  }
+};
+
+const handleAuthenticated = () => {
+  isAuthenticated.value = true;
+  loadUserInfo();
+  startInactivityTimer();
+};
+
+const signOut = async () => {
+  try {
+    clearTimeout(inactivityTimer);
+    await cognitoSignOut();
+    isAuthenticated.value = false;
+    user.value = null;
+    userGroups.value = [];
+  } catch (err) {
+    console.error('Sign out error:', err);
+  }
+};
 
 // User info refs
 const user = ref(null);
@@ -113,10 +169,12 @@ import MappingManagerStandalone from './components/MappingManagerStandalone.vue'
 import ServiceParamsStandalone from './components/ServiceParamsStandalone.vue';
 import StepServiceMappingStandalone from './components/StepServiceMappingStandalone.vue';
 import ServiceStepMappingStandalone from './components/ServiceStepMappingStandalone.vue';
+import ThemeToggle from './components/ThemeToggle.vue';
 
 import { getClient, getUserPoolClient } from './client.js';
 import * as queries from './graphql/queries';
 import * as mutations from './graphql/mutations';
+import { fetchAllPages } from './utils/pagination.js';
 
 // Use auth composable for permission checking
 const { isAdmin, isDeployment, isDeveloper, isReadonly, canEdit, canDelete } = useAuth();
@@ -133,8 +191,14 @@ const getClientInstance = () => {
 
 // All the GraphQL operations and entity configurations
 const listOriginProducts = async () => {
-  const result = await getClientInstance().graphql({ query: queries.listOriginProducts });
-  return { data: { listORIGIN_PRODUCTS: result.data.listOrigin_products } };
+  const items = await fetchAllPages(getClientInstance(), queries.listOriginProducts, {}, 'listORIGIN_PRODUCTS');
+  return {
+    data: {
+      listORIGIN_PRODUCTS: {
+        items
+      }
+    }
+  };
 };
 
 const createOriginProduct = async (input: any) => {
@@ -152,25 +216,7 @@ const deleteOriginProduct = async (input: any) => {
   return await getClientInstance().graphql({ query: mutations.deleteOriginProduct, variables: { input } });
 };
 
-const listServices = async () => {
-  const [servicesResult, providersResult] = await Promise.all([
-    getClientInstance().graphql({ query: queries.listServices }),
-    getClientInstance().graphql({ query: queries.listServiceProviders })
-  ]);
-  
-  const services = servicesResult.data.listSERVICES.items;
-  const providers = providersResult.data.listSERVICE_PROVIDERS.items;
-  
-  const enhancedServices = services.map(service => {
-    const provider = providers.find(p => p.SERVICE_PROVIDER_ID === service.SERVICE_PROVIDER_ID);
-    return {
-      ...service,
-      'Service Provider': provider ? `${provider.SERVICE_PROVIDER_ID}: ${provider.SERVICE_PROVIDER_NAME}` : service.SERVICE_PROVIDER_ID
-    };
-  });
-  
-  return { data: { listSERVICES: { items: enhancedServices } } };
-};
+
 
 const createService = async (input: any) => {
   if (!canEdit.value) throw new Error('Permission denied: Read-only access');
@@ -188,10 +234,6 @@ const deleteService = async (input: any) => {
 };
 
 // Add all missing entity operations
-const listRedirectUrls = async () => {
-  const result = await getClientInstance().graphql({ query: queries.listRedirectUrls });
-  return { data: { listREDIRECT_URLS: result.data.listRedirect_urls } };
-};
 
 const createRedirectUrl = async (input: any) => {
   return await getClientInstance().graphql({ query: mutations.createRedirectUrl, variables: { input } });
@@ -206,8 +248,31 @@ const deleteRedirectUrl = async (input: any) => {
 };
 
 const listServiceProviders = async () => {
-  const result = await getClientInstance().graphql({ query: queries.listServiceProviders });
-  return { data: { listSERVICE_PROVIDERS: result.data.listSERVICE_PROVIDERS } };
+  const items = await fetchAllPages(getClientInstance(), queries.listServiceProviders, {}, 'listSERVICE_PROVIDERS');
+  return {
+    data: {
+      listSERVICE_PROVIDERS: {
+        items
+      }
+    }
+  };
+};
+
+const listServices = async () => {
+  const [services, providers] = await Promise.all([
+    fetchAllPages(getClientInstance(), queries.listServices, {}, 'listSERVICES'),
+    fetchAllPages(getClientInstance(), queries.listServiceProviders, {}, 'listSERVICE_PROVIDERS')
+  ]);
+  
+  const enhancedServices = services.map(service => {
+    const provider = providers.find(p => p.SERVICE_PROVIDER_ID === service.SERVICE_PROVIDER_ID);
+    return {
+      ...service,
+      'Service Provider': provider ? `${provider.SERVICE_PROVIDER_ID}: ${provider.SERVICE_PROVIDER_NAME}` : service.SERVICE_PROVIDER_ID
+    };
+  });
+  
+  return { data: { listSERVICES: { items: enhancedServices } } };
 };
 
 const createServiceProvider = async (input: any) => {
@@ -226,8 +291,14 @@ const deleteServiceProvider = async (input: any) => {
 };
 
 const listServiceParams = async () => {
-  const result = await getClientInstance().graphql({ query: queries.listServiceParams });
-  return { data: { listSERVICE_PARAMS: result.data.listSERVICE_PARAMS } };
+  const items = await fetchAllPages(getClientInstance(), queries.listServiceParams, {}, 'listSERVICE_PARAMS');
+  return {
+    data: {
+      listSERVICE_PARAMS: {
+        items
+      }
+    }
+  };
 };
 
 const createServiceParam = async (input: any) => {
@@ -243,8 +314,14 @@ const deleteServiceParam = async (input: any) => {
 };
 
 const listServiceParamMappings = async () => {
-  const result = await getClientInstance().graphql({ query: queries.listServiceParamMappings });
-  return { data: { listSERVICE_PARAM_MAPPINGS: result.data.listSERVICE_PARAM_MAPPINGS } };
+  const items = await fetchAllPages(getClientInstance(), queries.listServiceParamMappings, {}, 'listSERVICE_PARAM_MAPPINGS');
+  return {
+    data: {
+      listSERVICE_PARAM_MAPPINGS: {
+        items
+      }
+    }
+  };
 };
 
 const createServiceParamMapping = async (input: any) => {
@@ -259,33 +336,23 @@ const deleteServiceParamMapping = async (input: any) => {
   return await getClientInstance().graphql({ query: mutations.deleteServiceParamMapping, variables: { input } });
 };
 
-const listStepTypes = async () => {
-  const result = await getClientInstance().graphql({ query: queries.listStepTypes });
-  return { data: { listSTEP_TYPES: result.data.listSTEP_TYPES } };
-};
-
-const createStepType = async (input: any) => {
-  return await getClientInstance().graphql({ query: mutations.createStepType, variables: { input } });
-};
-
-const updateStepType = async (input: any) => {
-  return await getClientInstance().graphql({ query: mutations.updateStepType, variables: { input } });
-};
-
-const deleteStepType = async (input: any) => {
-  return await getClientInstance().graphql({ query: mutations.deleteStepType, variables: { input } });
+const listRedirectUrls = async () => {
+  const items = await fetchAllPages(getClientInstance(), queries.listRedirectUrls, {}, 'listREDIRECT_URLS');
+  return {
+    data: {
+      listREDIRECT_URLS: {
+        items
+      }
+    }
+  };
 };
 
 const listStepServiceMappings = async () => {
-  const [mappingsResult, stepTypesResult, servicesResult] = await Promise.all([
-    getClientInstance().graphql({ query: queries.listStepServiceMappings }),
-    getClientInstance().graphql({ query: queries.listStepTypes }),
-    getClientInstance().graphql({ query: queries.listServices })
+  const [mappings, stepTypes, services] = await Promise.all([
+    fetchAllPages(getClientInstance(), queries.listStepServiceMappings, {}, 'listSTEP_SERVICE_MAPPINGS'),
+    fetchAllPages(getClientInstance(), queries.listStepTypes, {}, 'listSTEP_TYPES'),
+    fetchAllPages(getClientInstance(), queries.listServices, {}, 'listSERVICES')
   ]);
-  
-  const mappings = mappingsResult.data.listSTEP_SERVICE_MAPPINGS.items;
-  const stepTypes = stepTypesResult.data.listSTEP_TYPES.items;
-  const services = servicesResult.data.listSERVICES.items;
   
   const enhancedMappings = mappings.map(mapping => {
     const stepType = stepTypes.find(st => st.STEP_TYPE_ID === mapping.STEP_TYPE_ID);
@@ -310,6 +377,29 @@ const updateStepServiceMapping = async (input: any) => {
 
 const deleteStepServiceMapping = async (input: any) => {
   return await getClientInstance().graphql({ query: mutations.deleteStepServiceMapping, variables: { input } });
+};
+
+const listStepTypes = async () => {
+  const items = await fetchAllPages(getClientInstance(), queries.listStepTypes, {}, 'listSTEP_TYPES');
+  return {
+    data: {
+      listSTEP_TYPES: {
+        items
+      }
+    }
+  };
+};
+
+const createStepType = async (input: any) => {
+  return await getClientInstance().graphql({ query: mutations.createStepType, variables: { input } });
+};
+
+const updateStepType = async (input: any) => {
+  return await getClientInstance().graphql({ query: mutations.updateStepType, variables: { input } });
+};
+
+const deleteStepType = async (input: any) => {
+  return await getClientInstance().graphql({ query: mutations.deleteStepType, variables: { input } });
 };
 
 const currentView = ref('import');
@@ -457,9 +547,7 @@ const sortedEntities = computed(() => {
   return [...entities].sort((a, b) => a.name.localeCompare(b.name));
 });
 
-const currentEntityConfig = computed(() => {
-  return entities.find(entity => entity.name === currentView.value) || null;
-});
+
 
 const changeView = () => {
   console.log(`Changed to view: ${currentView.value}`);
@@ -515,9 +603,38 @@ const handleOpenServiceStepMapping = (data) => {
   showServiceStepMappingManager.value = true;
 };
 
+// Watch for environment changes and trigger refresh
+const environmentChangeKey = ref(0);
+watch(() => localStorage.getItem('selectedEnvironment'), () => {
+  environmentChangeKey.value++;
+}, { immediate: false });
+
+// Add environment reactivity to entity configs
+const getReactiveEntityConfig = (entityName) => {
+  const baseConfig = entities.find(entity => entity.name === entityName);
+  if (!baseConfig) return null;
+  
+  // Force reactivity by including environmentChangeKey
+  environmentChangeKey.value; // This makes the computed reactive to environment changes
+  return baseConfig;
+};
+
+const currentEntityConfig = computed(() => {
+  return getReactiveEntityConfig(currentView.value);
+});
+
 onMounted(async () => {
   currentView.value = 'import';
-  await loadUserInfo();
+  await checkAuthState();
+  if (isAuthenticated.value) {
+    await loadUserInfo();
+  }
+  
+  // Add activity listeners to reset inactivity timer
+  const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+  events.forEach(event => {
+    document.addEventListener(event, resetInactivityTimer, true);
+  });
 });
 </script>
 
@@ -531,20 +648,25 @@ onMounted(async () => {
   box-sizing: border-box;
 }
 
-.header-top {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
 .controls-section {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: flex-start;
   gap: 10px;
   margin-bottom: 15px;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+
+.controls-right {
+  display: flex;
   flex-direction: column;
+  gap: 10px;
 }
 
 .user-info-section,
@@ -605,7 +727,7 @@ select {
 }
 
 main {
-  background-color: #f9f9f9;
+  background-color: var(--bg-color, #f9f9f9);
   width: 100%;
   min-height: calc(100vh - 120px);
   overflow: auto;

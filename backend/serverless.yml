@@ -10,181 +10,155 @@ provider:
     name: hazel-mapping-serverless-deployment-bucket
 
 custom:
+  # Shared Cognito User Pool ID (from dev stage)
+  userPoolId: us-east-2_iAtP0Uzh5
+  
+  # Stage-specific database configurations
   stages:
     dev:
       enabled: true
       secretArn: arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-a11d98c5-d647-45a2-9978-f81be7aa3d60-iDsvX3
       databaseName: hazel_mapping_dev
+      clusterIdentifier: hazel-mapping
       minCapacity: 1
       maxCapacity: 2
     test:
       enabled: true
       secretArn: arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-cb7e7e17-e3eb-4916-a783-a3fad3597623-NOkBYH
       databaseName: hazel_mapping_test
+      clusterIdentifier: hazel-mapping-test
       minCapacity: 1
       maxCapacity: 4
     uat:
-      enabled: false
-      secretArn: arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-uat-placeholder
+      enabled: true
+      secretArn: arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-5caa7e9f-9f43-4073-ba7f-af959e3cf6bb-yn4rKu
       databaseName: hazel_mapping_uat
+      clusterIdentifier: hazel-mapping-uat
+      minCapacity: 1
+      maxCapacity: 4
     live:
-      enabled: false
-      secretArn: arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-live-placeholder
+      enabled: true
+      secretArn: arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-5975818b-f15c-4381-b0ba-1f281f97610d-GlpEdy
       databaseName: hazel_mapping_live
+      clusterIdentifier: hazel-mapping-live
+      minCapacity: 2
+      maxCapacity: 8
   
   stageConfig: ${self:custom.stages.${self:provider.stage}}
   appSync:
     name: vue-appsync-api-${self:provider.stage}
-    authenticationType: API_KEY
-    apiKeys:
-      - name: default
-        description: Default API Key
-        expiresAfter: 365d
+    authenticationType: AMAZON_COGNITO_USER_POOLS
+    userPoolConfig:
+      userPoolId: ${self:custom.userPoolId}
+      defaultAction: ALLOW
+    additionalAuthenticationProviders:
+      - authenticationType: API_KEY
+        apiKeyConfig:
+          apiKeyExpirationDays: 30
     schema: schema.graphql
     logging:
       level: ALL
       roleArn: !GetAtt AppSyncLoggingRole.Arn
     dataSources:
       - type: RELATIONAL_DATABASE
-        name: DevDataSource
+        name: StageDataSource
         config:
-          dbClusterIdentifier: hazel-mapping
-          databaseName: hazel_mapping_dev
-          awsSecretStoreArn: arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-a11d98c5-d647-45a2-9978-f81be7aa3d60-iDsvX3
-          serviceRoleArn: !GetAtt RDSServiceRole.Arn
-      - type: RELATIONAL_DATABASE
-        name: TestDataSource
-        config:
-          dbClusterIdentifier: hazel-mapping-test
-          databaseName: hazel_mapping_test
-          awsSecretStoreArn: arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-cb7e7e17-e3eb-4916-a783-a3fad3597623-NOkBYH
+          dbClusterIdentifier: ${self:custom.stageConfig.clusterIdentifier}
+          databaseName: ${self:custom.stageConfig.databaseName}
+          awsSecretStoreArn: ${self:custom.stageConfig.secretArn}
           serviceRoleArn: !GetAtt RDSServiceRole.Arn
     mappingTemplates:
-      # DEV environment operations
-      - dataSource: DevDataSource
+      # Generic operations that work with stage-specific data source
+      - dataSource: StageDataSource
         type: Query
-        field: listCONFIG_PARAMS_DEV
+        field: listCONFIG_PARAMS
         request: Query.listCONFIG_PARAMS.request.vtl
         response: Query.listCONFIG_PARAMS.response.vtl
-      - dataSource: DevDataSource
+      - dataSource: StageDataSource
         type: Query
-        field: listLOAN_APPS_DEV
+        field: listLOAN_APPS
         request: Query.listLOAN_APPS.request.vtl
         response: Query.listLOAN_APPS.response.vtl
-      - dataSource: DevDataSource
+      - dataSource: StageDataSource
         type: Query
-        field: listNEW_MEMBER_TOKENS_DEV
+        field: listNEW_MEMBER_TOKENS
         request: Query.listNEW_MEMBER_TOKENS.request.vtl
         response: Query.listNEW_MEMBER_TOKENS.response.vtl
-      - dataSource: DevDataSource
+      - dataSource: StageDataSource
         type: Query
-        field: listORIGIN_PRODUCTS_DEV
+        field: listORIGIN_PRODUCTS
         request: Query.listORIGIN_PRODUCTS.request.vtl
         response: Query.listORIGIN_PRODUCTS.response.vtl
-      
-      # TEST environment operations
-      - dataSource: TestDataSource
+      - dataSource: StageDataSource
         type: Query
-        field: listCONFIG_PARAMS_TEST
-        request: Query.listCONFIG_PARAMS.request.vtl
-        response: Query.listCONFIG_PARAMS.response.vtl
-      - dataSource: TestDataSource
-        type: Query
-        field: listLOAN_APPS_TEST
-        request: Query.listLOAN_APPS.request.vtl
-        response: Query.listLOAN_APPS.response.vtl
-      - dataSource: TestDataSource
-        type: Query
-        field: listNEW_MEMBER_TOKENS_TEST
-        request: Query.listNEW_MEMBER_TOKENS.request.vtl
-        response: Query.listNEW_MEMBER_TOKENS.response.vtl
-      - dataSource: TestDataSource
-        type: Query
-        field: listORIGIN_PRODUCTS_TEST
-        request: Query.listORIGIN_PRODUCTS.request.vtl
-        response: Query.listORIGIN_PRODUCTS.response.vtl
-      - dataSource: TestDataSource
-        type: Query
-        field: listSERVICE_PROVIDERS_TEST
+        field: listSERVICE_PROVIDERS
         request: Query.listSERVICE_PROVIDERS.request.vtl
         response: Query.listSERVICE_PROVIDERS.response.vtl
-      - dataSource: DevDataSource
+      - dataSource: StageDataSource
         type: Query
-        field: listSERVICE_PROVIDERS_DEV
-        request: Query.listSERVICE_PROVIDERS.request.vtl
-        response: Query.listSERVICE_PROVIDERS.response.vtl
-      - dataSource: TestDataSource
-        type: Query
-        field: listSERVICES_TEST
+        field: listSERVICES
         request: Query.listSERVICES.request.vtl
         response: Query.listSERVICES.response.vtl
-      - dataSource: DevDataSource
+      - dataSource: StageDataSource
         type: Query
-        field: listSERVICES_DEV
-        request: Query.listSERVICES.request.vtl
-        response: Query.listSERVICES.response.vtl
-      - dataSource: TestDataSource
-        type: Query
-        field: listREDIRECT_URLS_TEST
+        field: listREDIRECT_URLS
         request: Query.listREDIRECT_URLS.request.vtl
         response: Query.listREDIRECT_URLS.response.vtl
-      - dataSource: DevDataSource
+      - dataSource: StageDataSource
         type: Query
-        field: listREDIRECT_URLS_DEV
-        request: Query.listREDIRECT_URLS.request.vtl
-        response: Query.listREDIRECT_URLS.response.vtl
-      - dataSource: TestDataSource
-        type: Query
-        field: listSERVICE_PARAMS_TEST
+        field: listSERVICE_PARAMS
         request: Query.listSERVICE_PARAMS.request.vtl
         response: Query.listSERVICE_PARAMS.response.vtl
-      - dataSource: DevDataSource
+      - dataSource: StageDataSource
         type: Query
-        field: listSERVICE_PARAMS_DEV
-        request: Query.listSERVICE_PARAMS.request.vtl
-        response: Query.listSERVICE_PARAMS.response.vtl
-      - dataSource: TestDataSource
-        type: Query
-        field: listSERVICE_PARAM_MAPPINGS_TEST
+        field: listSERVICE_PARAM_MAPPINGS
         request: Query.listSERVICE_PARAM_MAPPINGS.request.vtl
         response: Query.listSERVICE_PARAM_MAPPINGS.response.vtl
-      - dataSource: DevDataSource
+      - dataSource: StageDataSource
         type: Query
-        field: listSERVICE_PARAM_MAPPINGS_DEV
-        request: Query.listSERVICE_PARAM_MAPPINGS.request.vtl
-        response: Query.listSERVICE_PARAM_MAPPINGS.response.vtl
+        field: listSTEP_TYPES
+        request: Query.listSTEP_TYPES.request.vtl
+        response: Query.listSTEP_TYPES.response.vtl
+      - dataSource: StageDataSource
+        type: Query
+        field: listSTEP_SERVICE_MAPPINGS
+        request: Query.listSTEP_SERVICE_MAPPINGS.request.vtl
+        response: Query.listSTEP_SERVICE_MAPPINGS.response.vtl
+      - dataSource: StageDataSource
+        type: Query
+        field: listSERVICE_EXPR_MAPPINGS
+        request: Query.listSERVICE_EXPR_MAPPINGS.request.vtl
+        response: Query.listSERVICE_EXPR_MAPPINGS.response.vtl
       
-      # REDIRECT_URL mutations for DEV
-      - dataSource: DevDataSource
+      # All mutations
+      - dataSource: StageDataSource
         type: Mutation
-        field: createREDIRECT_URL_DEV
+        field: createORIGIN_PRODUCT
+        request: Mutation.createORIGIN_PRODUCT.request.vtl
+        response: Mutation.createORIGIN_PRODUCT.response.vtl
+      - dataSource: StageDataSource
+        type: Mutation
+        field: updateORIGIN_PRODUCT
+        request: Mutation.updateORIGIN_PRODUCT.request.vtl
+        response: Mutation.updateORIGIN_PRODUCT.response.vtl
+      - dataSource: StageDataSource
+        type: Mutation
+        field: deleteORIGIN_PRODUCT
+        request: Mutation.deleteORIGIN_PRODUCT.request.vtl
+        response: Mutation.deleteORIGIN_PRODUCT.response.vtl
+      - dataSource: StageDataSource
+        type: Mutation
+        field: createREDIRECT_URL
         request: Mutation.createREDIRECT_URL.request.vtl
         response: Mutation.createREDIRECT_URL.response.vtl
-      - dataSource: DevDataSource
+      - dataSource: StageDataSource
         type: Mutation
-        field: updateREDIRECT_URL_DEV
+        field: updateREDIRECT_URL
         request: Mutation.updateREDIRECT_URL.request.vtl
         response: Mutation.updateREDIRECT_URL.response.vtl
-      - dataSource: DevDataSource
+      - dataSource: StageDataSource
         type: Mutation
-        field: deleteREDIRECT_URL_DEV
-        request: Mutation.deleteREDIRECT_URL.request.vtl
-        response: Mutation.deleteREDIRECT_URL.response.vtl
-      
-      # REDIRECT_URL mutations for TEST
-      - dataSource: TestDataSource
-        type: Mutation
-        field: createREDIRECT_URL_TEST
-        request: Mutation.createREDIRECT_URL.request.vtl
-        response: Mutation.createREDIRECT_URL.response.vtl
-      - dataSource: TestDataSource
-        type: Mutation
-        field: updateREDIRECT_URL_TEST
-        request: Mutation.updateREDIRECT_URL.request.vtl
-        response: Mutation.updateREDIRECT_URL.response.vtl
-      - dataSource: TestDataSource
-        type: Mutation
-        field: deleteREDIRECT_URL_TEST
+        field: deleteREDIRECT_URL
         request: Mutation.deleteREDIRECT_URL.request.vtl
         response: Mutation.deleteREDIRECT_URL.response.vtl
 
@@ -194,6 +168,178 @@ plugins:
 
 resources:
   Resources:
+
+    
+    EmailDomainValidationFunction:
+      Type: AWS::Lambda::Function
+      Properties:
+        FunctionName: email-domain-validation-${self:provider.stage}
+        Runtime: nodejs18.x
+        Handler: index.handler
+        Code:
+          ZipFile: |
+            exports.handler = async (event) => {
+              const email = event.request.userAttributes.email;
+              
+              // Input validation
+              if (!email || typeof email !== 'string') {
+                throw new Error('Invalid email format');
+              }
+              
+              var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+              if (!emailRegex.test(email)) {
+                throw new Error('Invalid email format');
+              }
+              
+              if (!email.endsWith('@velera.com')) {
+                throw new Error('Only @velera.com email addresses are allowed');
+              }
+              
+              console.log('Email validation passed for domain: ' + email.split('@')[1]);
+              return event;
+            };
+        Role: !GetAtt LambdaExecutionRole.Arn
+    
+    PostConfirmationFunction:
+      Type: AWS::Lambda::Function
+      Properties:
+        FunctionName: post-confirmation-${self:provider.stage}
+        Runtime: nodejs18.x
+        Handler: index.handler
+        Code:
+          ZipFile: |
+            const { CognitoIdentityProviderClient, AdminAddUserToGroupCommand, ListUsersInGroupCommand } = require('@aws-sdk/client-cognito-identity-provider');
+            const { SESClient, SendEmailCommand } = require('@aws-sdk/client-ses');
+            
+            const cognito = new CognitoIdentityProviderClient({ region: 'us-east-2' });
+            const ses = new SESClient({ region: 'us-east-2' });
+            
+            exports.handler = async (event) => {
+              const { userPoolId, userName } = event;
+              const userAttributes = event.request.userAttributes;
+              const region = process.env.AWS_REGION;
+              
+              // Input validation
+              if (!userAttributes.email || !userAttributes.email.includes('@')) {
+                console.error('Invalid email format');
+                return event;
+              }
+              
+              try {
+                // Add user to ReadOnly group by default
+                await cognito.send(new AdminAddUserToGroupCommand({
+                  GroupName: 'readonly',
+                  UserPoolId: userPoolId,
+                  Username: userName
+                }));
+                
+                console.log('User ' + userName + ' added to readonly group');
+                
+                // Send notification to admins about new user
+                const adminUsers = await cognito.send(new ListUsersInGroupCommand({
+                  GroupName: 'admin',
+                  UserPoolId: userPoolId
+                }));
+                
+                const adminEmails = adminUsers.Users.map(user => 
+                  user.Attributes.find(attr => attr.Name === 'email')?.Value
+                ).filter(email => email && email.includes('@'));
+                
+                console.log('Admin emails found:', JSON.stringify(adminEmails));
+                
+                if (adminEmails.length > 0) {
+                  const emailParams = {
+                    Source: 'eshubkagel@velera.com',
+                    Destination: { ToAddresses: adminEmails },
+                    Message: {
+                      Subject: { Data: 'New User Registration: ' + userAttributes.email.split('@')[0] + '@*** (' + (userAttributes.name || 'Unknown') + ')' },
+                      Body: {
+                        Text: {
+                          Data: 'New user has registered and been added to readonly group.\n\nUser Details:\n- Email: ' + userAttributes.email + '\n- Username: ' + userName + '\n- ' + (userAttributes.name || 'Requested Access: Unknown') + '\n\nTo add user to requested group:\nhttps://us-east-2.console.aws.amazon.com/cognito/v2/idp/user-pools/' + userPoolId + '/user-management/groups/details/' + (userAttributes.name ? userAttributes.name.replace('Requested: ', '').toLowerCase() : 'developer') + '/add-user?region=' + region
+                        }
+                      }
+                    }
+                  };
+                  
+                  console.log('Sending email TO:', JSON.stringify(adminEmails));
+                  const result = await ses.send(new SendEmailCommand(emailParams));
+                  console.log('SES Response:', JSON.stringify(result));
+                  console.log('Notification sent to ' + adminEmails.length + ' admins');
+                }
+              } catch (error) {
+                console.error('Error in post-confirmation:', error.message);
+                console.error('Full error:', JSON.stringify(error));
+              }
+              
+              return event;
+            };
+        Role: !GetAtt PostConfirmationLambdaRole.Arn
+    
+    PostConfirmationLambdaRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: lambda.amazonaws.com
+              Action: sts:AssumeRole
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        Policies:
+          - PolicyName: CognitoGroupManagement
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - cognito-idp:AdminAddUserToGroup
+                    - cognito-idp:ListUsersInGroup
+                  Resource: "arn:aws:cognito-idp:us-east-2:794611117044:userpool/us-east-2_iAtP0Uzh5"
+                - Effect: Allow
+                  Action:
+                    - ses:SendEmail
+                  Resource: 
+                    - "arn:aws:ses:${self:provider.region}:*:identity/eshubkagel@velera.com"
+    
+    PostConfirmationLambdaPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName: !Ref PostConfirmationFunction
+        Action: lambda:InvokeFunction
+        Principal: cognito-idp.amazonaws.com
+        SourceArn: "arn:aws:cognito-idp:us-east-2:794611117044:userpool/us-east-2_iAtP0Uzh5"
+    
+    LambdaExecutionRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: lambda.amazonaws.com
+              Action: sts:AssumeRole
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+    
+
+    
+    CognitoLambdaPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName: !Ref EmailDomainValidationFunction
+        Action: lambda:InvokeFunction
+        Principal: cognito-idp.amazonaws.com
+        SourceArn: "arn:aws:cognito-idp:us-east-2:794611117044:userpool/us-east-2_iAtP0Uzh5"
+    
+
+    
+
+    
+
+    
     AppSyncLoggingRole:
       Type: AWS::IAM::Role
       Properties:
@@ -233,9 +379,21 @@ resources:
                 - Effect: Allow
                   Action:
                     - rds-data:*
+                  Resource: 
+                    - "arn:aws:rds:${self:provider.region}:*:cluster:${self:custom.stageConfig.clusterIdentifier}"
+                - Effect: Allow
+                  Action:
                     - secretsmanager:GetSecretValue
                     - kms:Decrypt
                     - kms:DescribeKey
                   Resource: 
-                    - "*"
+                    - "${self:custom.stageConfig.secretArn}"
+                    - "arn:aws:kms:${self:provider.region}:*:key/*"
+                - Effect: Allow
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                  Resource: 
+                    - "arn:aws:logs:${self:provider.region}:*:log-group:/aws/appsync/*"
 

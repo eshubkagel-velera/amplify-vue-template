@@ -1,164 +1,135 @@
 export const listOriginProducts = `
-  query ListOriginProducts($filter: TableOrigin_productsFilterInput, $limit: Int, $nextToken: String) {
-    listOrigin_products(filter: $filter, limit: $limit, nextToken: $nextToken) {
-      items {
-        ORIGIN_PRODUCT_ID
-        VENDOR_NAME
-        PSCU_CLIENT_ID
-        PRODUCT_ID
-        PRODUCT_DESC
-        PARTNER_CODE
-        CREATED_DATE
-        CREATED_BY_USER_ID
-        CHANGED_DATE
-        CHANGED_BY_USER_ID
-      }
-      nextToken
+  query ListOriginProducts {
+    listORIGIN_PRODUCTS {
+      ORIGIN_PRODUCT_ID
+      VENDOR_NAME
+      PSCU_CLIENT_ID
+      PRODUCT_ID
+      PRODUCT_DESC
+      PARTNER_CODE
+      CREATED_DATE
+      CREATED_BY_USER_ID
+      CHANGED_DATE
+      CHANGED_BY_USER_ID
     }
   }
 `;
 
 export const listRedirectUrls = `
-  query ListRedirectUrls($filter: TableRedirect_urlsFilterInput, $limit: Int, $nextToken: String) {
-    listRedirect_urls(filter: $filter, limit: $limit, nextToken: $nextToken) {
-      items {
-        REDIRECT_URL_ID
-        ORIGIN_PRODUCT_ID
-        URL_TYPE_CODE
-        URL
-        RESPONSE_TEXT
-        CREATED_BY_USER_ID
-        CREATED_DATE
-        CHANGED_BY_USER_ID
-        CHANGED_DATE
-        PRODUCT_ID
-        VENDOR_NAME
-      }
-      nextToken
+  query ListRedirectUrls {
+    listREDIRECT_URLS {
+      REDIRECT_URL_ID
+      ORIGIN_PRODUCT_ID
+      URL_TYPE_CODE
+      URL
+      RESPONSE_TEXT
+      CREATED_BY_USER_ID
+      CREATED_DATE
+      CHANGED_BY_USER_ID
+      CHANGED_DATE
     }
   }
 `;
 
 export const listServiceProviders = `
-  query ListServiceProviders($filter: TableSERVICE_PROVIDERFilterInput, $limit: Int, $nextToken: String) {
-    listSERVICE_PROVIDERS(filter: $filter, limit: $limit, nextToken: $nextToken) {
-      items {
-        SERVICE_PROVIDER_ID
-        SERVICE_PROVIDER_NAME
-        CREATED_BY_USER_ID
-        CREATED_DATE
-        CHANGED_BY_USER_ID
-        CHANGED_DATE
-      }
-      nextToken
+  query ListServiceProviders {
+    listSERVICE_PROVIDERS {
+      SERVICE_PROVIDER_ID
+      SERVICE_PROVIDER_NAME
+      CREATED_BY_USER_ID
+      CREATED_DATE
+      CHANGED_BY_USER_ID
+      CHANGED_DATE
     }
   }
 `;
 
 export const listServices = `
-  query ListServices($filter: TableSERVICEFilterInput, $limit: Int, $nextToken: String) {
-    listSERVICES(filter: $filter, limit: $limit, nextToken: $nextToken) {
-      items {
-        SERVICE_ID
-        SERVICE_PROVIDER_ID
-        URI
-        CREATED_BY_USER_ID
-        CREATED_DATE
-        CHANGED_BY_USER_ID
-        CHANGED_DATE
-      }
-      nextToken
+  query ListServices {
+    listSERVICES {
+      SERVICE_ID
+      SERVICE_PROVIDER_ID
+      URI
+      CREATED_BY_USER_ID
+      CREATED_DATE
+      CHANGED_BY_USER_ID
+      CHANGED_DATE
     }
   }
 `;
 
 export const listServiceParams = `
-  query ListServiceParams($filter: TableSERVICE_PARAMFilterInput, $limit: Int, $nextToken: String) {
-    listSERVICE_PARAMS(filter: $filter, limit: $limit, nextToken: $nextToken) {
-      items {
-        SERVICE_PARAM_ID
-        SERVICE_ID
-        PARAM_NAME
-        CREATED_BY_USER_ID
-        CREATED_DATE
-        CHANGED_BY_USER_ID
-        CHANGED_DATE
-      }
-      nextToken
+  query ListServiceParams {
+    listSERVICE_PARAMS {
+      SERVICE_PARAM_ID
+      SERVICE_ID
+      PARAM_NAME
+      CREATED_BY_USER_ID
+      CREATED_DATE
+      CHANGED_BY_USER_ID
+      CHANGED_DATE
     }
   }
 `;
 
 export const listServiceParamMappings = `
-  query ListServiceParamMappings($filter: TableSERVICE_PARAM_MAPPINGFilterInput, $limit: Int, $nextToken: String) {
-    listSERVICE_PARAM_MAPPINGS(filter: $filter, limit: $limit, nextToken: $nextToken) {
-      items {
-        SERVICE_PARAM_MAPPING_ID
-        ORIGIN_PRODUCT_ID
-        SYSTEM_NBR
-        PRIN_NBR
-        AGENT_NBR
-        SOURCE_SERVICE_PARAM_ID
-        TARGET_SERVICE_PARAM_ID
-        PLASTIC_TYPE_ID
-        COMMENT_TEXT
-        CREATED_BY_USER_ID
-        CREATED_DATE
-        CHANGED_BY_USER_ID
-        CHANGED_DATE
-      }
-      nextToken
+  query ListServiceParamMappings {
+    listSERVICE_PARAM_MAPPINGS {
+      SERVICE_PARAM_MAPPING_ID
+      ORIGIN_PRODUCT_ID
+      SYSTEM_NBR
+      PRIN_NBR
+      AGENT_NBR
+      SOURCE_SERVICE_PARAM_ID
+      TARGET_SERVICE_PARAM_ID
+      PLASTIC_TYPE_ID
+      COMMENT_TEXT
+      CREATED_BY_USER_ID
+      CREATED_DATE
+      CHANGED_BY_USER_ID
+      CHANGED_DATE
     }
   }
 `;
 
 export const listServiceExprMappings = `
-  query ListServiceExprMappings($filter: TableSERVICE_EXPR_MAPPINGFilterInput, $limit: Int, $nextToken: String) {
-    listSERVICE_EXPR_MAPPINGS(filter: $filter, limit: $limit, nextToken: $nextToken) {
-      items {
-        SERVICE_EXPR_MAPPING_ID
-        SERVICE_PARAM_MAPPING_ID
-        SOURCE_EXPR
-        TARGET_EXPR
-        COMMENT_TEXT
-        CREATED_BY_USER_ID
-        CREATED_DATE
-        CHANGED_BY_USER_ID
-        CHANGED_DATE
-      }
-      nextToken
+  query ListServiceExprMappings {
+    listSERVICE_EXPR_MAPPINGS {
+      SERVICE_EXPR_MAPPING_ID
+      SERVICE_PARAM_MAPPING_ID
+      SOURCE_EXPR
+      TARGET_EXPR
+      COMMENT_TEXT
+      CREATED_BY_USER_ID
+      CREATED_DATE
+      CHANGED_BY_USER_ID
+      CHANGED_DATE
     }
   }
 `;
 
 export const listStepTypes = `
-  query ListStepTypes($filter: TableSTEP_TYPEFilterInput, $limit: Int, $nextToken: String) {
-    listSTEP_TYPES(filter: $filter, limit: $limit, nextToken: $nextToken) {
-      items {
-        STEP_TYPE_ID
-        STEP_TYPE_NAME
-        STEP_TYPE_DESC
-        RESOURCE_NAME
-        CREATED_BY_USER_ID
-        CREATED_DATE
-        CHANGED_BY_USER_ID
-        CHANGED_DATE
-      }
-      nextToken
+  query ListStepTypes {
+    listSTEP_TYPES {
+      STEP_TYPE_ID
+      STEP_TYPE_NAME
+      STEP_TYPE_DESC
+      RESOURCE_NAME
+      CREATED_BY_USER_ID
+      CREATED_DATE
+      CHANGED_BY_USER_ID
+      CHANGED_DATE
     }
   }
 `;
 
 export const listStepServiceMappings = `
-  query ListStepServiceMappings($filter: TableSTEP_SERVICE_MAPPINGFilterInput, $limit: Int, $nextToken: String) {
-    listSTEP_SERVICE_MAPPINGS(filter: $filter, limit: $limit, nextToken: $nextToken) {
-      items {
-        STEP_SERVICE_MAPPING_ID
-        STEP_TYPE_ID
-        SERVICE_ID
-        SEQUENCE_NBR
-      }
-      nextToken
+  query ListStepServiceMappings {
+    listSTEP_SERVICE_MAPPINGS {
+      STEP_SERVICE_MAPPING_ID
+      STEP_TYPE_ID
+      SERVICE_ID
+      SEQUENCE_NBR
     }
   }
 `;

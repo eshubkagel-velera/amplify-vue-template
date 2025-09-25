@@ -1,0 +1,6 @@
+{
+  "version": "2018-05-29",
+  "statements": [
+    "SELECT * FROM STEP_TYPE ORDER BY STEP_TYPE_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end"
+  ]
+}
