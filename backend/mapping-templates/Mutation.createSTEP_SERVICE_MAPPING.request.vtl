@@ -1,0 +1,12 @@
+{
+  "version": "2018-05-29",
+  "statements": [
+    "INSERT INTO STEP_SERVICE_MAPPING (STEP_TYPE_ID, SERVICE_ID, SEQUENCE_NBR) VALUES (:STEP_TYPE_ID, :SERVICE_ID, :SEQUENCE_NBR)",
+    "SELECT * FROM STEP_SERVICE_MAPPING WHERE STEP_SERVICE_MAPPING_ID = LAST_INSERT_ID()"
+  ],
+  "variableMap": {
+    ":STEP_TYPE_ID": $ctx.args.input.STEP_TYPE_ID,
+    ":SERVICE_ID": $ctx.args.input.SERVICE_ID,
+    ":SEQUENCE_NBR": $ctx.args.input.SEQUENCE_NBR
+  }
+}

@@ -5,12 +5,12 @@
     "SELECT * FROM SERVICE WHERE SERVICE_ID = :SERVICE_ID"
   ],
   "variableMap": {
-    ":SERVICE_ID": $util.toJson($ctx.args.input.SERVICE_ID),
-    ":SERVICE_PROVIDER_ID": $util.toJson($ctx.args.input.SERVICE_PROVIDER_ID),
-    ":URI": $util.toJson($ctx.args.input.URI),
-    ":SECRET_NAME": $util.toJson($ctx.args.input.SECRET_NAME),
-    ":REQUEST_TYPE": $util.toJson($ctx.args.input.REQUEST_TYPE),
-    ":CHANGED_BY_USER_ID": $util.toJson($ctx.args.input.CHANGED_BY_USER_ID),
-    ":CHANGED_DATE": $util.toJson($ctx.args.input.CHANGED_DATE)
+    ":SERVICE_ID": $ctx.args.input.SERVICE_ID,
+    ":SERVICE_PROVIDER_ID": $ctx.args.input.SERVICE_PROVIDER_ID,
+    ":URI": "$ctx.args.input.URI",
+    ":SECRET_NAME": #if($ctx.args.input.SECRET_NAME)"$ctx.args.input.SECRET_NAME"#else null #end,
+    ":REQUEST_TYPE": #if($ctx.args.input.REQUEST_TYPE)"$ctx.args.input.REQUEST_TYPE"#else null #end,
+    ":CHANGED_BY_USER_ID": $ctx.args.input.CHANGED_BY_USER_ID,
+    ":CHANGED_DATE": "$ctx.args.input.CHANGED_DATE"
   }
 }
