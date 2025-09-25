@@ -1,20 +1,8 @@
 <template>
   <div class="entity-manager">
-    <div class="header-row">
-      <h2>{{ entityName }} Manager</h2>
-      <ThemeToggle />
-    </div>
+    <h2>{{ entityName }} Manager</h2>
     
-    <!-- Step Type Filter for STEP_SERVICE_MAPPING -->
-    <div v-if="entityName === 'STEP_SERVICE_MAPPING' && !hideFilters" class="filter-section">
-      <label for="stepFilter">Filter by Step Type:</label>
-      <select id="stepFilter" v-model="selectedStepFilter" @change="filterByStepType">
-        <option value="">-- Select a Step Type --</option>
-        <option v-for="step in stepTypeOptions" :key="step.value" :value="step.value">
-          {{ step.label }}
-        </option>
-      </select>
-    </div>
+
     
     <!-- Service Filter for SERVICE_PARAM -->
     <div v-if="entityName === 'SERVICE_PARAM' && !hideFilters" class="filter-section">
@@ -314,7 +302,6 @@ import { getClient, getUserPoolClient } from '../client.js';
 import { listServiceParams } from '../graphql/queries.js';
 import * as queries from '../graphql/queries.js';
 import LoadingSkeleton from './LoadingSkeleton.vue';
-import ThemeToggle from './ThemeToggle.vue';
 import { useErrorHandler } from '../composables/useErrorHandler';
 import { useTableOperations } from '../composables/useTableOperations';
 import { useServiceEnhancement } from '../composables/useServiceEnhancement';
@@ -427,25 +414,18 @@ const loadEntities = async () => {
     return;
   }
   
-  // For STEP_SERVICE_MAPPING, don't load anything until step type is selected (unless parentId is provided)
-  if (props.entityName === 'STEP_SERVICE_MAPPING' && !selectedStepFilter.value && !props.parentId) {
-    allEntities.value = [];
-    entities.value = [];
-    filteredEntities.value = [];
-    return;
-  }
+
   
 
   
   try {
     let allItems = [];
-    let nextToken = null;
     const listName = `list${props.entityName}S`;
     
     const response = await props.loadFunction({ limit: 1000 });
     
-    if (response.data && response.data[listName] && response.data[listName].items) {
-      allItems = response.data[listName].items;
+    if (response.data && response.data[listName]) {
+      allItems = response.data[listName].items || [];
       
       // Filter by parent ID if provided
       if (props.parentId && props.parentField) {
@@ -802,9 +782,9 @@ const filterByStepType = async () => {
         getClient().graphql({ query: queries.listServices })
       ]);
       
-      const mappings = mappingsResult.data.listSTEP_SERVICE_MAPPINGS.items;
-      const stepTypes = stepTypesResult.data.listSTEP_TYPES.items;
-      const services = servicesResult.data.listSERVICES.items;
+      const mappings = mappingsResult.data.listSTEP_SERVICE_MAPPINGS?.items || [];
+      const stepTypes = stepTypesResult.data.listSTEP_TYPES?.items || [];
+      const services = servicesResult.data.listSERVICES?.items || [];
       
       // Add formatted display fields
       const enhancedMappings = mappings.map(mapping => {
@@ -856,9 +836,10 @@ const filterByService = async () => {
           variables
         });
         
-        if (response.data?.listSERVICE_PARAMS?.items) {
-          allItems.push(...response.data.listSERVICE_PARAMS.items);
-          nextToken = response.data.listSERVICE_PARAMS.nextToken;
+        if (response.data?.listSERVICE_PARAMS) {
+          const items = Array.isArray(response.data.listSERVICE_PARAMS) ? response.data.listSERVICE_PARAMS : [];
+          allItems.push(...items);
+          nextToken = null; // Direct array response doesn't have pagination
         } else {
           nextToken = null;
         }
@@ -906,7 +887,6 @@ watch(() => props.entityName, async () => {
   // Load step and service options for STEP_SERVICE_MAPPING entity
   if (props.entityName === 'STEP_SERVICE_MAPPING') {
     await loadStepServiceMappingOptions();
-    await loadStepTypeFilterOptions();
   }
   
   // Load vendor names for ORIGIN_PRODUCT entity
@@ -950,12 +930,14 @@ const loadServiceOptionsLocal = async () => {
 
 const loadServiceProviderOptions = async () => {
   try {
-    const result = await getClient().graphql({ query: queries.listServiceProviders });
-    const providers = result.data.listSERVICE_PROVIDERS.items;
+    const { callExternalApi } = await import('../client.js');
+    const environment = localStorage.getItem('selectedEnvironment') || 'dev';
+    const result = await callExternalApi(environment, 'listSERVICE_PROVIDERS');
+    const providers = result.data.listSERVICE_PROVIDERS.items || [];
     
     // Update the SERVICE_PROVIDER_ID field options
     const providerIdField = props.formFields.find(f => f.name === 'SERVICE_PROVIDER_ID');
-    if (providerIdField) {
+    if (providerIdField && Array.isArray(providers)) {
       providerIdField.options = providers.map(provider => ({
         value: provider.SERVICE_PROVIDER_ID,
         label: `${provider.SERVICE_PROVIDER_ID}: ${provider.SERVICE_PROVIDER_NAME}`
@@ -969,7 +951,7 @@ const loadServiceProviderOptions = async () => {
 const loadStepTypeFilterOptions = async () => {
   try {
     const result = await getClient().graphql({ query: queries.listStepTypes });
-    const stepTypes = result.data.listSTEP_TYPES.items;
+    const stepTypes = result.data.listSTEP_TYPES || [];
     
     stepTypeOptions.value = stepTypes.map(step => ({
       value: step.STEP_TYPE_ID,
@@ -977,6 +959,7 @@ const loadStepTypeFilterOptions = async () => {
     }));
   } catch (error) {
     console.error('Error loading step type options:', error);
+    stepTypeOptions.value = [];
   }
 };
 
@@ -988,9 +971,9 @@ const loadStepServiceMappingOptions = async () => {
       getClient().graphql({ query: queries.listServiceProviders })
     ]);
     
-    const stepTypes = stepTypesResult.data.listSTEP_TYPES.items;
-    const services = servicesResult.data.listSERVICES.items;
-    const providers = providersResult.data.listSERVICE_PROVIDERS.items;
+    const stepTypes = stepTypesResult.data.listSTEP_TYPES?.items || [];
+    const services = servicesResult.data.listSERVICES?.items || [];
+    const providers = providersResult.data.listSERVICE_PROVIDERS?.items || [];
     
     // Update STEP_TYPE_ID field options
     const stepTypeField = props.formFields.find(f => f.name === 'STEP_TYPE_ID');
@@ -1030,8 +1013,9 @@ const showParameterMappings = async (entity) => {
         query: queries.listServiceParams,
         variables: { limit: 1000, nextToken }
       });
-      allServiceParams.push(...serviceParamsResult.data.listSERVICE_PARAMS.items);
-      nextToken = serviceParamsResult.data.listSERVICE_PARAMS.nextToken;
+      const items = Array.isArray(serviceParamsResult.data.listSERVICE_PARAMS) ? serviceParamsResult.data.listSERVICE_PARAMS : [];
+      allServiceParams.push(...items);
+      nextToken = null; // Direct array response doesn't have pagination
     } while (nextToken);
     
     const [mappingsResult, productsResult, servicesResult] = await Promise.all([
@@ -1040,9 +1024,9 @@ const showParameterMappings = async (entity) => {
       getClient().graphql({ query: queries.listServices })
     ]);
     
-    const allMappings = mappingsResult.data.listSERVICE_PARAM_MAPPINGS.items;
-    const products = productsResult.data.listOrigin_products.items;
-    const services = servicesResult.data.listSERVICES.items;
+    const allMappings = mappingsResult.data.listSERVICE_PARAM_MAPPINGS || [];
+    const products = productsResult.data.listORIGIN_PRODUCTS || [];
+    const services = servicesResult.data.listSERVICES || [];
     const serviceParams = allServiceParams;
     
     // Find mappings where this param is source or target
@@ -1068,14 +1052,6 @@ const showParameterMappings = async (entity) => {
         SOURCE_SERVICE: sourceService?.URI || (sourceParam ? `Service ID: ${sourceParam.SERVICE_ID}` : 'N/A'),
         TARGET_SERVICE: targetService?.URI || (targetParam ? `Service ID: ${targetParam.SERVICE_ID}` : 'N/A')
       };
-      
-      return {
-        SERVICE_PARAM_MAPPING_ID: mapping.SERVICE_PARAM_MAPPING_ID,
-        PSCU_CLIENT_ID: product?.PSCU_CLIENT_ID || 'N/A',
-        PRODUCT_ID: product?.PRODUCT_ID || 'N/A',
-        SOURCE_SERVICE: sourceServiceDisplay,
-        TARGET_SERVICE: targetServiceDisplay
-      };
     });
     
     selectedParamMappings.value = enhancedMappings;
@@ -1090,7 +1066,7 @@ const checkParameterMappings = async () => {
   
   try {
     const result = await getClient().graphql({ query: queries.listServiceParamMappings });
-    const mappings = result.data.listSERVICE_PARAM_MAPPINGS.items;
+    const mappings = result.data.listSERVICE_PARAM_MAPPINGS || [];
     const mappingCounts = new Map();
     
     mappings.forEach(mapping => {
@@ -1116,9 +1092,10 @@ const loadVendorNames = async () => {
     const response = await props.loadFunction({ limit: 1000 });
     const listName = `list${props.entityName}S`;
     
-    if (response.data && response.data[listName] && response.data[listName].items) {
+    if (response.data && response.data[listName]) {
+      const items = Array.isArray(response.data[listName]) ? response.data[listName] : [];
       const uniqueVendors = [...new Set(
-        response.data[listName].items
+        items
           .map(item => item.VENDOR_NAME)
           .filter(name => name && name.trim())
       )].sort();
@@ -1129,6 +1106,18 @@ const loadVendorNames = async () => {
     console.error('Error loading vendor names:', error);
   }
 };
+
+// Listen for environment changes via custom event
+const handleEnvironmentChange = () => {
+  // Only reload if we're currently showing data (not empty due to filters)
+  if (props.entityName !== 'SERVICE_PARAM' || selectedServiceFilter.value || props.parentId) {
+    if (props.entityName !== 'STEP_SERVICE_MAPPING' || selectedStepFilter.value || props.parentId) {
+      loadEntities();
+    }
+  }
+};
+
+window.addEventListener('environmentChanged', handleEnvironmentChange);
 
 onMounted(async () => {
   if (props.entityName === 'SERVICE_PARAM') {
@@ -1151,6 +1140,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   document.removeEventListener('keydown', handleEscapeKey);
+  window.removeEventListener('environmentChanged', handleEnvironmentChange);
 });
 </script>
 

@@ -1,0 +1,62 @@
+service: vue-multi-db-api
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-2
+
+plugins:
+  - serverless-appsync-plugin
+
+custom:
+  appSync:
+    name: vue-multi-db-api
+    authenticationType: API_KEY
+    dataSources:
+      - type: AMAZON_DYNAMODB
+        name: UsersTable
+        config:
+          tableName: !Ref UsersTable
+      - type: AMAZON_DYNAMODB
+        name: ProductsTable
+        config:
+          tableName: !Ref ProductsTable
+      - type: AMAZON_DYNAMODB
+        name: OrdersTable
+        config:
+          tableName: !Ref OrdersTable
+
+resources:
+  Resources:
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+    
+    ProductsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+    
+    OrdersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH

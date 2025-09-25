@@ -2,7 +2,7 @@
   <div class="mapping-manager">
     <div class="header-row">
       <h2>Service Mapping Manager</h2>
-      <ThemeToggle />
+
     </div>
     
     <!-- Product Information Box -->
@@ -277,11 +277,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { generateClient } from 'aws-amplify/api';
+import { getClient } from '../client.js';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
 import { createServiceParamMappingBatch, createServiceExprMappingBatch } from '../graphql.ts';
-import ThemeToggle from './ThemeToggle.vue';
+import { fetchAllPages } from '../utils/pagination.js';
+
 import { useErrorHandler } from '../composables/useErrorHandler';
 import { getCurrentDateString } from '../utils/dateUtils';
 import type { OriginProduct, Service, ServiceParam } from '../types';
@@ -368,8 +369,8 @@ const progressPercentage = computed(() =>
 // Methods
 const loadProducts = async () => {
   try {
-    const result = await generateClient().graphql({ query: queries.listOriginProducts });
-    products.value = result.data.listOrigin_products.items;
+    const items = await fetchAllPages(getClient(), queries.listOriginProducts, {}, 'listORIGIN_PRODUCTS');
+    products.value = items;
   } catch (error) {
     showError('Failed to load products');
   }
@@ -396,8 +397,8 @@ const loadMappingCount = async () => {
     const productId = props.productId || parseInt(selectedProductId.value);
     if (!productId) return;
     
-    const result = await generateClient().graphql({ query: queries.listServiceParamMappings });
-    const productMappings = result.data.listSERVICE_PARAM_MAPPINGS.items.filter(
+    const allMappings = await fetchAllPages(getClient(), queries.listServiceParamMappings, {}, 'listSERVICE_PARAM_MAPPINGS');
+    const productMappings = allMappings.filter(
       mapping => mapping.ORIGIN_PRODUCT_ID === productId
     );
     totalMappingCount.value = productMappings.length;
@@ -408,8 +409,8 @@ const loadMappingCount = async () => {
 
 const loadResourceNames = async () => {
   try {
-    const result = await generateClient().graphql({ query: queries.listStepTypes });
-    const uniqueResources = [...new Set(result.data.listSTEP_TYPES.items.map(item => item.RESOURCE_NAME))];
+    const items = await fetchAllPages(getClient(), queries.listStepTypes, {}, 'listSTEP_TYPES');
+    const uniqueResources = [...new Set(items.map(item => item.RESOURCE_NAME))];
     resourceNames.value = uniqueResources.sort();
   } catch (error) {
     showError('Failed to load resource names');
@@ -418,8 +419,8 @@ const loadResourceNames = async () => {
 
 const loadStepTypes = async () => {
   try {
-    const result = await generateClient().graphql({ query: queries.listStepTypes });
-    stepTypes.value = result.data.listSTEP_TYPES.items;
+    const items = await fetchAllPages(getClient(), queries.listStepTypes, {}, 'listSTEP_TYPES');
+    stepTypes.value = items;
   } catch (error) {
     showError('Failed to load step types');
   }
@@ -427,8 +428,8 @@ const loadStepTypes = async () => {
 
 const loadAllServices = async () => {
   try {
-    const result = await generateClient().graphql({ query: queries.listServices });
-    allServices.value = result.data.listSERVICES.items;
+    const items = await fetchAllPages(getClient(), queries.listServices, {}, 'listSERVICES');
+    allServices.value = items;
   } catch (error) {
     showError('Failed to load services');
   }
@@ -453,8 +454,8 @@ const onStepTypeChange = async () => {
 
 const loadTargetServices = async () => {
   try {
-    const result = await generateClient().graphql({ query: queries.listStepServiceMappings });
-    const stepServiceMappings = result.data.listSTEP_SERVICE_MAPPINGS.items.filter(
+    const allMappings = await fetchAllPages(getClient(), queries.listStepServiceMappings, {}, 'listSTEP_SERVICE_MAPPINGS');
+    const stepServiceMappings = allMappings.filter(
       mapping => mapping.STEP_TYPE_ID === selectedStepType.value.STEP_TYPE_ID
     );
     
@@ -502,17 +503,9 @@ const loadSourceParams = async () => {
         variables.nextToken = nextToken;
       }
       
-      const result = await generateClient().graphql({ 
-        query: queries.listServiceParams,
-        variables
-      });
-      
-      if (result.data?.listSERVICE_PARAMS?.items) {
-        allParams.push(...result.data.listSERVICE_PARAMS.items);
-        nextToken = result.data.listSERVICE_PARAMS.nextToken;
-      } else {
-        nextToken = null;
-      }
+      const params = await fetchAllPages(getClient(), queries.listServiceParams, variables, 'listSERVICE_PARAMS');
+    allParams.push(...params);
+    nextToken = null;
     } while (nextToken);
     
     sourceParams.value = allParams;
@@ -523,8 +516,8 @@ const loadSourceParams = async () => {
 
 const loadTargetParams = async () => {
   try {
-    const result = await generateClient().graphql({ query: queries.listServiceParams });
-    const targetParams = result.data.listSERVICE_PARAMS.items.filter(
+    const allParams = await fetchAllPages(getClient(), queries.listServiceParams, {}, 'listSERVICE_PARAMS');
+    const targetParams = allParams.filter(
       param => param.SERVICE_ID === selectedTargetService.value.SERVICE_ID
     );
     
@@ -574,15 +567,11 @@ const checkMappingExists = async () => {
 const loadExistingMappingsForTarget = async () => {
   try {
     const productId = props.productId || parseInt(selectedProductId.value);
-    const [paramMappingsResult, exprMappingsResult, allParamsResult] = await Promise.all([
-      generateClient().graphql({ query: queries.listServiceParamMappings }),
-      generateClient().graphql({ query: queries.listServiceExprMappings }),
-      generateClient().graphql({ query: queries.listServiceParams })
+    const [allParamMappings, allExprMappings, allParams] = await Promise.all([
+      fetchAllPages(getClient(), queries.listServiceParamMappings, {}, 'listSERVICE_PARAM_MAPPINGS'),
+      fetchAllPages(getClient(), queries.listServiceExprMappings, {}, 'listSERVICE_EXPR_MAPPINGS'),
+      fetchAllPages(getClient(), queries.listServiceParams, {}, 'listSERVICE_PARAMS')
     ]);
-    
-    const allParamMappings = paramMappingsResult.data.listSERVICE_PARAM_MAPPINGS.items;
-    const allExprMappings = exprMappingsResult.data.listSERVICE_EXPR_MAPPINGS.items;
-    const allParams = allParamsResult.data.listSERVICE_PARAMS.items;
     
     // Get all mappings for this product and target service
     const targetParamIds = mappings.value.map(m => m.TARGET_SERVICE_PARAM_ID);
@@ -635,13 +624,10 @@ const filterMappingsBySource = async () => {
     if (!selectedSourceService.value) return;
     
     const productId = props.productId || parseInt(selectedProductId.value);
-    const [paramMappingsResult, exprMappingsResult] = await Promise.all([
-      generateClient().graphql({ query: queries.listServiceParamMappings }),
-      generateClient().graphql({ query: queries.listServiceExprMappings })
+    const [allParamMappings, allExprMappings] = await Promise.all([
+      fetchAllPages(getClient(), queries.listServiceParamMappings, {}, 'listSERVICE_PARAM_MAPPINGS'),
+      fetchAllPages(getClient(), queries.listServiceExprMappings, {}, 'listSERVICE_EXPR_MAPPINGS')
     ]);
-    
-    const allParamMappings = paramMappingsResult.data.listSERVICE_PARAM_MAPPINGS.items;
-    const allExprMappings = exprMappingsResult.data.listSERVICE_EXPR_MAPPINGS.items;
     
     // Get source service param IDs
     const sourceServiceParamIds = sourceParams.value.map(sp => sp.SERVICE_PARAM_ID);
@@ -1170,7 +1156,7 @@ const deleteMapping = async () => {
   try {
     const productId = props.productId || parseInt(selectedProductId.value);
     const result = await generateClient().graphql({ query: queries.listServiceParamMappings });
-    const mappingsToDelete = result.data.listSERVICE_PARAM_MAPPINGS.items.filter(mapping => 
+    const mappingsToDelete = (result.data.listSERVICE_PARAM_MAPPINGS || []).filter(mapping => 
       mapping.ORIGIN_PRODUCT_ID === productId &&
       sourceParams.value.some(sp => sp.SERVICE_PARAM_ID === mapping.SOURCE_SERVICE_PARAM_ID) &&
       mappings.value.some(tm => tm.TARGET_SERVICE_PARAM_ID === mapping.TARGET_SERVICE_PARAM_ID)
@@ -1178,7 +1164,7 @@ const deleteMapping = async () => {
     
     // Delete expression mappings first
     const exprResult = await generateClient().graphql({ query: queries.listServiceExprMappings });
-    const expressionsToDelete = exprResult.data.listSERVICE_EXPR_MAPPINGS.items.filter(expr =>
+    const expressionsToDelete = (exprResult.data.listSERVICE_EXPR_MAPPINGS || []).filter(expr =>
       mappingsToDelete.some(m => m.SERVICE_PARAM_MAPPING_ID === expr.SERVICE_PARAM_MAPPING_ID)
     );
     

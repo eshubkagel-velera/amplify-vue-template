@@ -1,3 +1,16 @@
+## Authorization check
+#if(!$ctx.identity || !$ctx.identity.sub)
+  $util.unauthorized()
+#end
+
+## Input validation
+#if(!$ctx.args.input.URL || $ctx.args.input.URL.length() == 0)
+  $util.error("URL is required", "ValidationError")
+#end
+#if(!$ctx.args.input.URL_TYPE_CODE.matches("^[EN]$"))
+  $util.error("URL_TYPE_CODE must be E or N", "ValidationError")
+#end
+
 {
   "version": "2018-05-29",
   "statements": [
@@ -8,7 +21,7 @@
     ":URL_TYPE_CODE": $util.toJson($ctx.args.input.URL_TYPE_CODE),
     ":URL": $util.toJson($ctx.args.input.URL),
     ":RESPONSE_TEXT": $util.toJson($ctx.args.input.RESPONSE_TEXT),
-    ":CREATED_BY_USER_ID": $util.toJson($ctx.args.input.CREATED_BY_USER_ID),
-    ":CREATED_DATE": $util.toJson($ctx.args.input.CREATED_DATE)
+    ":CREATED_BY_USER_ID": $util.toJson($ctx.identity.sub),
+    ":CREATED_DATE": $util.toJson($util.time.nowISO8601())
   }
 }

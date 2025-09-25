@@ -2,7 +2,7 @@
   <div class="component-container">
     <div class="header-row">
       <h2>GraphQL Schema Introspection</h2>
-      <ThemeToggle />
+
     </div>
     
     <div class="bordered-section">
@@ -61,7 +61,7 @@ import '../styles/shared.css';
 import { ref } from 'vue';
 import { generateClient } from 'aws-amplify/api';
 import { introspectionQuery } from '../graphql/queries';
-import ThemeToggle from './ThemeToggle.vue';
+
 import { useErrorHandler } from '../composables/useErrorHandler';
 
 interface SchemaType {

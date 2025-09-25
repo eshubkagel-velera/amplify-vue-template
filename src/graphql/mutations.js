@@ -13,8 +13,8 @@ export const createOriginProduct = `
 `;
 
 export const updateOriginProduct = `
-  mutation UpdateOriginProduct($input: UpdateORIGIN_PRODUCTInput!, $condition: TableORIGIN_PRODUCTConditionInput) {
-    updateORIGIN_PRODUCT(input: $input, condition: $condition) {
+  mutation UpdateOriginProduct($input: UpdateORIGIN_PRODUCTInput!) {
+    updateORIGIN_PRODUCT(input: $input) {
       PRODUCT_ID
       PRODUCT_DESC
       PSCU_CLIENT_ID
@@ -29,8 +29,8 @@ export const updateOriginProduct = `
 `;
 
 export const deleteOriginProduct = `
-  mutation DeleteOriginProduct($input: DeleteORIGIN_PRODUCTInput!, $condition: TableORIGIN_PRODUCTConditionInput) {
-    deleteORIGIN_PRODUCT(input: $input, condition: $condition) {
+  mutation DeleteOriginProduct($input: DeleteORIGIN_PRODUCTInput!) {
+    deleteORIGIN_PRODUCT(input: $input) {
       CHANGED_BY_USER_ID
       CHANGED_DATE
       PARTNER_CODE
@@ -38,9 +38,9 @@ export const deleteOriginProduct = `
   }
 `;
 
-export const createRedirectUrl = `
+export const createRedirectUrl = (environment) => `
   mutation CreateRedirectUrl($input: CreateREDIRECT_URLInput!) {
-    createREDIRECT_URL(input: $input) {
+    createREDIRECT_URL_${environment.toUpperCase()}(input: $input) {
       REDIRECT_URL_ID
       ORIGIN_PRODUCT_ID
       URL_TYPE_CODE
@@ -52,9 +52,9 @@ export const createRedirectUrl = `
   }
 `;
 
-export const updateRedirectUrl = `
-  mutation UpdateRedirectUrl($input: UpdateREDIRECT_URLInput!, $condition: TableREDIRECT_URLConditionInput) {
-    updateREDIRECT_URL(input: $input, condition: $condition) {
+export const updateRedirectUrl = (environment) => `
+  mutation UpdateRedirectUrl($input: UpdateREDIRECT_URLInput!) {
+    updateREDIRECT_URL_${environment.toUpperCase()}(input: $input) {
       REDIRECT_URL_ID
       ORIGIN_PRODUCT_ID
       URL_TYPE_CODE
@@ -68,9 +68,9 @@ export const updateRedirectUrl = `
   }
 `;
 
-export const deleteRedirectUrl = `
-  mutation DeleteRedirectUrl($input: DeleteREDIRECT_URLInput!, $condition: TableREDIRECT_URLConditionInput) {
-    deleteREDIRECT_URL(input: $input, condition: $condition) {
+export const deleteRedirectUrl = (environment) => `
+  mutation DeleteRedirectUrl($input: DeleteREDIRECT_URLInput!) {
+    deleteREDIRECT_URL_${environment.toUpperCase()}(input: $input) {
       REDIRECT_URL_ID
       ORIGIN_PRODUCT_ID
       URL
@@ -90,8 +90,8 @@ export const createServiceProvider = `
 `;
 
 export const updateServiceProvider = `
-  mutation UpdateServiceProvider($input: UpdateSERVICE_PROVIDERInput!, $condition: TableSERVICE_PROVIDERConditionInput) {
-    updateSERVICE_PROVIDER(input: $input, condition: $condition) {
+  mutation UpdateServiceProvider($input: UpdateSERVICE_PROVIDERInput!) {
+    updateSERVICE_PROVIDER(input: \$input) {
       SERVICE_PROVIDER_ID
       SERVICE_PROVIDER_NAME
       CREATED_BY_USER_ID
@@ -103,8 +103,8 @@ export const updateServiceProvider = `
 `;
 
 export const deleteServiceProvider = `
-  mutation DeleteServiceProvider($input: DeleteSERVICE_PROVIDERInput!, $condition: TableSERVICE_PROVIDERConditionInput) {
-    deleteSERVICE_PROVIDER(input: $input, condition: $condition) {
+  mutation DeleteServiceProvider($input: DeleteSERVICE_PROVIDERInput!) {
+    deleteSERVICE_PROVIDER(input: \$input) {
       SERVICE_PROVIDER_ID
       SERVICE_PROVIDER_NAME
     }
@@ -126,8 +126,8 @@ export const createService = `
 `;
 
 export const updateService = `
-  mutation UpdateService($input: UpdateSERVICEInput!, $condition: TableSERVICEConditionInput) {
-    updateSERVICE(input: $input, condition: $condition) {
+  mutation UpdateService($input: UpdateSERVICEInput!) {
+    updateSERVICE(input: \$input) {
       SERVICE_ID
       SERVICE_PROVIDER_ID
       URI
@@ -140,8 +140,8 @@ export const updateService = `
 `;
 
 export const deleteService = `
-  mutation DeleteService($input: DeleteSERVICEInput!, $condition: TableSERVICEConditionInput) {
-    deleteSERVICE(input: $input, condition: $condition) {
+  mutation DeleteService($input: DeleteSERVICEInput!) {
+    deleteSERVICE(input: \$input) {
       SERVICE_ID
       SERVICE_PROVIDER_ID
       URI
@@ -168,8 +168,8 @@ export const createServiceParam = `
 `;
 
 export const updateServiceParam = `
-  mutation UpdateServiceParam($input: UpdateSERVICE_PARAMInput!, $condition: TableSERVICE_PARAMConditionInput) {
-    updateSERVICE_PARAM(input: $input, condition: $condition) {
+  mutation UpdateServiceParam($input: UpdateSERVICE_PARAMInput!) {
+    updateSERVICE_PARAM(input: \$input) {
       SERVICE_PARAM_ID
       SERVICE_ID
       PARAM_NAME
@@ -182,8 +182,8 @@ export const updateServiceParam = `
 `;
 
 export const deleteServiceParam = `
-  mutation DeleteServiceParam($input: DeleteSERVICE_PARAMInput!, $condition: TableSERVICE_PARAMConditionInput) {
-    deleteSERVICE_PARAM(input: $input, condition: $condition) {
+  mutation DeleteServiceParam($input: DeleteSERVICE_PARAMInput!) {
+    deleteSERVICE_PARAM(input: \$input) {
       SERVICE_PARAM_ID
       SERVICE_ID
       PARAM_NAME
@@ -216,8 +216,8 @@ export const createServiceParamMapping = `
 `;
 
 export const updateServiceParamMapping = `
-  mutation UpdateServiceParamMapping($input: UpdateSERVICE_PARAM_MAPPINGInput!, $condition: TableSERVICE_PARAM_MAPPINGConditionInput) {
-    updateSERVICE_PARAM_MAPPING(input: $input, condition: $condition) {
+  mutation UpdateServiceParamMapping($input: UpdateSERVICE_PARAM_MAPPINGInput!) {
+    updateSERVICE_PARAM_MAPPING(input: \$input) {
       SERVICE_PARAM_MAPPING_ID
       ORIGIN_PRODUCT_ID
       SYSTEM_NBR
@@ -236,8 +236,8 @@ export const updateServiceParamMapping = `
 `;
 
 export const deleteServiceParamMapping = `
-  mutation DeleteServiceParamMapping($input: DeleteSERVICE_PARAM_MAPPINGInput!, $condition: TableSERVICE_PARAM_MAPPINGConditionInput) {
-    deleteSERVICE_PARAM_MAPPING(input: $input, condition: $condition) {
+  mutation DeleteServiceParamMapping($input: DeleteSERVICE_PARAM_MAPPINGInput!) {
+    deleteSERVICE_PARAM_MAPPING(input: \$input) {
       SERVICE_PARAM_MAPPING_ID
       ORIGIN_PRODUCT_ID
       SYSTEM_NBR
@@ -272,8 +272,8 @@ export const createServiceExprMapping = `
 `;
 
 export const updateServiceExprMapping = `
-  mutation UpdateServiceExprMapping($input: UpdateSERVICE_EXPR_MAPPINGInput!, $condition: TableSERVICE_EXPR_MAPPINGConditionInput) {
-    updateSERVICE_EXPR_MAPPING(input: $input, condition: $condition) {
+  mutation UpdateServiceExprMapping($input: UpdateSERVICE_EXPR_MAPPINGInput!) {
+    updateSERVICE_EXPR_MAPPING(input: \$input) {
       SERVICE_EXPR_MAPPING_ID
       SERVICE_PARAM_MAPPING_ID
       SOURCE_EXPR
@@ -288,8 +288,8 @@ export const updateServiceExprMapping = `
 `;
 
 export const deleteServiceExprMapping = `
-  mutation DeleteServiceExprMapping($input: DeleteSERVICE_EXPR_MAPPINGInput!, $condition: TableSERVICE_EXPR_MAPPINGConditionInput) {
-    deleteSERVICE_EXPR_MAPPING(input: $input, condition: $condition) {
+  mutation DeleteServiceExprMapping($input: DeleteSERVICE_EXPR_MAPPINGInput!) {
+    deleteSERVICE_EXPR_MAPPING(input: \$input) {
       SERVICE_EXPR_MAPPING_ID
       SERVICE_PARAM_MAPPING_ID
       SOURCE_EXPR
@@ -319,8 +319,8 @@ export const createStepType = `
 `;
 
 export const updateStepType = `
-  mutation UpdateStepType($input: UpdateSTEP_TYPEInput!, $condition: TableSTEP_TYPEConditionInput) {
-    updateSTEP_TYPE(input: $input, condition: $condition) {
+  mutation UpdateStepType($input: UpdateSTEP_TYPEInput!) {
+    updateSTEP_TYPE(input: \$input) {
       STEP_TYPE_ID
       STEP_TYPE_NAME
       STEP_TYPE_DESC
@@ -334,8 +334,8 @@ export const updateStepType = `
 `;
 
 export const deleteStepType = `
-  mutation DeleteStepType($input: DeleteSTEP_TYPEInput!, $condition: TableSTEP_TYPEConditionInput) {
-    deleteSTEP_TYPE(input: $input, condition: $condition) {
+  mutation DeleteStepType($input: DeleteSTEP_TYPEInput!) {
+    deleteSTEP_TYPE(input: \$input) {
       STEP_TYPE_ID
       STEP_TYPE_NAME
       STEP_TYPE_DESC
@@ -360,8 +360,8 @@ export const createStepServiceMapping = `
 `;
 
 export const updateStepServiceMapping = `
-  mutation UpdateStepServiceMapping($input: UpdateSTEP_SERVICE_MAPPINGInput!, $condition: TableSTEP_SERVICE_MAPPINGConditionInput) {
-    updateSTEP_SERVICE_MAPPING(input: $input, condition: $condition) {
+  mutation UpdateStepServiceMapping($input: UpdateSTEP_SERVICE_MAPPINGInput!) {
+    updateSTEP_SERVICE_MAPPING(input: \$input) {
       STEP_SERVICE_MAPPING_ID
       STEP_TYPE_ID
       SERVICE_ID
@@ -371,8 +371,8 @@ export const updateStepServiceMapping = `
 `;
 
 export const deleteStepServiceMapping = `
-  mutation DeleteStepServiceMapping($input: DeleteSTEP_SERVICE_MAPPINGInput!, $condition: TableSTEP_SERVICE_MAPPINGConditionInput) {
-    deleteSTEP_SERVICE_MAPPING(input: $input, condition: $condition) {
+  mutation DeleteStepServiceMapping($input: DeleteSTEP_SERVICE_MAPPINGInput!) {
+    deleteSTEP_SERVICE_MAPPING(input: \$input) {
       STEP_SERVICE_MAPPING_ID
       STEP_TYPE_ID
       SERVICE_ID

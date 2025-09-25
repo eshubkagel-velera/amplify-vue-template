@@ -2,7 +2,6 @@
   <div class="service-import">
     <div class="header-row">
       <h2>Import Services from OpenAPI</h2>
-      <ThemeToggle />
     </div>
     
     <!-- Format Selection -->
@@ -412,13 +411,12 @@ import type { Service, ServiceParam, ServiceProvider } from '../types';
 if (typeof window !== 'undefined') {
   (window as any).Buffer = Buffer;
 }
-import * as queries from '../graphql/queries';
-import * as mutations from '../graphql/mutations';
+// Removed query imports - using string names instead
 
 // Load service providers on component mount
 const loadServiceProviders = async () => {
   try {
-    const result = await callExternalApi(window.currentEnvironment, queries.listServiceProviders);
+    const result = await callExternalApi(window.currentEnvironment, 'listSERVICE_PROVIDERS');
     serviceProviders.value = result.data.listSERVICE_PROVIDERS.items;
   } catch (err) {
     console.error('Error loading service providers:', err);
@@ -446,7 +444,7 @@ const createServiceProviderIfNeeded = async () => {
       CREATED_DATE: new Date().toISOString().split('T')[0]
     };
     
-    const result = await callExternalApi(window.currentEnvironment, mutations.createServiceProvider, { input: providerInput });
+    const result = await callExternalApi(window.currentEnvironment, 'createSERVICE_PROVIDER', { input: providerInput });
     
     const newProvider = result.data.createSERVICE_PROVIDER;
     serviceProviders.value.push(newProvider);
@@ -480,7 +478,7 @@ const onServiceProviderChange = async (event: Event) => {
 };
 
 import { createServiceBatch, createServiceParamBatch } from '../graphql.ts';
-import ThemeToggle from './ThemeToggle.vue';
+
 
 
 
@@ -934,7 +932,7 @@ const checkServiceExists = async () => {
       serviceProviderId = parseInt(selectedServiceProvider.value);
     }
     
-    const result = await callExternalApi(window.currentEnvironment, queries.listServices);
+    const result = await callExternalApi(window.currentEnvironment, 'listSERVICES');
     const services = result.data.listSERVICES.items;
     
     const existing = services.find((s: any) => 
@@ -953,24 +951,10 @@ const checkExistingParameters = async (reqParams: any[], respParams: any[]) => {
   if (!existingServiceId.value) return;
   
   try {
-    let allExistingParams = [];
-    let nextToken = null;
-    
-    // Paginate through all parameters for this service
-    do {
-      const variables = {
-        filter: { SERVICE_ID: { eq: existingServiceId.value } },
-        limit: 1000
-      };
-      if (nextToken) {
-        variables.nextToken = nextToken;
-      }
-      
-      const result = await callExternalApi(window.currentEnvironment, queries.listServiceParams, variables);
-      
-      allExistingParams.push(...result.data.listSERVICE_PARAMS.items);
-      nextToken = result.data.listSERVICE_PARAMS.nextToken;
-    } while (nextToken);
+    const result = await callExternalApi(window.currentEnvironment, 'listSERVICE_PARAMS', {
+      filter: { SERVICE_ID: { eq: existingServiceId.value } }
+    });
+    const allExistingParams = result.data.listSERVICE_PARAMS.items;
     
     // Mark existing request parameters and disable/uncheck them
     reqParams.forEach(param => {
@@ -1055,29 +1039,16 @@ const insertService = async () => {
         CREATED_DATE: new Date().toISOString().split('T')[0]
       };
       
-      const serviceResult = await callExternalApi(window.currentEnvironment, mutations.createService, { input: serviceInput });
+      const serviceResult = await callExternalApi(window.currentEnvironment, 'createSERVICE', { input: serviceInput });
       
       serviceId = serviceResult.data.createSERVICE.SERVICE_ID;
     }
     
     // Get fresh existing parameters for this service only
-    let existingParams = [];
-    let nextToken = null;
-    
-    do {
-      const variables = {
-        filter: { SERVICE_ID: { eq: serviceId } },
-        limit: 1000
-      };
-      if (nextToken) {
-        variables.nextToken = nextToken;
-      }
-      
-      const result = await callExternalApi(window.currentEnvironment, queries.listServiceParams, variables);
-      
-      existingParams.push(...result.data.listSERVICE_PARAMS.items);
-      nextToken = result.data.listSERVICE_PARAMS.nextToken;
-    } while (nextToken);
+    const result = await callExternalApi(window.currentEnvironment, 'listSERVICE_PARAMS', {
+      filter: { SERVICE_ID: { eq: serviceId } }
+    });
+    const existingParams = result.data.listSERVICE_PARAMS.items;
     
     // Update requestParams to mark existing ones for THIS service only
     requestParams.value.forEach(param => {
@@ -1109,7 +1080,7 @@ const insertService = async () => {
       
       for (const paramInput of paramInputs) {
         try {
-          await callExternalApi(window.currentEnvironment, mutations.createServiceParam, { input: paramInput });
+          await callExternalApi(window.currentEnvironment, 'createSERVICE_PARAM', { input: paramInput });
           currentInsert.value++;
         } catch (err) {
           console.error('Failed to create parameter:', paramInput.PARAM_NAME, err);
@@ -1143,23 +1114,10 @@ const updateService = async () => {
   
   try {
     // Get fresh existing parameters for this service only
-    let existingParams = [];
-    let nextToken = null;
-    
-    do {
-      const variables = {
-        filter: { SERVICE_ID: { eq: existingServiceId.value } },
-        limit: 1000
-      };
-      if (nextToken) {
-        variables.nextToken = nextToken;
-      }
-      
-      const result = await callExternalApi(window.currentEnvironment, queries.listServiceParams, variables);
-      
-      existingParams.push(...result.data.listSERVICE_PARAMS.items);
-      nextToken = result.data.listSERVICE_PARAMS.nextToken;
-    } while (nextToken);
+    const result = await callExternalApi(window.currentEnvironment, 'listSERVICE_PARAMS', {
+      filter: { SERVICE_ID: { eq: existingServiceId.value } }
+    });
+    const existingParams = result.data.listSERVICE_PARAMS.items;
     
     // Update requestParams to mark existing ones for THIS service only
     requestParams.value.forEach(param => {
@@ -1190,7 +1148,7 @@ const updateService = async () => {
       
       for (const paramInput of paramInputs) {
         try {
-          await callExternalApi(window.currentEnvironment, mutations.createServiceParam, { input: paramInput });
+          await callExternalApi(window.currentEnvironment, 'createSERVICE_PARAM', { input: paramInput });
           currentInsert.value++;
         } catch (err) {
           console.error('Failed to create parameter:', paramInput.PARAM_NAME, err);

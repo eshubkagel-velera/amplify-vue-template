@@ -229,7 +229,7 @@
 
 <script setup lang="ts">
 import '../styles/shared.css';
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { generateClient } from 'aws-amplify/api';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
@@ -286,8 +286,10 @@ const formatDate = (dateValue) => {
 
 const loadProducts = async () => {
   try {
-    const result = await generateClient().graphql({ query: queries.listOriginProducts });
-    products.value = result.data.listOrigin_products.items;
+    const { callExternalApi } = await import('../client.js');
+    const environment = localStorage.getItem('selectedEnvironment') || 'dev';
+    const result = await callExternalApi(environment, 'listORIGIN_PRODUCTS');
+    products.value = result.data.listORIGIN_PRODUCTS.items || [];
   } catch (error) {
     showError('Failed to load products');
   }
@@ -309,8 +311,10 @@ const loadRedirectUrls = async () => {
   if (!productId) return;
   
   try {
-    const result = await generateClient().graphql({ query: queries.listRedirectUrls });
-    const productUrls = result.data.listRedirect_urls.items.filter(
+    const { callExternalApi } = await import('../client.js');
+    const environment = localStorage.getItem('selectedEnvironment') || 'dev';
+    const result = await callExternalApi(environment, 'listREDIRECT_URLS');
+    const productUrls = result.data.listREDIRECT_URLS.items.filter(
       url => url.ORIGIN_PRODUCT_ID === productId
     );
     redirectUrls.value = productUrls;
@@ -337,6 +341,7 @@ const submitForm = async () => {
   if (props.readonly) return;
   try {
     const today = new Date().toISOString().split('T')[0];
+    const environment = localStorage.getItem('selectedEnvironment') || 'dev';
     let cleanedFormData = { ...formData.value };
     
     if (showEditModal.value) {
@@ -350,14 +355,15 @@ const submitForm = async () => {
         CHANGED_DATE: today
       };
       await generateClient().graphql({
-        query: mutations.updateRedirectUrl,
+        query: mutations.updateRedirectUrl(environment),
         variables: { input: updateData }
       });
     } else {
       cleanedFormData.ORIGIN_PRODUCT_ID = props.productId || parseInt(selectedProductId.value);
       cleanedFormData.CREATED_DATE = today;
+      cleanedFormData.CREATED_BY_USER_ID = parseInt(cleanedFormData.CREATED_BY_USER_ID);
       await generateClient().graphql({
-        query: mutations.createRedirectUrl,
+        query: mutations.createRedirectUrl(environment),
         variables: { input: cleanedFormData }
       });
     }
@@ -383,9 +389,10 @@ const confirmBulkDelete = () => {
 
 const deleteBulkUrls = async () => {
   try {
+    const environment = localStorage.getItem('selectedEnvironment') || 'dev';
     for (const urlId of selectedUrls.value) {
       await generateClient().graphql({
-        query: mutations.deleteRedirectUrl,
+        query: mutations.deleteRedirectUrl(environment),
         variables: { input: { REDIRECT_URL_ID: urlId } }
       });
     }
@@ -495,6 +502,16 @@ const goBack = () => {
   window.dispatchEvent(new CustomEvent('goBackToProducts'));
 };
 
+// Listen for environment changes
+const handleEnvironmentChange = () => {
+  loadProducts();
+  if (props.productId) {
+    loadRedirectUrls();
+  }
+};
+
+window.addEventListener('environmentChanged', handleEnvironmentChange);
+
 onMounted(async () => {
   await loadProducts();
   
@@ -504,6 +521,11 @@ onMounted(async () => {
     selectedProduct.value = products.value.find(p => p.ORIGIN_PRODUCT_ID === props.productId);
     await loadRedirectUrls();
   }
+});
+
+// Cleanup event listener
+onUnmounted(() => {
+  window.removeEventListener('environmentChanged', handleEnvironmentChange);
 });
 </script>
 

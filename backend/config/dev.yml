@@ -1,0 +1,5 @@
+stage: dev
+region: us-east-2
+cognitoUserPoolId: us-east-2_iAtP0Uzh5
+databaseEndpoint: hazel-mapping.cluster-a11d98c5-d647-45a2-9978-f81be7aa3d60.us-east-2.rds.amazonaws.com
+appSyncDomainName: appsync-dev.velera.com

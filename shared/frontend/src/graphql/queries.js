@@ -40,17 +40,14 @@ export const listRedirectUrls = `
 `;
 
 export const listServiceProviders = `
-  query ListServiceProviders($filter: TableSERVICE_PROVIDERFilterInput, $limit: Int, $nextToken: String) {
-    listSERVICE_PROVIDERS(filter: $filter, limit: $limit, nextToken: $nextToken) {
-      items {
-        SERVICE_PROVIDER_ID
-        SERVICE_PROVIDER_NAME
-        CREATED_BY_USER_ID
-        CREATED_DATE
-        CHANGED_BY_USER_ID
-        CHANGED_DATE
-      }
-      nextToken
+  query ListServiceProviders {
+    listSERVICE_PROVIDERS {
+      SERVICE_PROVIDER_ID
+      SERVICE_PROVIDER_NAME
+      CREATED_BY_USER_ID
+      CREATED_DATE
+      CHANGED_BY_USER_ID
+      CHANGED_DATE
     }
   }
 `;

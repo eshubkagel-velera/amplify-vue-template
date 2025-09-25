@@ -1,0 +1,52 @@
+/* Environment-specific styling for security */
+
+.environment-banner {
+  padding: 8px 16px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 12px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  border-radius: 4px;
+}
+
+.env-dev {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  border: 1px solid #1976d2;
+}
+
+.env-test {
+  background-color: #fff3e0;
+  color: #f57c00;
+  border: 1px solid #f57c00;
+}
+
+.env-uat {
+  background-color: #fff8e1;
+  color: #f9a825;
+  border: 1px solid #f9a825;
+}
+
+.env-live {
+  background-color: #ffebee;
+  color: #d32f2f;
+  border: 2px solid #d32f2f;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+.production-warning {
+  background-color: #ffcdd2;
+  border: 2px solid #f44336;
+  padding: 12px;
+  border-radius: 4px;
+  margin: 16px 0;
+  color: #d32f2f;
+  font-weight: bold;
+}

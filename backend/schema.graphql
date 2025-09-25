@@ -100,7 +100,7 @@ input CreateORIGIN_PRODUCTInput {
   CHANGED_DATE: String
   CREATED_BY_USER_ID: Int!
   CREATED_DATE: String!
-  ORIGIN_PRODUCT_ID: Int!
+  ORIGIN_PRODUCT_ID: Int
   PARTNER_CODE: String
   PRODUCT_DESC: String!
   PRODUCT_ID: String!
@@ -131,49 +131,265 @@ input DeleteREDIRECT_URLInput {
   REDIRECT_URL_ID: Int!
 }
 
+input CreateSERVICE_PROVIDERInput {
+  SERVICE_PROVIDER_NAME: String!
+  CREATED_BY_USER_ID: Int!
+  CREATED_DATE: String!
+}
+
+input UpdateSERVICE_PROVIDERInput {
+  SERVICE_PROVIDER_ID: Int!
+  SERVICE_PROVIDER_NAME: String!
+  CHANGED_BY_USER_ID: Int
+  CHANGED_DATE: String
+}
+
+input DeleteSERVICE_PROVIDERInput {
+  SERVICE_PROVIDER_ID: Int!
+}
+
+input CreateSERVICEInput {
+  SERVICE_PROVIDER_ID: Int!
+  URI: String!
+  CREATED_BY_USER_ID: Int!
+  CREATED_DATE: String!
+}
+
+input UpdateSERVICEInput {
+  SERVICE_ID: Int!
+  SERVICE_PROVIDER_ID: Int!
+  URI: String!
+  CHANGED_BY_USER_ID: Int
+  CHANGED_DATE: String
+}
+
+input DeleteSERVICEInput {
+  SERVICE_ID: Int!
+}
+
+input CreateSERVICE_PARAMInput {
+  SERVICE_ID: Int!
+  PARAM_NAME: String!
+  CREATED_BY_USER_ID: Int!
+  CREATED_DATE: String!
+}
+
+input UpdateSERVICE_PARAMInput {
+  SERVICE_PARAM_ID: Int!
+  SERVICE_ID: Int!
+  PARAM_NAME: String!
+  CHANGED_BY_USER_ID: Int
+  CHANGED_DATE: String
+}
+
+input DeleteSERVICE_PARAMInput {
+  SERVICE_PARAM_ID: Int!
+}
+
+input CreateSERVICE_PARAM_MAPPINGInput {
+  ORIGIN_PRODUCT_ID: Int!
+  SYSTEM_NBR: String
+  PRIN_NBR: String
+  AGENT_NBR: String
+  SOURCE_SERVICE_PARAM_ID: Int!
+  TARGET_SERVICE_PARAM_ID: Int!
+  PLASTIC_TYPE_ID: Int
+  COMMENT_TEXT: String
+  CREATED_BY_USER_ID: Int!
+  CREATED_DATE: String!
+}
+
+input UpdateSERVICE_PARAM_MAPPINGInput {
+  SERVICE_PARAM_MAPPING_ID: Int!
+  ORIGIN_PRODUCT_ID: Int!
+  SYSTEM_NBR: String
+  PRIN_NBR: String
+  AGENT_NBR: String
+  SOURCE_SERVICE_PARAM_ID: Int!
+  TARGET_SERVICE_PARAM_ID: Int!
+  PLASTIC_TYPE_ID: Int
+  COMMENT_TEXT: String
+  CHANGED_BY_USER_ID: Int
+  CHANGED_DATE: String
+}
+
+input DeleteSERVICE_PARAM_MAPPINGInput {
+  SERVICE_PARAM_MAPPING_ID: Int!
+}
+
+input CreateSERVICE_EXPR_MAPPINGInput {
+  SERVICE_PARAM_MAPPING_ID: Int!
+  SOURCE_EXPR: String!
+  TARGET_EXPR: String!
+  COMMENT_TEXT: String
+  CREATED_BY_USER_ID: Int!
+  CREATED_DATE: String!
+}
+
+input UpdateSERVICE_EXPR_MAPPINGInput {
+  SERVICE_EXPR_MAPPING_ID: Int!
+  SERVICE_PARAM_MAPPING_ID: Int!
+  SOURCE_EXPR: String!
+  TARGET_EXPR: String!
+  COMMENT_TEXT: String
+  CHANGED_BY_USER_ID: Int
+  CHANGED_DATE: String
+}
+
+input DeleteSERVICE_EXPR_MAPPINGInput {
+  SERVICE_EXPR_MAPPING_ID: Int!
+}
+
+input CreateSTEP_TYPEInput {
+  STEP_TYPE_NAME: String!
+  STEP_TYPE_DESC: String
+  RESOURCE_NAME: String
+  CREATED_BY_USER_ID: Int!
+  CREATED_DATE: String!
+}
+
+input UpdateSTEP_TYPEInput {
+  STEP_TYPE_ID: Int!
+  STEP_TYPE_NAME: String!
+  STEP_TYPE_DESC: String
+  RESOURCE_NAME: String
+  CHANGED_BY_USER_ID: Int
+  CHANGED_DATE: String
+}
+
+input DeleteSTEP_TYPEInput {
+  STEP_TYPE_ID: Int!
+}
+
+input CreateSTEP_SERVICE_MAPPINGInput {
+  STEP_TYPE_ID: Int!
+  SERVICE_ID: Int!
+  SEQUENCE_NBR: Int!
+}
+
+input UpdateSTEP_SERVICE_MAPPINGInput {
+  STEP_SERVICE_MAPPING_ID: Int!
+  STEP_TYPE_ID: Int!
+  SERVICE_ID: Int!
+  SEQUENCE_NBR: Int!
+}
+
+input DeleteSTEP_SERVICE_MAPPINGInput {
+  STEP_SERVICE_MAPPING_ID: Int!
+}
+
+input UpdateORIGIN_PRODUCTInput {
+  ORIGIN_PRODUCT_ID: Int!
+  VENDOR_NAME: String!
+  PRODUCT_ID: String!
+  PRODUCT_DESC: String!
+  PSCU_CLIENT_ID: Int!
+  PARTNER_CODE: String
+  CHANGED_BY_USER_ID: Int
+  CHANGED_DATE: String
+}
+
+input DeleteORIGIN_PRODUCTInput {
+  ORIGIN_PRODUCT_ID: Int!
+}
+
+type ORIGIN_PRODUCTConnection {
+  items: [ORIGIN_PRODUCT]
+  nextToken: String
+}
+
+type SERVICE_PROVIDERConnection {
+  items: [SERVICE_PROVIDER]
+  nextToken: String
+}
+
+type SERVICEConnection {
+  items: [SERVICE]
+  nextToken: String
+}
+
+type SERVICE_PARAMConnection {
+  items: [SERVICE_PARAM]
+  nextToken: String
+}
+
+type SERVICE_PARAM_MAPPINGConnection {
+  items: [SERVICE_PARAM_MAPPING]
+  nextToken: String
+}
+
+type SERVICE_EXPR_MAPPINGConnection {
+  items: [SERVICE_EXPR_MAPPING]
+  nextToken: String
+}
+
+type STEP_TYPEConnection {
+  items: [STEP_TYPE]
+  nextToken: String
+}
+
+type STEP_SERVICE_MAPPINGConnection {
+  items: [STEP_SERVICE_MAPPING]
+  nextToken: String
+}
+
+type REDIRECT_URLConnection {
+  items: [REDIRECT_URL]
+  nextToken: String
+}
+
 type Query {
-  # Dev environment queries
-  listCONFIG_PARAMS_DEV: [CONFIG_PARAM]
-  listLOAN_APPS_DEV: [LOAN_APP]
-  listNEW_MEMBER_TOKENS_DEV: [NEW_MEMBER_TOKEN]
-  listORIGIN_PRODUCTS_DEV: [ORIGIN_PRODUCT]
-  
-  # Test environment queries
-  listCONFIG_PARAMS_TEST: [CONFIG_PARAM]
-  listLOAN_APPS_TEST: [LOAN_APP]
-  listNEW_MEMBER_TOKENS_TEST: [NEW_MEMBER_TOKEN]
-  listORIGIN_PRODUCTS_TEST: [ORIGIN_PRODUCT]
-  listSERVICE_PROVIDERS_TEST: [SERVICE_PROVIDER]
-  listSERVICES_TEST: [SERVICE]
-  listSERVICE_PARAMS_TEST: [SERVICE_PARAM]
-  listSERVICE_PARAM_MAPPINGS_TEST: [SERVICE_PARAM_MAPPING]
-  listSERVICE_EXPR_MAPPINGS_TEST: [SERVICE_EXPR_MAPPING]
-  listSTEP_TYPES_TEST: [STEP_TYPE]
-  listSTEP_SERVICE_MAPPINGS_TEST: [STEP_SERVICE_MAPPING]
-  listREDIRECT_URLS_TEST: [REDIRECT_URL]
-  
-  # Dev environment queries
-  listSERVICE_PROVIDERS_DEV: [SERVICE_PROVIDER]
-  listSERVICES_DEV: [SERVICE]
-  listSERVICE_PARAMS_DEV: [SERVICE_PARAM]
-  listSERVICE_PARAM_MAPPINGS_DEV: [SERVICE_PARAM_MAPPING]
-  listSERVICE_EXPR_MAPPINGS_DEV: [SERVICE_EXPR_MAPPING]
-  listSTEP_TYPES_DEV: [STEP_TYPE]
-  listSTEP_SERVICE_MAPPINGS_DEV: [STEP_SERVICE_MAPPING]
-  listREDIRECT_URLS_DEV: [REDIRECT_URL]
+  # Generic queries that work with any stage
+  listCONFIG_PARAMS: [CONFIG_PARAM] @aws_auth(cognito_groups: ["readonly", "developer", "deployment", "admin"])
+  listLOAN_APPS: [LOAN_APP] @aws_auth(cognito_groups: ["readonly", "developer", "deployment", "admin"])
+  listNEW_MEMBER_TOKENS: [NEW_MEMBER_TOKEN] @aws_auth(cognito_groups: ["readonly", "developer", "deployment", "admin"])
+  listORIGIN_PRODUCTS: ORIGIN_PRODUCTConnection @aws_auth(cognito_groups: ["readonly", "developer", "deployment", "admin"])
+  listSERVICE_PROVIDERS: SERVICE_PROVIDERConnection @aws_auth(cognito_groups: ["readonly", "developer", "deployment", "admin"])
+  listSERVICES: SERVICEConnection @aws_auth(cognito_groups: ["readonly", "developer", "deployment", "admin"])
+  listSERVICE_PARAMS: SERVICE_PARAMConnection @aws_auth(cognito_groups: ["readonly", "developer", "deployment", "admin"])
+  listSERVICE_PARAM_MAPPINGS: SERVICE_PARAM_MAPPINGConnection @aws_auth(cognito_groups: ["readonly", "developer", "deployment", "admin"])
+  listSERVICE_EXPR_MAPPINGS: SERVICE_EXPR_MAPPINGConnection @aws_auth(cognito_groups: ["readonly", "developer", "deployment", "admin"])
+  listSTEP_TYPES: STEP_TYPEConnection @aws_auth(cognito_groups: ["readonly", "developer", "deployment", "admin"])
+  listSTEP_SERVICE_MAPPINGS: STEP_SERVICE_MAPPINGConnection @aws_auth(cognito_groups: ["readonly", "developer", "deployment", "admin"])
+  listREDIRECT_URLS: REDIRECT_URLConnection @aws_auth(cognito_groups: ["readonly", "developer", "deployment", "admin"])
 }
 
 type Mutation {
-  createCONFIG_PARAM(input: CreateCONFIG_PARAMInput!): CONFIG_PARAM
-  createLOAN_APP(input: CreateLOAN_APPInput!): LOAN_APP
-  createNEW_MEMBER_TOKEN(input: CreateNEW_MEMBER_TOKENInput!): NEW_MEMBER_TOKEN
-  createORIGIN_PRODUCT(input: CreateORIGIN_PRODUCTInput!): ORIGIN_PRODUCT
-  createREDIRECT_URL_DEV(input: CreateREDIRECT_URLInput!): REDIRECT_URL
-  updateREDIRECT_URL_DEV(input: UpdateREDIRECT_URLInput!): REDIRECT_URL
-  deleteREDIRECT_URL_DEV(input: DeleteREDIRECT_URLInput!): REDIRECT_URL
-  createREDIRECT_URL_TEST(input: CreateREDIRECT_URLInput!): REDIRECT_URL
-  updateREDIRECT_URL_TEST(input: UpdateREDIRECT_URLInput!): REDIRECT_URL
-  deleteREDIRECT_URL_TEST(input: DeleteREDIRECT_URLInput!): REDIRECT_URL
+  # Create mutations - accessible by developer, deployment, admin
+  createCONFIG_PARAM(input: CreateCONFIG_PARAMInput!): CONFIG_PARAM @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  createLOAN_APP(input: CreateLOAN_APPInput!): LOAN_APP @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  createNEW_MEMBER_TOKEN(input: CreateNEW_MEMBER_TOKENInput!): NEW_MEMBER_TOKEN @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  createORIGIN_PRODUCT(input: CreateORIGIN_PRODUCTInput!): ORIGIN_PRODUCT @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  createSERVICE_PROVIDER(input: CreateSERVICE_PROVIDERInput!): SERVICE_PROVIDER @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  createSERVICE(input: CreateSERVICEInput!): SERVICE @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  createSERVICE_PARAM(input: CreateSERVICE_PARAMInput!): SERVICE_PARAM @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  createSERVICE_PARAM_MAPPING(input: CreateSERVICE_PARAM_MAPPINGInput!): SERVICE_PARAM_MAPPING @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  createSERVICE_EXPR_MAPPING(input: CreateSERVICE_EXPR_MAPPINGInput!): SERVICE_EXPR_MAPPING @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  createSTEP_TYPE(input: CreateSTEP_TYPEInput!): STEP_TYPE @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  createSTEP_SERVICE_MAPPING(input: CreateSTEP_SERVICE_MAPPINGInput!): STEP_SERVICE_MAPPING @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  createREDIRECT_URL(input: CreateREDIRECT_URLInput!): REDIRECT_URL @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  
+  # Update mutations - accessible by developer, deployment, admin
+  updateORIGIN_PRODUCT(input: UpdateORIGIN_PRODUCTInput!): ORIGIN_PRODUCT @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  updateSERVICE_PROVIDER(input: UpdateSERVICE_PROVIDERInput!): SERVICE_PROVIDER @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  updateSERVICE(input: UpdateSERVICEInput!): SERVICE @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  updateSERVICE_PARAM(input: UpdateSERVICE_PARAMInput!): SERVICE_PARAM @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  updateSERVICE_PARAM_MAPPING(input: UpdateSERVICE_PARAM_MAPPINGInput!): SERVICE_PARAM_MAPPING @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  updateSERVICE_EXPR_MAPPING(input: UpdateSERVICE_EXPR_MAPPINGInput!): SERVICE_EXPR_MAPPING @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  updateSTEP_TYPE(input: UpdateSTEP_TYPEInput!): STEP_TYPE @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  updateSTEP_SERVICE_MAPPING(input: UpdateSTEP_SERVICE_MAPPINGInput!): STEP_SERVICE_MAPPING @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  updateREDIRECT_URL(input: UpdateREDIRECT_URLInput!): REDIRECT_URL @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  
+  # Delete mutations - accessible by deployment, admin only
+  deleteORIGIN_PRODUCT(input: DeleteORIGIN_PRODUCTInput!): ORIGIN_PRODUCT @aws_auth(cognito_groups: ["deployment", "admin"])
+  deleteSERVICE_PROVIDER(input: DeleteSERVICE_PROVIDERInput!): SERVICE_PROVIDER @aws_auth(cognito_groups: ["deployment", "admin"])
+  deleteSERVICE(input: DeleteSERVICEInput!): SERVICE @aws_auth(cognito_groups: ["deployment", "admin"])
+  deleteSERVICE_PARAM(input: DeleteSERVICE_PARAMInput!): SERVICE_PARAM @aws_auth(cognito_groups: ["deployment", "admin"])
+  deleteSERVICE_PARAM_MAPPING(input: DeleteSERVICE_PARAM_MAPPINGInput!): SERVICE_PARAM_MAPPING @aws_auth(cognito_groups: ["deployment", "admin"])
+  deleteSERVICE_EXPR_MAPPING(input: DeleteSERVICE_EXPR_MAPPINGInput!): SERVICE_EXPR_MAPPING @aws_auth(cognito_groups: ["deployment", "admin"])
+  deleteSTEP_TYPE(input: DeleteSTEP_TYPEInput!): STEP_TYPE @aws_auth(cognito_groups: ["deployment", "admin"])
+  deleteSTEP_SERVICE_MAPPING(input: DeleteSTEP_SERVICE_MAPPINGInput!): STEP_SERVICE_MAPPING @aws_auth(cognito_groups: ["deployment", "admin"])
+  deleteREDIRECT_URL(input: DeleteREDIRECT_URLInput!): REDIRECT_URL @aws_auth(cognito_groups: ["deployment", "admin"])
 }
 
 type SERVICE_PROVIDER {
