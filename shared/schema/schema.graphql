@@ -252,6 +252,8 @@ type SERVICE {
   SERVICE_ID: Int!
   SERVICE_PROVIDER_ID: Int!
   URI: String!
+  SECRET_NAME: String
+  REQUEST_TYPE: String
 }
 
 type SERVICEConnection {
@@ -545,6 +547,8 @@ input CreateSERVICEInput {
   CREATED_DATE: AWSDate!
   SERVICE_PROVIDER_ID: Int!
   URI: String!
+  SECRET_NAME: String
+  REQUEST_TYPE: String
 }
 
 input CreateSERVICE_EXPR_MAPPINGInput {
@@ -1457,6 +1461,8 @@ input UpdateSERVICEInput {
   SERVICE_ID: Int!
   SERVICE_PROVIDER_ID: Int
   URI: String
+  SECRET_NAME: String
+  REQUEST_TYPE: String
 }
 
 input UpdateSERVICE_EXPR_MAPPINGInput {

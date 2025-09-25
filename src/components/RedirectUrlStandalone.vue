@@ -1,6 +1,6 @@
 <template>
   <div class="redirect-url-standalone">
-    <h2>Redirect URL Manager</h2>
+
     
     <!-- Product Selection (only show when no productId prop) -->
     <div v-if="!props.productId" class="bordered-section">
@@ -27,8 +27,8 @@
     <div v-if="selectedProductId || props.productId" class="bordered-section">
       <div class="action-buttons">
         <button @click="loadRedirectUrls" class="btn-primary">Refresh</button>
-        <button @click="showCreateModal = true" class="btn-success" :disabled="props.readonly">{{ props.readonly ? 'View Only Mode' : 'Add New Redirect URL' }}</button>
-        <button @click="confirmBulkDelete" :disabled="selectedUrls.length === 0 || props.readonly" class="btn-danger">Delete Selected ({{ selectedUrls.length }})</button>
+        <button @click="showCreateModal = true" class="btn-success" :disabled="props.readonly || !canEdit">{{ props.readonly || !canEdit ? 'View Only Mode' : 'Add New Redirect URL' }}</button>
+        <button @click="confirmBulkDelete" :disabled="selectedUrls.length === 0 || !canDelete" class="btn-danger">Delete Selected ({{ selectedUrls.length }})</button>
         <button v-if="props.productId" @click="goBack" class="btn-secondary">Back to Products</button>
         <span class="record-count">{{ redirectUrls.length }} redirect URLs</span>
       </div>
@@ -235,6 +235,7 @@ import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
 import { useErrorHandler } from '../composables/useErrorHandler';
 import { useTableOperations } from '../composables/useTableOperations';
+import { useAuth } from '../composables/useAuth';
 import type { OriginProduct, RedirectUrl } from '../types';
 
 const props = defineProps({
@@ -263,6 +264,8 @@ const showCreateModal = ref(false);
 const showEditModal = ref(false);
 const showDeleteModal = ref(false);
 const { error: errorMessage, showErrorModal, handleError, clearError } = useErrorHandler();
+const { canEdit, canDelete } = useAuth();
+console.log('Auth permissions:', { canEdit: canEdit.value, canDelete: canDelete.value, readonly: props.readonly });
 const formData = ref<Partial<RedirectUrl>>({});
 const filters = ref({
   URL_TYPE_CODE: '',
@@ -338,11 +341,15 @@ const editUrl = (url) => {
 };
 
 const submitForm = async () => {
-  if (props.readonly) return;
+  // Prevent submission for readonly users
+  if (props.readonly && showEditModal.value) {
+    return;
+  }
   try {
     const today = new Date().toISOString().split('T')[0];
     const environment = localStorage.getItem('selectedEnvironment') || 'dev';
     let cleanedFormData = { ...formData.value };
+    console.log('Form data before cleaning:', cleanedFormData);
     
     if (showEditModal.value) {
       const updateData = {
@@ -351,9 +358,11 @@ const submitForm = async () => {
         URL_TYPE_CODE: cleanedFormData.URL_TYPE_CODE,
         URL: cleanedFormData.URL,
         RESPONSE_TEXT: cleanedFormData.RESPONSE_TEXT,
-        CHANGED_BY_USER_ID: cleanedFormData.CHANGED_BY_USER_ID,
+        CHANGED_BY_USER_ID: parseInt(cleanedFormData.CHANGED_BY_USER_ID) || 1,
         CHANGED_DATE: today
       };
+      console.log('Update data being sent:', updateData);
+      console.log('Mutation query:', mutations.updateRedirectUrl(environment));
       await generateClient().graphql({
         query: mutations.updateRedirectUrl(environment),
         variables: { input: updateData }
@@ -371,6 +380,11 @@ const submitForm = async () => {
     cancelForm();
     await loadRedirectUrls();
   } catch (error) {
+    console.error('Submit form error:', error);
+    if (error.errors) {
+      console.error('GraphQL errors:', error.errors);
+      error.errors.forEach(err => console.error('Error message:', err.message));
+    }
     showError('Failed to save redirect URL');
   }
 };
@@ -388,13 +402,20 @@ const confirmBulkDelete = () => {
 };
 
 const deleteBulkUrls = async () => {
+  if (!canDelete.value) {
+    showError('You do not have permission to delete records');
+    return;
+  }
   try {
     const environment = localStorage.getItem('selectedEnvironment') || 'dev';
+    console.log('Delete attempt:', { canDelete: canDelete.value, environment, selectedUrls: selectedUrls.value });
     for (const urlId of selectedUrls.value) {
-      await generateClient().graphql({
+      console.log('Deleting URL ID:', urlId);
+      const result = await generateClient().graphql({
         query: mutations.deleteRedirectUrl(environment),
         variables: { input: { REDIRECT_URL_ID: urlId } }
       });
+      console.log('Delete result:', result);
     }
     
     showDeleteModal.value = false;
@@ -402,6 +423,11 @@ const deleteBulkUrls = async () => {
     allSelected.value = false;
     await loadRedirectUrls();
   } catch (error) {
+    console.error('Delete error details:', error);
+    if (error.errors) {
+      console.error('GraphQL errors:', error.errors);
+      error.errors.forEach(err => console.error('Error message:', err.message));
+    }
     showError('Failed to delete redirect URLs');
   }
 };

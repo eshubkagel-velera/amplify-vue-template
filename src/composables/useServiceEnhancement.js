@@ -9,8 +9,8 @@ export const useServiceEnhancement = () => {
         getClient().graphql({ query: queries.listServiceProviders })
       ]);
       
-      const services = servicesResult.data.listSERVICES || [];
-      const providers = providersResult.data.listSERVICE_PROVIDERS || [];
+      const services = servicesResult.data.listSERVICES?.items || [];
+      const providers = providersResult.data.listSERVICE_PROVIDERS?.items || [];
       
       return serviceParams.map(param => {
         const service = services.find(s => s.SERVICE_ID === param.SERVICE_ID);
@@ -36,8 +36,8 @@ export const useServiceEnhancement = () => {
         getClient().graphql({ query: queries.listServiceProviders })
       ]);
       
-      const services = servicesResult.data.listSERVICES || [];
-      const providers = providersResult.data.listSERVICE_PROVIDERS || [];
+      const services = servicesResult.data.listSERVICES?.items || [];
+      const providers = providersResult.data.listSERVICE_PROVIDERS?.items || [];
       
       return services.map(service => {
         const provider = providers.find(p => p.SERVICE_PROVIDER_ID === service.SERVICE_PROVIDER_ID);

@@ -2,28 +2,8 @@
   <div id="app">
     <AuthLogin v-if="!isAuthenticated" @authenticated="handleAuthenticated" />
     <div v-else>
+      <div style="height: 125px;"></div>
       <header>
-        <div class="controls-section">
-          <div class="header-title">
-            <h1>Hazel Mapping Editor</h1>
-          </div>
-          <div class="controls-right">
-            <div class="user-info-section">
-              <label>User:</label>
-              <span class="user-info">{{ user?.email }} ({{ userGroups.join(', ') }})</span>
-            </div>
-            <EnvironmentSelector />
-            <div class="screen-selector">
-              <label for="screen-select">Screen:</label>
-              <select id="screen-select" v-model="currentView" @change="changeView" :disabled="showMappingManager || showRedirectUrlManager || showStepServicesManager || showServiceParamsManager || showServiceStepMappingManager">
-                <option v-for="entity in sortedEntities" :key="entity.name" :value="entity.name">
-                  {{ entity.name }}
-                </option>
-                <option value="import">Import Services</option>
-              </select>
-            </div>
-          </div>
-        </div>
       <nav>
         <button v-if="showMappingManager" @click="closeMappingManager" class="btn-primary" style="margin-left: 10px;">
           Back to {{ currentView }}
@@ -71,11 +51,37 @@
         :canDelete="canDelete"
       />
       </main>
-      <div style="position: fixed; top: 10px; right: 10px; display: flex; gap: 10px;">
-        <ThemeToggle />
-        <button @click="signOut" class="btn-danger">
-          Sign Out
-        </button>
+      <div style="position: fixed; top: 0; left: 0; right: 0; display: flex; flex-direction: column; background: var(--bg-color, #fff); z-index: 1000; padding: 10px; border-bottom: 1px solid var(--border-color, #dee2e6);">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="flex: 1; text-align: center;">
+            <h1 style="margin: 0; font-size: 2rem;">Hazel Mapping Editor</h1>
+            <h2 style="margin: 30px 0 0 0; font-size: 1.2rem; color: var(--text-color, #666);">{{ currentView === 'import' ? 'Import Services' : currentView + ' Manager' }}</h2>
+          </div>
+          <div style="display: flex; gap: 10px; flex-direction: column; align-items: flex-end;">
+            <div style="display: flex; gap: 10px;">
+              <ThemeToggle />
+              <button @click="signOut" class="btn-danger">
+                Sign Out
+              </button>
+            </div>
+            <div class="controls-right" style="position: relative; top: 0;">
+              <div class="user-info-section">
+                <label>User:</label>
+                <span class="user-info">{{ user?.email }} ({{ filteredUserGroups.join(', ') }})</span>
+              </div>
+              <EnvironmentSelector />
+              <div class="screen-selector">
+                <label for="screen-select">Screen:</label>
+                <select id="screen-select" v-model="currentView" @change="changeView" :disabled="showMappingManager || showRedirectUrlManager || showStepServicesManager || showServiceParamsManager || showServiceStepMappingManager">
+                  <option v-for="entity in sortedEntities" :key="entity.name" :value="entity.name">
+                    {{ entity.name }}
+                  </option>
+                  <option value="import">Import Services</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -156,6 +162,12 @@ const loadUserInfo = async () => {
       
       if (accessToken.payload['cognito:groups']) {
         userGroups.value = accessToken.payload['cognito:groups'];
+        console.log('Setting user groups:', userGroups.value);
+        
+        // Update the global auth state
+        const { useAuth } = await import('./composables/useAuth');
+        const { setUserGroups } = useAuth();
+        setUserGroups(userGroups.value);
       }
     }
   } catch (err) {
@@ -177,7 +189,7 @@ import * as mutations from './graphql/mutations';
 import { fetchAllPages } from './utils/pagination.js';
 
 // Use auth composable for permission checking
-const { isAdmin, isDeployment, isDeveloper, isReadonly, canEdit, canDelete } = useAuth();
+const { isAdmin, isDeployment, isDeveloper, isReadonly, canEdit, canDelete, userGroups: filteredUserGroups } = useAuth();
 
 // Initialize client lazily to ensure Amplify is configured first
 let client: any = null;
@@ -464,10 +476,17 @@ const entities = [
   },
   {
     name: 'SERVICE',
-    fields: ['SERVICE_ID', 'Service Provider', 'URI', 'CREATED_BY_USER_ID', 'CREATED_DATE', 'CHANGED_BY_USER_ID', 'CHANGED_DATE'],
+    fields: ['SERVICE_ID', 'Service Provider', 'URI', 'SECRET_NAME', 'REQUEST_TYPE', 'CREATED_BY_USER_ID', 'CREATED_DATE', 'CHANGED_BY_USER_ID', 'CHANGED_DATE'],
     formFields: [
       { name: 'SERVICE_PROVIDER_ID', type: 'select', required: true, disabled: false, options: [] },
       { name: 'URI', type: 'text', required: true, disabled: false },
+      { name: 'SECRET_NAME', type: 'text', required: false, disabled: false },
+      { name: 'REQUEST_TYPE', type: 'select', required: false, disabled: false, options: [
+        { value: 'get', label: 'GET' },
+        { value: 'post', label: 'POST' },
+        { value: 'put', label: 'PUT' },
+        { value: 'delete', label: 'DELETE' }
+      ] },
       { name: 'CREATED_BY_USER_ID', type: 'number', required: true, disabled: false },
       { name: 'CREATED_DATE', type: 'date', required: true, disabled: true }
     ],

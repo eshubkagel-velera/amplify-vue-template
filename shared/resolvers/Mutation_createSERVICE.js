@@ -12,7 +12,7 @@ export function request(ctx) {
         table: 'SERVICE',
         values: input,
     });
-    const selectStatement = `SELECT SERVICE_ID, SERVICE_PROVIDER_ID, URI, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE FROM hazel_mapping_dev.SERVICE WHERE SERVICE_ID IN (SELECT MAX(SERVICE_ID) FROM hazel_mapping_dev.SERVICE)`;
+    const selectStatement = `SELECT SERVICE_ID, SERVICE_PROVIDER_ID, URI, SECRET_NAME, REQUEST_TYPE, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE FROM SERVICE WHERE SERVICE_ID = LAST_INSERT_ID()`;
     return createMySQLStatement(insertStatement, selectStatement)
 }
 
@@ -30,6 +30,9 @@ export function response(ctx) {
             result
         )
     }
-    return toJsonObject(result)[1][0]
+    console.log('SERVICE create result:', JSON.stringify(result));
+    const jsonResult = toJsonObject(result);
+    console.log('JSON result:', JSON.stringify(jsonResult));
+    return jsonResult[1] && jsonResult[1][0] ? jsonResult[1][0] : null;
 }
 

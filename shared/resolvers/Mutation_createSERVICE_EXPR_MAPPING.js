@@ -12,7 +12,7 @@ export function request(ctx) {
         table: 'SERVICE_EXPR_MAPPING',
         values: input,
     });
-    const selectStatement = `SELECT * FROM hazel_mapping_dev.SERVICE_EXPR_MAPPING WHERE SERVICE_EXPR_MAPPING_ID IN (SELECT MAX(SERVICE_EXPR_MAPPING_ID) FROM hazel_mapping_dev.SERVICE_EXPR_MAPPING)`;
+    const selectStatement = `SELECT * FROM SERVICE_EXPR_MAPPING WHERE SERVICE_EXPR_MAPPING_ID IN (SELECT MAX(SERVICE_EXPR_MAPPING_ID) FROM SERVICE_EXPR_MAPPING)`;
     return createMySQLStatement(insertStatement, selectStatement)
 }
 

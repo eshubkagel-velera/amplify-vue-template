@@ -22,7 +22,7 @@
     ":URL_TYPE_CODE": $util.toJson($ctx.args.input.URL_TYPE_CODE),
     ":URL": $util.toJson($ctx.args.input.URL),
     ":RESPONSE_TEXT": $util.toJson($ctx.args.input.RESPONSE_TEXT),
-    ":CHANGED_BY_USER_ID": $util.toJson($ctx.identity.sub),
-    ":CHANGED_DATE": $util.toJson($util.time.nowISO8601())
+    ":CHANGED_BY_USER_ID": $util.toJson($ctx.args.input.CHANGED_BY_USER_ID),
+    ":CHANGED_DATE": $util.toJson($ctx.args.input.CHANGED_DATE)
   }
 }

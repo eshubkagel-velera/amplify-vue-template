@@ -1,6 +1,6 @@
 <template>
   <div class="entity-manager">
-    <h2>{{ entityName }} Manager</h2>
+
     
 
     
@@ -22,7 +22,7 @@
       <div class="action-buttons">
         <button @click="loadEntities" class="btn-primary">Refresh</button>
         <button @click="showCreateModal = true" class="btn-success" :disabled="props.readonly">{{ props.readonly ? 'View Only Mode' : 'Add New' }}</button>
-        <button @click="confirmBulkDelete" :disabled="selectedEntities.length === 0 || !props.canDelete" class="btn-danger">Delete Selected ({{ selectedEntities.length }})</button>
+        <button @click="confirmBulkDelete" :disabled="selectedEntities.length === 0 || !canDelete" class="btn-danger">Delete Selected ({{ selectedEntities.length }})</button>
         <span class="record-count">{{ entities.length }} records</span>
       </div>
     </div>
@@ -305,6 +305,7 @@ import LoadingSkeleton from './LoadingSkeleton.vue';
 import { useErrorHandler } from '../composables/useErrorHandler';
 import { useTableOperations } from '../composables/useTableOperations';
 import { useServiceEnhancement } from '../composables/useServiceEnhancement';
+import { useAuth } from '../composables/useAuth';
 import { getCurrentDateString, formatDate } from '../utils/dateUtils';
 import { getEntityConfig } from '../config/entityConfig';
 import type { FormField } from '../types';
@@ -377,6 +378,7 @@ const selectedParamMappings = ref([]);
 const selectedParamName = ref('');
 const { error: errorMessage, showErrorModal, handleError, handleGraphQLError, clearError } = useErrorHandler();
 const { enhanceServiceParams, loadServiceOptions } = useServiceEnhancement();
+const { canDelete } = useAuth();
 const showSuccessModal = ref(false);
 const successMessage = ref('');
 
@@ -551,8 +553,7 @@ const deleteBulkEntities = async () => {
 };
 
 const toggleSelectAll = () => {
-  const newValue = !allSelected.value;
-  selectedEntities.value = newValue ? filteredEntities.value.map(getEntityId) : [];
+  toggleSelectAllItems();
 };
 
 // Set current date in YYYY-MM-DD format for CREATED_DATE when creating a new entity
@@ -603,6 +604,26 @@ const submitForm = async () => {
     // Clean form data for specific entities
     let cleanedFormData = { ...formData.value };
     
+    // Convert number fields to integers for all entities
+    props.formFields.forEach(field => {
+      if (field.type === 'number' && cleanedFormData[field.name] !== undefined && cleanedFormData[field.name] !== '') {
+        const converted = parseInt(cleanedFormData[field.name]);
+        if (!isNaN(converted)) {
+          cleanedFormData[field.name] = converted;
+        }
+      }
+    });
+    
+    // Ensure CREATED_BY_USER_ID is always an integer
+    if (cleanedFormData.CREATED_BY_USER_ID !== undefined) {
+      cleanedFormData.CREATED_BY_USER_ID = parseInt(cleanedFormData.CREATED_BY_USER_ID) || 1;
+    }
+    
+    // Ensure PSCU_CLIENT_ID is always an integer for ORIGIN_PRODUCT
+    if (props.entityName === 'ORIGIN_PRODUCT' && cleanedFormData.PSCU_CLIENT_ID !== undefined) {
+      cleanedFormData.PSCU_CLIENT_ID = parseInt(cleanedFormData.PSCU_CLIENT_ID);
+    }
+    
     if (props.entityName === 'STEP_SERVICE_MAPPING') {
       // Only keep supported fields with proper types
       cleanedFormData = {};
@@ -623,6 +644,14 @@ const submitForm = async () => {
     }
     if (cleanedFormData['Service Provider']) {
       delete cleanedFormData['Service Provider'];
+    }
+    
+    // For updates, remove CREATED fields that aren't allowed in update input
+    if (showEditModal.value) {
+      if (props.entityName === 'SERVICE') {
+        delete cleanedFormData.CREATED_BY_USER_ID;
+        delete cleanedFormData.CREATED_DATE;
+      }
     }
     
     console.log('Submitting form data:', cleanedFormData);
@@ -837,9 +866,9 @@ const filterByService = async () => {
         });
         
         if (response.data?.listSERVICE_PARAMS) {
-          const items = Array.isArray(response.data.listSERVICE_PARAMS) ? response.data.listSERVICE_PARAMS : [];
+          const items = response.data.listSERVICE_PARAMS.items || [];
           allItems.push(...items);
-          nextToken = null; // Direct array response doesn't have pagination
+          nextToken = response.data.listSERVICE_PARAMS.nextToken;
         } else {
           nextToken = null;
         }
@@ -951,7 +980,7 @@ const loadServiceProviderOptions = async () => {
 const loadStepTypeFilterOptions = async () => {
   try {
     const result = await getClient().graphql({ query: queries.listStepTypes });
-    const stepTypes = result.data.listSTEP_TYPES || [];
+    const stepTypes = result.data.listSTEP_TYPES?.items || [];
     
     stepTypeOptions.value = stepTypes.map(step => ({
       value: step.STEP_TYPE_ID,
@@ -1024,9 +1053,9 @@ const showParameterMappings = async (entity) => {
       getClient().graphql({ query: queries.listServices })
     ]);
     
-    const allMappings = mappingsResult.data.listSERVICE_PARAM_MAPPINGS || [];
-    const products = productsResult.data.listORIGIN_PRODUCTS || [];
-    const services = servicesResult.data.listSERVICES || [];
+    const allMappings = mappingsResult.data.listSERVICE_PARAM_MAPPINGS?.items || [];
+    const products = productsResult.data.listORIGIN_PRODUCTS?.items || [];
+    const services = servicesResult.data.listSERVICES?.items || [];
     const serviceParams = allServiceParams;
     
     // Find mappings where this param is source or target
@@ -1066,7 +1095,7 @@ const checkParameterMappings = async () => {
   
   try {
     const result = await getClient().graphql({ query: queries.listServiceParamMappings });
-    const mappings = result.data.listSERVICE_PARAM_MAPPINGS || [];
+    const mappings = result.data.listSERVICE_PARAM_MAPPINGS?.items || [];
     const mappingCounts = new Map();
     
     mappings.forEach(mapping => {
@@ -1277,7 +1306,8 @@ button {
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  padding-top: 200px;
   z-index: 1000;
 }
 
