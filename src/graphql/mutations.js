@@ -40,7 +40,7 @@ export const deleteOriginProduct = `
 
 export const createRedirectUrl = (environment) => `
   mutation CreateRedirectUrl($input: CreateREDIRECT_URLInput!) {
-    createREDIRECT_URL_${environment.toUpperCase()}(input: $input) {
+    createREDIRECT_URL(input: $input) {
       REDIRECT_URL_ID
       ORIGIN_PRODUCT_ID
       URL_TYPE_CODE
@@ -54,7 +54,7 @@ export const createRedirectUrl = (environment) => `
 
 export const updateRedirectUrl = (environment) => `
   mutation UpdateRedirectUrl($input: UpdateREDIRECT_URLInput!) {
-    updateREDIRECT_URL_${environment.toUpperCase()}(input: $input) {
+    updateREDIRECT_URL(input: $input) {
       REDIRECT_URL_ID
       ORIGIN_PRODUCT_ID
       URL_TYPE_CODE
@@ -70,7 +70,7 @@ export const updateRedirectUrl = (environment) => `
 
 export const deleteRedirectUrl = (environment) => `
   mutation DeleteRedirectUrl($input: DeleteREDIRECT_URLInput!) {
-    deleteREDIRECT_URL_${environment.toUpperCase()}(input: $input) {
+    deleteREDIRECT_URL(input: $input) {
       REDIRECT_URL_ID
       ORIGIN_PRODUCT_ID
       URL
@@ -117,6 +117,8 @@ export const createService = `
       SERVICE_ID
       SERVICE_PROVIDER_ID
       URI
+      SECRET_NAME
+      REQUEST_TYPE
       CREATED_BY_USER_ID
       CREATED_DATE
       CHANGED_BY_USER_ID
@@ -131,6 +133,8 @@ export const updateService = `
       SERVICE_ID
       SERVICE_PROVIDER_ID
       URI
+      SECRET_NAME
+      REQUEST_TYPE
       CREATED_BY_USER_ID
       CREATED_DATE
       CHANGED_BY_USER_ID

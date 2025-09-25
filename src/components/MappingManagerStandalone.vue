@@ -1,73 +1,73 @@
 <template>
   <div class="mapping-manager">
-    <div class="header-row">
-      <h2>Service Mapping Manager</h2>
 
-    </div>
     
-    <!-- Product Information Box -->
-    <div class="bordered-section">
-      <div v-if="!props.productId">
-        <label for="productFilter">Select Product:</label>
-        <select id="productFilter" v-model="selectedProductId" @change="onProductChange">
-          <option value="">-- Select a Product --</option>
-          <option v-for="product in products" :key="product.ORIGIN_PRODUCT_ID" :value="product.ORIGIN_PRODUCT_ID">
-            {{ product.ORIGIN_PRODUCT_ID }}: {{ product.VENDOR_NAME }} - {{ product.PRODUCT_DESC }}
-          </option>
-        </select>
+    <!-- Product Information and Filter Dropdowns Row -->
+    <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+      <!-- Product Information Box -->
+      <div class="bordered-section">
+        <div v-if="!props.productId">
+          <label for="productFilter">Select Product:</label>
+          <select id="productFilter" v-model="selectedProductId" @change="onProductChange">
+            <option value="">-- Select a Product --</option>
+            <option v-for="product in products" :key="product.ORIGIN_PRODUCT_ID" :value="product.ORIGIN_PRODUCT_ID">
+              {{ product.ORIGIN_PRODUCT_ID }}: {{ product.VENDOR_NAME }} - {{ product.PRODUCT_DESC }}
+            </option>
+          </select>
+        </div>
+        
+        <div v-if="selectedProduct" class="product-info">
+          <h3>Product Information</h3>
+          <p><strong>Product ID:</strong> {{ selectedProduct.PRODUCT_ID }}</p>
+          <p><strong>PSCU Client ID:</strong> {{ selectedProduct.PSCU_CLIENT_ID }}</p>
+          <p><strong>Partner Code:</strong> {{ selectedProduct.PARTNER_CODE }}</p>
+          <p><strong>Description:</strong> {{ selectedProduct.PRODUCT_DESC }}</p>
+          <p><strong>Total Mappings:</strong> {{ totalMappingCount }}</p>
+        </div>
       </div>
       
-      <div v-if="selectedProduct" class="product-info">
-        <h3>Product Information</h3>
-        <p><strong>Product ID:</strong> {{ selectedProduct.PRODUCT_ID }}</p>
-        <p><strong>PSCU Client ID:</strong> {{ selectedProduct.PSCU_CLIENT_ID }}</p>
-        <p><strong>Partner Code:</strong> {{ selectedProduct.PARTNER_CODE }}</p>
-        <p><strong>Description:</strong> {{ selectedProduct.PRODUCT_DESC }}</p>
-        <p><strong>Total Mappings:</strong> {{ totalMappingCount }}</p>
-      </div>
-    </div>
-    
-    <!-- Filter Dropdowns Box -->
-    <div v-if="selectedProductId || props.productId" class="bordered-section">
-      <div class="form-controls">
-        <div class="form-group">
-          <label>Resource Name:</label>
-          <select v-model="selectedResourceName" @change="onResourceNameChange">
-            <option value="">-- Select Resource --</option>
-            <option v-for="resource in resourceNames" :key="resource" :value="resource">
-              {{ resource }}
-            </option>
-          </select>
-        </div>
+      <!-- Filter Dropdowns Box -->
+      <div v-if="selectedProductId || props.productId" class="bordered-section">
+        <div class="form-controls-vertical">
+          <div class="form-group">
+            <label>Resource Name:</label>
+            <select v-model="selectedResourceName" @change="onResourceNameChange">
+              <option value="">-- Select Resource --</option>
+              <option v-for="resource in resourceNames" :key="resource" :value="resource">
+                {{ resource }}
+              </option>
+            </select>
+          </div>
 
-        <div class="form-group">
-          <label>Step Type:</label>
-          <select v-model="selectedStepType" @change="onStepTypeChange" :disabled="!selectedResourceName">
-            <option value="">-- Select Step Type --</option>
-            <option v-for="step in filteredStepTypes" :key="step.STEP_TYPE_ID" :value="step">
-              {{ step.STEP_TYPE_ID }}: {{ step.STEP_TYPE_NAME }}
-            </option>
-          </select>
-        </div>
+          <div class="form-group">
+            <label>Step Type:</label>
+            <select v-model="selectedStepType" @change="onStepTypeChange" :disabled="!selectedResourceName">
+              <option value="">-- Select Step Type --</option>
+              <option v-for="step in filteredStepTypes" :key="step.STEP_TYPE_ID" :value="step">
+                {{ step.STEP_TYPE_ID }}: {{ step.STEP_TYPE_NAME }}
+              </option>
+            </select>
+          </div>
 
-        <div class="form-group">
-          <label>Target Service:</label>
-          <select v-model="selectedTargetService" @change="onTargetServiceChange" :disabled="!selectedStepType">
-            <option value="">-- Select Target Service --</option>
-            <option v-for="service in targetServices" :key="service.SERVICE_ID" :value="service">
-              {{ service.SERVICE_ID }}: {{ service.URI }}
-            </option>
-          </select>
-        </div>
+          <div class="form-group">
+            <label>Target Service:</label>
+            <select v-model="selectedTargetService" @change="onTargetServiceChange" :disabled="!selectedStepType">
+              <option value="">-- Select Target Service --</option>
+              <option v-for="service in targetServices" :key="service.SERVICE_ID" :value="service">
+                {{ service.SERVICE_ID }}: {{ service.URI }}
+              </option>
+            </select>
+          </div>
 
-        <div class="form-group">
-          <label>Source Service:</label>
-          <select v-model="selectedSourceService" @change="onSourceServiceChange" :disabled="!selectedStepType">
-            <option value="">-- Select Source Service --</option>
-            <option v-for="service in allServices" :key="service.SERVICE_ID" :value="service">
-              {{ service.SERVICE_ID }}: {{ service.URI }}
-            </option>
-          </select>
+          <div class="form-group">
+            <label>Source Service:</label>
+            <select v-model="selectedSourceService" @change="onSourceServiceChange" :disabled="!selectedStepType">
+              <option value="">-- Select Source Service --</option>
+              <option v-for="service in allServices" :key="service.SERVICE_ID" :value="service">
+                {{ service.SERVICE_ID }}: {{ service.URI }}
+              </option>
+            </select>
+          </div>
         </div>
       </div>
     </div>
@@ -1337,7 +1337,7 @@ onMounted(async () => {
 
 .bordered-section select {
   padding: 8px;
-  min-width: 400px;
+  width: 400px;
   border: 1px solid var(--border-color);
   border-radius: 4px;
   background-color: var(--input-bg);
@@ -1370,6 +1370,16 @@ onMounted(async () => {
   min-width: 200px;
 }
 
+.form-controls-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-controls-vertical .form-group {
+  min-width: 250px;
+}
+
 .form-group {
   display: flex;
   flex-direction: column;
@@ -1384,7 +1394,7 @@ onMounted(async () => {
   padding: 8px;
   border: 1px solid var(--border-color);
   border-radius: 4px;
-  min-width: 200px;
+  width: 400px;
   background-color: var(--input-bg);
   color: var(--text-color);
 }

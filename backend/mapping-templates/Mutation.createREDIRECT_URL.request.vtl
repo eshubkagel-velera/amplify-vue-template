@@ -21,7 +21,7 @@
     ":URL_TYPE_CODE": $util.toJson($ctx.args.input.URL_TYPE_CODE),
     ":URL": $util.toJson($ctx.args.input.URL),
     ":RESPONSE_TEXT": $util.toJson($ctx.args.input.RESPONSE_TEXT),
-    ":CREATED_BY_USER_ID": $util.toJson($ctx.identity.sub),
-    ":CREATED_DATE": $util.toJson($util.time.nowISO8601())
+    ":CREATED_BY_USER_ID": $util.toJson($ctx.args.input.CREATED_BY_USER_ID),
+    ":CREATED_DATE": $util.toJson($ctx.args.input.CREATED_DATE)
   }
 }

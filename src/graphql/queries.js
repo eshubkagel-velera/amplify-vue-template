@@ -1,16 +1,19 @@
 export const listOriginProducts = `
   query ListOriginProducts {
     listORIGIN_PRODUCTS {
-      ORIGIN_PRODUCT_ID
-      VENDOR_NAME
-      PSCU_CLIENT_ID
-      PRODUCT_ID
-      PRODUCT_DESC
-      PARTNER_CODE
-      CREATED_DATE
-      CREATED_BY_USER_ID
-      CHANGED_DATE
-      CHANGED_BY_USER_ID
+      items {
+        ORIGIN_PRODUCT_ID
+        VENDOR_NAME
+        PSCU_CLIENT_ID
+        PRODUCT_ID
+        PRODUCT_DESC
+        PARTNER_CODE
+        CREATED_DATE
+        CREATED_BY_USER_ID
+        CHANGED_DATE
+        CHANGED_BY_USER_ID
+      }
+      nextToken
     }
   }
 `;
@@ -18,15 +21,18 @@ export const listOriginProducts = `
 export const listRedirectUrls = `
   query ListRedirectUrls {
     listREDIRECT_URLS {
-      REDIRECT_URL_ID
-      ORIGIN_PRODUCT_ID
-      URL_TYPE_CODE
-      URL
-      RESPONSE_TEXT
-      CREATED_BY_USER_ID
-      CREATED_DATE
-      CHANGED_BY_USER_ID
-      CHANGED_DATE
+      items {
+        REDIRECT_URL_ID
+        ORIGIN_PRODUCT_ID
+        URL_TYPE_CODE
+        URL
+        RESPONSE_TEXT
+        CREATED_BY_USER_ID
+        CREATED_DATE
+        CHANGED_BY_USER_ID
+        CHANGED_DATE
+      }
+      nextToken
     }
   }
 `;
@@ -34,12 +40,15 @@ export const listRedirectUrls = `
 export const listServiceProviders = `
   query ListServiceProviders {
     listSERVICE_PROVIDERS {
-      SERVICE_PROVIDER_ID
-      SERVICE_PROVIDER_NAME
-      CREATED_BY_USER_ID
-      CREATED_DATE
-      CHANGED_BY_USER_ID
-      CHANGED_DATE
+      items {
+        SERVICE_PROVIDER_ID
+        SERVICE_PROVIDER_NAME
+        CREATED_BY_USER_ID
+        CREATED_DATE
+        CHANGED_BY_USER_ID
+        CHANGED_DATE
+      }
+      nextToken
     }
   }
 `;
@@ -47,13 +56,16 @@ export const listServiceProviders = `
 export const listServices = `
   query ListServices {
     listSERVICES {
-      SERVICE_ID
-      SERVICE_PROVIDER_ID
-      URI
-      CREATED_BY_USER_ID
-      CREATED_DATE
-      CHANGED_BY_USER_ID
-      CHANGED_DATE
+      items {
+        SERVICE_ID
+        SERVICE_PROVIDER_ID
+        URI
+        CREATED_BY_USER_ID
+        CREATED_DATE
+        CHANGED_BY_USER_ID
+        CHANGED_DATE
+      }
+      nextToken
     }
   }
 `;
@@ -61,13 +73,16 @@ export const listServices = `
 export const listServiceParams = `
   query ListServiceParams {
     listSERVICE_PARAMS {
-      SERVICE_PARAM_ID
-      SERVICE_ID
-      PARAM_NAME
-      CREATED_BY_USER_ID
-      CREATED_DATE
-      CHANGED_BY_USER_ID
-      CHANGED_DATE
+      items {
+        SERVICE_PARAM_ID
+        SERVICE_ID
+        PARAM_NAME
+        CREATED_BY_USER_ID
+        CREATED_DATE
+        CHANGED_BY_USER_ID
+        CHANGED_DATE
+      }
+      nextToken
     }
   }
 `;
@@ -75,19 +90,22 @@ export const listServiceParams = `
 export const listServiceParamMappings = `
   query ListServiceParamMappings {
     listSERVICE_PARAM_MAPPINGS {
-      SERVICE_PARAM_MAPPING_ID
-      ORIGIN_PRODUCT_ID
-      SYSTEM_NBR
-      PRIN_NBR
-      AGENT_NBR
-      SOURCE_SERVICE_PARAM_ID
-      TARGET_SERVICE_PARAM_ID
-      PLASTIC_TYPE_ID
-      COMMENT_TEXT
-      CREATED_BY_USER_ID
-      CREATED_DATE
-      CHANGED_BY_USER_ID
-      CHANGED_DATE
+      items {
+        SERVICE_PARAM_MAPPING_ID
+        ORIGIN_PRODUCT_ID
+        SYSTEM_NBR
+        PRIN_NBR
+        AGENT_NBR
+        SOURCE_SERVICE_PARAM_ID
+        TARGET_SERVICE_PARAM_ID
+        PLASTIC_TYPE_ID
+        COMMENT_TEXT
+        CREATED_BY_USER_ID
+        CREATED_DATE
+        CHANGED_BY_USER_ID
+        CHANGED_DATE
+      }
+      nextToken
     }
   }
 `;
@@ -95,15 +113,18 @@ export const listServiceParamMappings = `
 export const listServiceExprMappings = `
   query ListServiceExprMappings {
     listSERVICE_EXPR_MAPPINGS {
-      SERVICE_EXPR_MAPPING_ID
-      SERVICE_PARAM_MAPPING_ID
-      SOURCE_EXPR
-      TARGET_EXPR
-      COMMENT_TEXT
-      CREATED_BY_USER_ID
-      CREATED_DATE
-      CHANGED_BY_USER_ID
-      CHANGED_DATE
+      items {
+        SERVICE_EXPR_MAPPING_ID
+        SERVICE_PARAM_MAPPING_ID
+        SOURCE_EXPR
+        TARGET_EXPR
+        COMMENT_TEXT
+        CREATED_BY_USER_ID
+        CREATED_DATE
+        CHANGED_BY_USER_ID
+        CHANGED_DATE
+      }
+      nextToken
     }
   }
 `;
@@ -111,14 +132,17 @@ export const listServiceExprMappings = `
 export const listStepTypes = `
   query ListStepTypes {
     listSTEP_TYPES {
-      STEP_TYPE_ID
-      STEP_TYPE_NAME
-      STEP_TYPE_DESC
-      RESOURCE_NAME
-      CREATED_BY_USER_ID
-      CREATED_DATE
-      CHANGED_BY_USER_ID
-      CHANGED_DATE
+      items {
+        STEP_TYPE_ID
+        STEP_TYPE_NAME
+        STEP_TYPE_DESC
+        RESOURCE_NAME
+        CREATED_BY_USER_ID
+        CREATED_DATE
+        CHANGED_BY_USER_ID
+        CHANGED_DATE
+      }
+      nextToken
     }
   }
 `;
@@ -126,10 +150,13 @@ export const listStepTypes = `
 export const listStepServiceMappings = `
   query ListStepServiceMappings {
     listSTEP_SERVICE_MAPPINGS {
-      STEP_SERVICE_MAPPING_ID
-      STEP_TYPE_ID
-      SERVICE_ID
-      SEQUENCE_NBR
+      items {
+        STEP_SERVICE_MAPPING_ID
+        STEP_TYPE_ID
+        SERVICE_ID
+        SEQUENCE_NBR
+      }
+      nextToken
     }
   }
 `;

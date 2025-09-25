@@ -1,6 +1,6 @@
 <template>
   <div class="component-container">
-    <h2>Service Mappings for Step Type ID: {{ stepTypeId }}</h2>
+
     
     <!-- Step Type Info -->
     <div v-if="stepTypeInfo" class="bordered-section">
@@ -70,7 +70,7 @@ const loadStepServiceMappings = async (params = {}) => {
     };
   });
   
-  return { data: { listSTEP_SERVICE_MAPPINGS: enhancedMappings } };
+  return { data: { listSTEP_SERVICE_MAPPINGS: { items: enhancedMappings } } };
 };
 
 const loadStepTypeInfo = async () => {

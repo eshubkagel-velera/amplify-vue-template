@@ -1,6 +1,6 @@
 <template>
   <div class="component-container">
-    <h2>Step Mappings for Service ID: {{ serviceId }}</h2>
+
     
     <!-- Service Info -->
     <div v-if="serviceInfo" class="bordered-section">

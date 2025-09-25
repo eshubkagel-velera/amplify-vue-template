@@ -117,6 +117,8 @@ export const createService = `
       SERVICE_ID
       SERVICE_PROVIDER_ID
       URI
+      SECRET_NAME
+      REQUEST_TYPE
       CREATED_BY_USER_ID
       CREATED_DATE
       CHANGED_BY_USER_ID
@@ -131,6 +133,8 @@ export const updateService = `
       SERVICE_ID
       SERVICE_PROVIDER_ID
       URI
+      SECRET_NAME
+      REQUEST_TYPE
       CREATED_BY_USER_ID
       CREATED_DATE
       CHANGED_BY_USER_ID

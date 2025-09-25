@@ -151,6 +151,8 @@ input DeleteSERVICE_PROVIDERInput {
 input CreateSERVICEInput {
   SERVICE_PROVIDER_ID: Int!
   URI: String!
+  SECRET_NAME: String
+  REQUEST_TYPE: String
   CREATED_BY_USER_ID: Int!
   CREATED_DATE: String!
 }
@@ -159,6 +161,8 @@ input UpdateSERVICEInput {
   SERVICE_ID: Int!
   SERVICE_PROVIDER_ID: Int!
   URI: String!
+  SECRET_NAME: String
+  REQUEST_TYPE: String
   CHANGED_BY_USER_ID: Int
   CHANGED_DATE: String
 }
@@ -285,6 +289,8 @@ input UpdateORIGIN_PRODUCTInput {
   PRODUCT_DESC: String!
   PSCU_CLIENT_ID: Int!
   PARTNER_CODE: String
+  CREATED_BY_USER_ID: Int
+  CREATED_DATE: String
   CHANGED_BY_USER_ID: Int
   CHANGED_DATE: String
 }
@@ -380,16 +386,16 @@ type Mutation {
   updateSTEP_SERVICE_MAPPING(input: UpdateSTEP_SERVICE_MAPPINGInput!): STEP_SERVICE_MAPPING @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
   updateREDIRECT_URL(input: UpdateREDIRECT_URLInput!): REDIRECT_URL @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
   
-  # Delete mutations - accessible by deployment, admin only
-  deleteORIGIN_PRODUCT(input: DeleteORIGIN_PRODUCTInput!): ORIGIN_PRODUCT @aws_auth(cognito_groups: ["deployment", "admin"])
-  deleteSERVICE_PROVIDER(input: DeleteSERVICE_PROVIDERInput!): SERVICE_PROVIDER @aws_auth(cognito_groups: ["deployment", "admin"])
-  deleteSERVICE(input: DeleteSERVICEInput!): SERVICE @aws_auth(cognito_groups: ["deployment", "admin"])
-  deleteSERVICE_PARAM(input: DeleteSERVICE_PARAMInput!): SERVICE_PARAM @aws_auth(cognito_groups: ["deployment", "admin"])
-  deleteSERVICE_PARAM_MAPPING(input: DeleteSERVICE_PARAM_MAPPINGInput!): SERVICE_PARAM_MAPPING @aws_auth(cognito_groups: ["deployment", "admin"])
-  deleteSERVICE_EXPR_MAPPING(input: DeleteSERVICE_EXPR_MAPPINGInput!): SERVICE_EXPR_MAPPING @aws_auth(cognito_groups: ["deployment", "admin"])
-  deleteSTEP_TYPE(input: DeleteSTEP_TYPEInput!): STEP_TYPE @aws_auth(cognito_groups: ["deployment", "admin"])
-  deleteSTEP_SERVICE_MAPPING(input: DeleteSTEP_SERVICE_MAPPINGInput!): STEP_SERVICE_MAPPING @aws_auth(cognito_groups: ["deployment", "admin"])
-  deleteREDIRECT_URL(input: DeleteREDIRECT_URLInput!): REDIRECT_URL @aws_auth(cognito_groups: ["deployment", "admin"])
+  # Delete mutations - accessible by developer (dev/test only), deployment, admin
+  deleteORIGIN_PRODUCT(input: DeleteORIGIN_PRODUCTInput!): ORIGIN_PRODUCT @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  deleteSERVICE_PROVIDER(input: DeleteSERVICE_PROVIDERInput!): SERVICE_PROVIDER @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  deleteSERVICE(input: DeleteSERVICEInput!): SERVICE @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  deleteSERVICE_PARAM(input: DeleteSERVICE_PARAMInput!): SERVICE_PARAM @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  deleteSERVICE_PARAM_MAPPING(input: DeleteSERVICE_PARAM_MAPPINGInput!): SERVICE_PARAM_MAPPING @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  deleteSERVICE_EXPR_MAPPING(input: DeleteSERVICE_EXPR_MAPPINGInput!): SERVICE_EXPR_MAPPING @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  deleteSTEP_TYPE(input: DeleteSTEP_TYPEInput!): STEP_TYPE @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  deleteSTEP_SERVICE_MAPPING(input: DeleteSTEP_SERVICE_MAPPINGInput!): STEP_SERVICE_MAPPING @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
+  deleteREDIRECT_URL(input: DeleteREDIRECT_URLInput!): REDIRECT_URL @aws_auth(cognito_groups: ["developer", "deployment", "admin"])
 }
 
 type SERVICE_PROVIDER {
@@ -405,6 +411,8 @@ type SERVICE {
   SERVICE_ID: Int!
   SERVICE_PROVIDER_ID: Int!
   URI: String!
+  SECRET_NAME: String
+  REQUEST_TYPE: String
   CREATED_BY_USER_ID: Int!
   CREATED_DATE: String!
   CHANGED_BY_USER_ID: Int
