@@ -4,12 +4,12 @@
     "INSERT INTO ORIGIN_PRODUCT (VENDOR_NAME, PRODUCT_ID, PRODUCT_DESC, PSCU_CLIENT_ID, PARTNER_CODE, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:VENDOR_NAME, :PRODUCT_ID, :PRODUCT_DESC, :PSCU_CLIENT_ID, :PARTNER_CODE, :CREATED_BY_USER_ID, :CREATED_DATE)"
   ],
   "variableMap": {
-    ":VENDOR_NAME": $util.toJson($ctx.args.input.VENDOR_NAME),
-    ":PRODUCT_ID": $util.toJson($ctx.args.input.PRODUCT_ID),
-    ":PRODUCT_DESC": $util.toJson($ctx.args.input.PRODUCT_DESC),
-    ":PSCU_CLIENT_ID": $util.toJson($ctx.args.input.PSCU_CLIENT_ID),
-    ":PARTNER_CODE": $util.toJson($ctx.args.input.PARTNER_CODE),
-    ":CREATED_BY_USER_ID": $util.toJson($ctx.args.input.CREATED_BY_USER_ID),
-    ":CREATED_DATE": $util.toJson($ctx.args.input.CREATED_DATE)
+    ":VENDOR_NAME": "$ctx.args.input.VENDOR_NAME",
+    ":PRODUCT_ID": "$ctx.args.input.PRODUCT_ID",
+    ":PRODUCT_DESC": "$ctx.args.input.PRODUCT_DESC",
+    ":PSCU_CLIENT_ID": $ctx.args.input.PSCU_CLIENT_ID,
+    ":PARTNER_CODE": #if($ctx.args.input.PARTNER_CODE)"$ctx.args.input.PARTNER_CODE"#else null #end,
+    ":CREATED_BY_USER_ID": $ctx.args.input.CREATED_BY_USER_ID,
+    ":CREATED_DATE": "$ctx.args.input.CREATED_DATE"
   }
 }

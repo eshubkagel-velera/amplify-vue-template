@@ -4,13 +4,13 @@
     "UPDATE ORIGIN_PRODUCT SET VENDOR_NAME = :VENDOR_NAME, PRODUCT_ID = :PRODUCT_ID, PRODUCT_DESC = :PRODUCT_DESC, PSCU_CLIENT_ID = :PSCU_CLIENT_ID, PARTNER_CODE = :PARTNER_CODE, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE ORIGIN_PRODUCT_ID = :ORIGIN_PRODUCT_ID"
   ],
   "variableMap": {
-    ":ORIGIN_PRODUCT_ID": $util.toJson($ctx.args.input.ORIGIN_PRODUCT_ID),
-    ":VENDOR_NAME": $util.toJson($ctx.args.input.VENDOR_NAME),
-    ":PRODUCT_ID": $util.toJson($ctx.args.input.PRODUCT_ID),
-    ":PRODUCT_DESC": $util.toJson($ctx.args.input.PRODUCT_DESC),
-    ":PSCU_CLIENT_ID": $util.toJson($ctx.args.input.PSCU_CLIENT_ID),
-    ":PARTNER_CODE": $util.toJson($ctx.args.input.PARTNER_CODE),
-    ":CHANGED_BY_USER_ID": $util.toJson($ctx.args.input.CHANGED_BY_USER_ID),
-    ":CHANGED_DATE": $util.toJson($ctx.args.input.CHANGED_DATE)
+    ":ORIGIN_PRODUCT_ID": $ctx.args.input.ORIGIN_PRODUCT_ID,
+    ":VENDOR_NAME": "$ctx.args.input.VENDOR_NAME",
+    ":PRODUCT_ID": "$ctx.args.input.PRODUCT_ID",
+    ":PRODUCT_DESC": "$ctx.args.input.PRODUCT_DESC",
+    ":PSCU_CLIENT_ID": $ctx.args.input.PSCU_CLIENT_ID,
+    ":PARTNER_CODE": #if($ctx.args.input.PARTNER_CODE)"$ctx.args.input.PARTNER_CODE"#else null #end,
+    ":CHANGED_BY_USER_ID": $ctx.args.input.CHANGED_BY_USER_ID,
+    ":CHANGED_DATE": "$ctx.args.input.CHANGED_DATE"
   }
 }

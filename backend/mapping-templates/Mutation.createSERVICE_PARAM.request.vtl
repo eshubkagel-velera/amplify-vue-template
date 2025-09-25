@@ -1,0 +1,12 @@
+{
+  "version": "2018-05-29",
+  "statements": [
+    "INSERT INTO SERVICE_PARAM (SERVICE_ID, PARAM_NAME, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:SERVICE_ID, :PARAM_NAME, :CREATED_BY_USER_ID, :CREATED_DATE)"
+  ],
+  "variableMap": {
+    ":SERVICE_ID": $ctx.args.input.SERVICE_ID,
+    ":PARAM_NAME": "$ctx.args.input.PARAM_NAME",
+    ":CREATED_BY_USER_ID": $ctx.args.input.CREATED_BY_USER_ID,
+    ":CREATED_DATE": "$ctx.args.input.CREATED_DATE"
+  }
+}

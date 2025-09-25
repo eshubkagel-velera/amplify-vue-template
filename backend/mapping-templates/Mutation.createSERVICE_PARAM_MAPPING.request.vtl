@@ -1,0 +1,18 @@
+{
+  "version": "2018-05-29",
+  "statements": [
+    "INSERT INTO SERVICE_PARAM_MAPPING (ORIGIN_PRODUCT_ID, SYSTEM_NBR, PRIN_NBR, AGENT_NBR, SOURCE_SERVICE_PARAM_ID, TARGET_SERVICE_PARAM_ID, PLASTIC_TYPE_ID, COMMENT_TEXT, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:ORIGIN_PRODUCT_ID, :SYSTEM_NBR, :PRIN_NBR, :AGENT_NBR, :SOURCE_SERVICE_PARAM_ID, :TARGET_SERVICE_PARAM_ID, :PLASTIC_TYPE_ID, :COMMENT_TEXT, :CREATED_BY_USER_ID, :CREATED_DATE)"
+  ],
+  "variableMap": {
+    ":ORIGIN_PRODUCT_ID": $ctx.args.input.ORIGIN_PRODUCT_ID,
+    ":SYSTEM_NBR": #if($ctx.args.input.SYSTEM_NBR)"$ctx.args.input.SYSTEM_NBR"#else null #end,
+    ":PRIN_NBR": #if($ctx.args.input.PRIN_NBR)"$ctx.args.input.PRIN_NBR"#else null #end,
+    ":AGENT_NBR": #if($ctx.args.input.AGENT_NBR)"$ctx.args.input.AGENT_NBR"#else null #end,
+    ":SOURCE_SERVICE_PARAM_ID": $ctx.args.input.SOURCE_SERVICE_PARAM_ID,
+    ":TARGET_SERVICE_PARAM_ID": $ctx.args.input.TARGET_SERVICE_PARAM_ID,
+    ":PLASTIC_TYPE_ID": #if($ctx.args.input.PLASTIC_TYPE_ID)$ctx.args.input.PLASTIC_TYPE_ID#else null #end,
+    ":COMMENT_TEXT": #if($ctx.args.input.COMMENT_TEXT)"$ctx.args.input.COMMENT_TEXT"#else null #end,
+    ":CREATED_BY_USER_ID": $ctx.args.input.CREATED_BY_USER_ID,
+    ":CREATED_DATE": "$ctx.args.input.CREATED_DATE"
+  }
+}
