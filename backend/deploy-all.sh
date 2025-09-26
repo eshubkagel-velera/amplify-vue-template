@@ -8,7 +8,7 @@ npx serverless deploy --stage dev
 echo "Deploying TEST environment..."
 npx serverless deploy --stage test
 
-echo "Deploying PROD environment..."
-npx serverless deploy --stage prod
+echo "Deploying LIVE environment..."
+npx serverless deploy --stage live
 
 echo "All environments deployed!"
