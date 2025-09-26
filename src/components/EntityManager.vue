@@ -34,7 +34,7 @@
         <table class="entity-table">
           <thead>
             <tr>
-              <th class="w-12">
+              <th v-if="!comparisonMode" class="w-12">
                 <input 
                   type="checkbox" 
                   @change="toggleSelectAll" 
@@ -52,7 +52,7 @@
               <th>Actions</th>
             </tr>
             <tr class="filter-row">
-              <th></th>
+              <th v-if="!comparisonMode"></th>
               <th v-for="field in fields" :key="`filter-${field}`">
                 <input 
                   v-model="filters[field]" 
@@ -69,7 +69,7 @@
           </thead>
           <tbody>
             <tr v-for="(entity, index) in displayEntities" :key="entity.__isBlank ? `blank-${index}` : getEntityId(entity)" :class="getRowClass(entity)">
-              <td class="text-center">
+              <td v-if="!comparisonMode" class="text-center">
                 <input 
                   v-if="!entity.__isBlank"
                   type="checkbox" 
@@ -89,6 +89,9 @@
               <td>
                 <button v-if="!entity.__isBlank" @click="editEntity(entity)" :aria-label="`Edit ${entityName} ${getEntityId(entity)}`" class="btn-primary">
                   {{ props.readonly ? 'View' : (props.entityName === 'SERVICE_PARAM' && paramMappings.get(getEntityId(entity)) > 0) ? 'Copy & Edit' : 'Edit' }}
+                </button>
+                <button v-if="!entity.__isBlank && props.comparisonMode && canAddToOtherEnvironment && !isRecordMatched(entity)" @click="addToOtherEnvironment(entity)" class="btn-success" style="margin-left: 5px;">
+                  Add to {{ getOtherEnvironmentName() }}
                 </button>
                 <button v-if="!entity.__isBlank && !props.hideRowActions && props.entityName === 'SERVICE_PARAM' && paramMappings.get(getEntityId(entity)) > 0" @click="showParameterMappings(entity)" class="btn-primary" style="margin-left: 5px;">Mappings ({{ paramMappings.get(getEntityId(entity)) }})</button>
                 <button v-if="!entity.__isBlank && !props.hideRowActions && props.entityName === 'ORIGIN_PRODUCT'" @click="openMapping(entity)" class="btn-primary" style="margin-left: 5px;">Mapping</button>
@@ -400,6 +403,14 @@ const props = defineProps({
   syncSort: {
     type: Object,
     default: () => ({ field: '', direction: 'asc' })
+  },
+  otherEnvironment: {
+    type: String,
+    default: ''
+  },
+  canAddToOther: {
+    type: Boolean,
+    default: false
   }
 });
 
@@ -533,7 +544,7 @@ const editEntity = (entity) => {
   showEditModal.value = true;
 };
 
-const emit = defineEmits(['openMapping', 'openRedirectUrls', 'openStepServices', 'openServiceParams', 'openServiceStepMapping', 'entityCountChanged', 'selectedCountChanged', 'filterChanged', 'sortChanged']);
+const emit = defineEmits(['openMapping', 'openRedirectUrls', 'openStepServices', 'openServiceParams', 'openServiceStepMapping', 'entityCountChanged', 'selectedCountChanged', 'filterChanged', 'sortChanged', 'addToOtherEnvironment']);
 
 const openMapping = (entity) => {
   emit('openMapping', { productId: entity.ORIGIN_PRODUCT_ID });
@@ -1344,6 +1355,38 @@ const getRowClass = (entity) => {
   return isMatched ? '' : 'row-unmatched';
 };
 
+const canAddToOtherEnvironment = computed(() => {
+  return props.comparisonMode && props.canAddToOther;
+});
+
+const getOtherEnvironmentName = () => {
+  return props.otherEnvironment ? props.otherEnvironment.toUpperCase() : '';
+};
+
+const addToOtherEnvironment = (entity) => {
+  emit('addToOtherEnvironment', { entity, targetEnvironment: props.otherEnvironment });
+};
+
+const isRecordMatched = (entity) => {
+  if (!props.comparisonMode || !props.fieldDifferences) return false;
+  
+  const entityId = getEntityId(entity);
+  
+  // Check if this record has a match in the other environment
+  if (props.comparisonMode === 'primary') {
+    return props.fieldDifferences.has(entityId);
+  } else {
+    // For compare mode, check if this record is referenced as a match
+    for (const [primaryId, info] of props.fieldDifferences.entries()) {
+      if (info.compareId === entityId) {
+        return true;
+      }
+    }
+  }
+  
+  return false;
+};
+
 const getCellClass = (entity, field) => {
   if (!props.fieldDifferences || !props.comparisonMode) return '';
   
@@ -1396,7 +1439,7 @@ defineExpose({
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 20px;
-  table-layout: fixed;
+  table-layout: auto;
 }
 
 .entity-table th,
