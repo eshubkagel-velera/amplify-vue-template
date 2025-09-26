@@ -20,12 +20,29 @@ export const useAuth = () => {
   const isAdmin = computed(() => roleFlags.value.isAdmin)
   const isDeployment = computed(() => roleFlags.value.isDeployment)
   const isDeveloper = computed(() => roleFlags.value.isDeveloper)
-  const isReadonly = computed(() => roleFlags.value.isReadonly)
+  const isReadonly = computed(() => {
+    const env = currentEnvironment.value
+    
+    // Explicit readonly role
+    if (roleFlags.value.isReadonly) return true
+    
+    // Developer in UAT/LIVE is readonly
+    if (isDeveloper.value && (env === 'uat' || env === 'live')) return true
+    
+    return false
+  })
   
   const canEdit = computed(() => {
-    if (isReadonly.value) return false
-    const isDevOrTest = currentEnvironment.value === 'dev' || currentEnvironment.value === 'test'
-    return isAdmin.value || isDeployment.value || (isDeveloper.value && isDevOrTest)
+    const env = currentEnvironment.value
+    
+    // Admin and deployment can edit in all environments
+    if (isAdmin.value || isDeployment.value) return true
+    
+    // Developer can edit only in dev and test
+    if (isDeveloper.value && (env === 'dev' || env === 'test')) return true
+    
+    // Readonly cannot edit anywhere
+    return false
   })
   const currentEnvironment = ref(localStorage.getItem('selectedEnvironment') || 'dev')
   
@@ -39,16 +56,16 @@ export const useAuth = () => {
   })
   
   const canDelete = computed(() => {
-    const isDevOrTest = currentEnvironment.value === 'dev' || currentEnvironment.value === 'test'
-    console.log('canDelete check:', {
-      userGroups: userGroups.value,
-      currentEnv: currentEnvironment.value,
-      isAdmin: isAdmin.value,
-      isDeployment: isDeployment.value,
-      isDeveloper: isDeveloper.value,
-      isDevOrTest
-    })
-    return isAdmin.value || isDeployment.value || (isDeveloper.value && isDevOrTest)
+    const env = currentEnvironment.value
+    
+    // Admin and deployment can delete in all environments
+    if (isAdmin.value || isDeployment.value) return true
+    
+    // Developer can delete only in dev and test
+    if (isDeveloper.value && (env === 'dev' || env === 'test')) return true
+    
+    // Readonly cannot delete anywhere
+    return false
   })
   const canEditProduction = computed(() => isAdmin.value)
   

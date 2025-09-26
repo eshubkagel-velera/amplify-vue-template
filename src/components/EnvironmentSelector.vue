@@ -11,24 +11,44 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
+import { useAuth } from '../composables/useAuth';
 
 const selectedEnvironment = ref('dev');
-const environments = ref({});
+const allEnvironments = ref({});
+const { isAdmin, isDeployment, isDeveloper } = useAuth();
+
+const environments = computed(() => {
+  const filtered = {};
+  
+  // Admin and deployment can see all environments
+  if (isAdmin.value || isDeployment.value) {
+    return allEnvironments.value;
+  }
+  
+  // Developer can see all environments (but readonly in UAT/LIVE)
+  if (isDeveloper.value) {
+    return allEnvironments.value;
+  }
+  
+  // Readonly can only see dev and test
+  Object.keys(allEnvironments.value).forEach(key => {
+    if (key === 'dev' || key === 'test') {
+      filtered[key] = allEnvironments.value[key];
+    }
+  });
+  
+  return filtered;
+});
 
 onMounted(() => {
-  environments.value = window.environments || {};
+  allEnvironments.value = window.environments || {};
   selectedEnvironment.value = window.currentEnvironment || 'dev';
 });
 
 const getDataSourceName = (env) => {
-  const dataSourceMap = {
-    dev: 'hazel_mapping_dev',
-    test: 'hazel_mapping_test', 
-    uat: 'hazel_mapping_uat',
-    prod: 'hazel_mapping_live'
-  };
-  return dataSourceMap[env] || env;
+  const envVarName = `VITE_DB_NAME_${env.toUpperCase()}`;
+  return import.meta.env[envVarName] || env;
 };
 
 const switchEnvironment = () => {
@@ -77,5 +97,5 @@ select {
 .env-dev { background: #28a745; color: white; }
 .env-test { background: #ffc107; color: black; }
 .env-uat { background: #fd7e14; color: white; }
-.env-prod { background: #dc3545; color: white; }
+.env-live { background: #dc3545; color: white; }
 </style>
