@@ -30,8 +30,11 @@
               :comparisonMode="'primary'"
               :matchedPairs="matchedPairs"
               :unmatchedRecords="unmatchedPrimary"
+              :otherEnvironment="compareEnvironment"
+              :canAddToOther="canAddToEnvironment('primary')"
               @filterChanged="syncToCompare"
               @sortChanged="syncToCompare"
+              @addToOtherEnvironment="handleAddToOther"
             />
           </div>
         </div>
@@ -61,6 +64,9 @@
               :primaryData="primaryData"
               :syncFilters="syncFilters"
               :syncSort="syncSort"
+              :otherEnvironment="primaryEnvironment"
+              :canAddToOther="canAddToEnvironment('compare')"
+              @addToOtherEnvironment="handleAddToOther"
             />
           </div>
         </div>
@@ -70,6 +76,31 @@
     <div v-else class="no-comparison">
       <p>Select an environment to compare with {{ primaryEnvironment.toUpperCase() }}</p>
     </div>
+    
+    <!-- Add to Other Environment Modal -->
+    <div v-if="showAddToOtherModal" class="modal-overlay">
+      <div class="modal-content">
+        <h3>Add Record to {{ addToOtherData?.targetEnvironment?.toUpperCase() }}</h3>
+        <p>Are you sure you want to add this record to {{ addToOtherData?.targetEnvironment?.toUpperCase() }}?</p>
+        <div v-if="addToOtherData?.entity" class="record-preview">
+          <h4>Record Details:</h4>
+          <div v-for="formField in entityConfig?.formFields?.filter(f => !['CREATED_DATE', 'CREATED_BY_USER_ID'].includes(f.name)) || []" :key="formField.name" class="field-preview">
+            <strong>{{ formField.name }}:</strong> {{ addToOtherData.entity[formField.name] }}
+          </div>
+          <div class="field-preview">
+            <strong>CREATED_DATE:</strong> {{ getCurrentDateString() }}
+          </div>
+          <div class="form-group">
+            <label for="createdByUser"><strong>CREATED_BY_USER_ID:</strong></label>
+            <input id="createdByUser" v-model="createdByUserId" type="number" value="1" />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button @click="confirmAddToOther" class="btn-success">Yes, Add Record</button>
+          <button @click="closeAddToOtherModal" class="btn-primary">Cancel</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -77,6 +108,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import EntityManager from './EntityManager.vue';
 import { getClient } from '../client.js';
+import { useAuth } from '../composables/useAuth';
 
 const props = defineProps({
   primaryEnvironment: {
@@ -285,6 +317,96 @@ const syncToCompare = (syncData) => {
   }
 };
 
+const canAddToEnvironment = (mode) => {
+  const targetEnv = mode === 'primary' ? props.compareEnvironment : props.primaryEnvironment;
+  const { canEdit } = useAuth();
+  
+  // Check if user can edit in the target environment
+  // This is a simplified check - you may need more complex logic based on your auth system
+  return canEdit.value;
+};
+
+const showAddToOtherModal = ref(false);
+const addToOtherData = ref(null);
+const createdByUserId = ref(1);
+
+const handleAddToOther = (data) => {
+  console.log('Add to other environment:', data);
+  addToOtherData.value = data;
+  showAddToOtherModal.value = true;
+};
+
+const closeAddToOtherModal = () => {
+  showAddToOtherModal.value = false;
+  addToOtherData.value = null;
+  createdByUserId.value = 1;
+};
+
+const getCurrentDateString = () => {
+  return new Date().toISOString().split('T')[0];
+};
+
+const confirmAddToOther = async () => {
+  if (!addToOtherData.value) return;
+  
+  try {
+    const { entity, targetEnvironment } = addToOtherData.value;
+    
+    // Build form data using only the form fields (same as normal add)
+    const formData = {};
+    props.entityConfig.formFields.forEach(field => {
+      if (entity[field.name] !== undefined && entity[field.name] !== null) {
+        formData[field.name] = entity[field.name];
+      }
+    });
+    
+    // Generate a new unique PRODUCT_ID to avoid duplicates
+    if (formData.PRODUCT_ID) {
+      formData.PRODUCT_ID = crypto.randomUUID();
+      console.log('Generated new PRODUCT_ID:', formData.PRODUCT_ID);
+    }
+    
+    // Add current date and user ID for audit fields
+    const currentDate = new Date().toISOString().split('T')[0];
+    formData.CREATED_DATE = currentDate;
+    formData.CREATED_BY_USER_ID = parseInt(createdByUserId.value) || 1;
+    
+    console.log('Adding record to target environment:', targetEnvironment);
+    console.log('Form data being sent:', formData);
+    
+    // Use direct API call to target environment
+    console.log('Creating record in target environment:', targetEnvironment);
+    
+    const { callExternalApi } = await import('../client.js');
+    
+    // Use the same approach as the comparison data loading
+    const { createComparisonRecord } = await import('../utils/comparisonClient.js');
+    const result = await createComparisonRecord(targetEnvironment, 'ORIGIN_PRODUCT', formData);
+    
+    console.log('Create result:', result);
+    
+    closeAddToOtherModal();
+    console.log(`Successfully added record to ${targetEnvironment}`);
+    
+    // Refresh the comparison data to show the new record
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
+  } catch (error) {
+    console.error('Error adding record to other environment:', error);
+    
+    let errorMsg = 'Failed to add record to other environment';
+    if (error.errors && error.errors.length > 0) {
+      errorMsg = error.errors.map(e => e.message).join('\n');
+    } else if (error.message) {
+      errorMsg = error.message;
+    }
+    
+    console.log('Full error object:', JSON.stringify(error, null, 2));
+    alert(`Error: ${errorMsg}`);
+  }
+};
+
 onMounted(() => {
   console.log('Environment comparison mounted', {
     primary: props.primaryEnvironment,
@@ -382,5 +504,69 @@ onMounted(() => {
   color: var(--text-color, #666);
   border: 1px dashed var(--border-color, #dee2e6);
   background: var(--bg-color, #f8f9fa);
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 300px;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: var(--modal-bg, #fff);
+  color: var(--text-color, #333);
+  padding: 30px;
+  border-radius: 8px;
+  min-width: 400px;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.record-preview {
+  margin: 20px 0;
+  padding: 15px;
+  background: var(--bg-color, #f8f9fa);
+  border-radius: 4px;
+  border: 1px solid var(--border-color, #dee2e6);
+}
+
+.field-preview {
+  margin: 5px 0;
+  padding: 5px;
+}
+
+.form-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.form-group {
+  margin: 10px 0;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--border-color, #dee2e6);
+  border-radius: 4px;
+  background: var(--input-bg, #fff);
+  color: var(--text-color, #333);
 }
 </style>
