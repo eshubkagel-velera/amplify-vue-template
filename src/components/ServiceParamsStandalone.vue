@@ -10,6 +10,7 @@
       <p><strong>Service Provider:</strong> {{ serviceInfo.SERVICE_PROVIDER_NAME }}</p>
     </div>
     <EntityManager
+      ref="entityManager"
       entityName="SERVICE_PARAM"
       :fields="['SERVICE_PARAM_ID', 'PARAM_NAME', 'CREATED_DATE']"
       :formFields="[
@@ -28,13 +29,18 @@
       :parentField="'SERVICE_ID'"
       :readonly="props.readonly || false"
       :canDelete="!props.readonly"
+      :hideActionButtons="true"
+      @entityCountChanged="$emit('entityCountChanged', $event)"
+      @selectedCountChanged="$emit('selectedCountChanged', $event)"
     />
   </div>
 </template>
 
 <script setup lang="ts">
 import '../styles/shared.css';
-import { defineProps, ref } from 'vue';
+import { defineProps, ref, defineEmits } from 'vue';
+
+defineEmits(['entityCountChanged', 'selectedCountChanged']);
 import EntityManager from './EntityManager.vue';
 import { generateClient } from 'aws-amplify/api';
 import * as queries from '../graphql/queries';

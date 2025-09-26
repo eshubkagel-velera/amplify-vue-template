@@ -444,7 +444,7 @@ const createServiceProviderIfNeeded = async () => {
       CREATED_DATE: new Date().toISOString().split('T')[0]
     };
     
-    const result = await callExternalApi(window.currentEnvironment, 'createSERVICE_PROVIDER', { input: providerInput });
+    const result = await callExternalApi(window.currentEnvironment, createServiceProvider, { input: providerInput });
     
     const newProvider = result.data.createSERVICE_PROVIDER;
     serviceProviders.value.push(newProvider);
@@ -478,6 +478,7 @@ const onServiceProviderChange = async (event: Event) => {
 };
 
 import { createServiceBatch, createServiceParamBatch } from '../graphql.ts';
+import { createService, createServiceParam, createServiceProvider } from '../graphql/mutations.js';
 
 
 
@@ -1039,9 +1040,20 @@ const insertService = async () => {
         CREATED_DATE: new Date().toISOString().split('T')[0]
       };
       
-      const serviceResult = await callExternalApi(window.currentEnvironment, 'createSERVICE', { input: serviceInput });
+      const serviceResult = await callExternalApi(window.currentEnvironment, createService, { input: serviceInput });
       
       serviceId = serviceResult.data.createSERVICE.SERVICE_ID;
+      
+      // Handle placeholder ID
+      if (serviceId === -1) {
+        const findResult = await callExternalApi(window.currentEnvironment, 'listSERVICES');
+        const realService = findResult.data.listSERVICES.items
+          .filter(s => s.SERVICE_PROVIDER_ID === serviceProviderId && s.URI === serviceUri)
+          .sort((a, b) => b.SERVICE_ID - a.SERVICE_ID)[0];
+        if (realService) {
+          serviceId = realService.SERVICE_ID;
+        }
+      }
     }
     
     // Get fresh existing parameters for this service only
@@ -1080,7 +1092,7 @@ const insertService = async () => {
       
       for (const paramInput of paramInputs) {
         try {
-          await callExternalApi(window.currentEnvironment, 'createSERVICE_PARAM', { input: paramInput });
+          await callExternalApi(window.currentEnvironment, createServiceParam, { input: paramInput });
           currentInsert.value++;
         } catch (err) {
           console.error('Failed to create parameter:', paramInput.PARAM_NAME, err);
@@ -1148,7 +1160,7 @@ const updateService = async () => {
       
       for (const paramInput of paramInputs) {
         try {
-          await callExternalApi(window.currentEnvironment, 'createSERVICE_PARAM', { input: paramInput });
+          await callExternalApi(window.currentEnvironment, createServiceParam, { input: paramInput });
           currentInsert.value++;
         } catch (err) {
           console.error('Failed to create parameter:', paramInput.PARAM_NAME, err);

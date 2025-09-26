@@ -24,7 +24,7 @@
     </div>
     
     <!-- Action Buttons -->
-    <div v-if="selectedProductId || props.productId" class="bordered-section">
+    <div v-if="selectedProductId || props.productId" class="fixed-action-buttons">
       <div class="action-buttons">
         <button @click="loadRedirectUrls" class="btn-primary">Refresh</button>
         <button @click="showCreateModal = true" class="btn-success" :disabled="props.readonly || !canEdit">{{ props.readonly || !canEdit ? 'View Only Mode' : 'Add New Redirect URL' }}</button>
@@ -524,6 +524,8 @@ watch(showCreateModal, (newVal) => {
   }
 });
 
+
+
 const goBack = () => {
   window.dispatchEvent(new CustomEvent('goBackToProducts'));
 };
@@ -813,5 +815,15 @@ onUnmounted(() => {
   cursor: pointer;
   border: none;
   border-radius: 4px;
+}
+
+.fixed-action-buttons {
+  position: sticky;
+  top: 125px;
+  background: var(--bg-color, #fff);
+  z-index: 100;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-color, #dee2e6);
+  margin-bottom: 10px;
 }
 </style>
