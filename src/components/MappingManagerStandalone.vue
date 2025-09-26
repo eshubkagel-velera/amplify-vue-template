@@ -73,7 +73,7 @@
     </div>
 
     <!-- Action Buttons and Target Parameters Row -->
-    <div v-if="showActionButtons || selectedTargetService" class="buttons-params-row">
+    <div v-if="showActionButtons || selectedTargetService" class="fixed-action-buttons">
       <!-- Action Buttons -->
       <div v-if="showActionButtons" class="action-buttons">
         <button v-if="!mappingExists" @click="createMapping" :disabled="saving || props.readonly" class="btn-success">
@@ -276,7 +276,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { getClient } from '../client.js';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
@@ -547,7 +547,7 @@ const loadTargetParams = async () => {
 const checkMappingExists = async () => {
   try {
     const productId = props.productId || parseInt(selectedProductId.value);
-    const result = await generateClient().graphql({ query: queries.listServiceParamMappings });
+    const result = await getClient().graphql({ query: queries.listServiceParamMappings });
     const existingMappings = result.data.listSERVICE_PARAM_MAPPINGS.items.filter(mapping => 
       mapping.ORIGIN_PRODUCT_ID === productId &&
       sourceParams.value.some(sp => sp.SERVICE_PARAM_ID === mapping.SOURCE_SERVICE_PARAM_ID) &&
@@ -598,6 +598,16 @@ const loadExistingMappingsForTarget = async () => {
         mapping.selected = true;
         mapping.SERVICE_PARAM_MAPPING_ID = existing.SERVICE_PARAM_MAPPING_ID;
         mapping.SERVICE_EXPR_MAPPING_ID = expr?.SERVICE_EXPR_MAPPING_ID;
+        
+        // Store original values for change detection
+        mapping.originalValues = {
+          TARGET_EXPR: expr?.TARGET_EXPR || '',
+          SOURCE_EXPR: expr?.SOURCE_EXPR || '',
+          SOURCE_PARAM_NAME: sourceParam?.PARAM_NAME || '',
+          SYSTEM_NBR: existing.SYSTEM_NBR || 'ALL',
+          PRIN_NBR: existing.PRIN_NBR || 'ALL',
+          AGENT_NBR: existing.AGENT_NBR || 'ALL'
+        };
       } else {
         // Reset non-existing mappings
         mapping.SOURCE_SERVICE_PARAM_ID = '';
@@ -682,7 +692,7 @@ const filterMappingsBySource = async () => {
 
 const loadExistingMappings = async (existingMappings) => {
   try {
-    const exprResult = await generateClient().graphql({ query: queries.listServiceExprMappings });
+    const exprResult = await getClient().graphql({ query: queries.listServiceExprMappings });
     const expressions = exprResult.data.listSERVICE_EXPR_MAPPINGS.items;
     
     mappings.value.forEach(mapping => {
@@ -762,7 +772,7 @@ const createMapping = async () => {
         console.log('Creating custom target param:', mapping.TARGET_PARAM_NAME);
         
         // First check if parameter already exists
-        const existingTargetParams = await generateClient().graphql({
+        const existingTargetParams = await getClient().graphql({
           query: queries.listServiceParams,
           variables: {
             filter: {
@@ -776,7 +786,7 @@ const createMapping = async () => {
           targetServiceParamId = existingTargetParams.data.listSERVICE_PARAMS.items[0].SERVICE_PARAM_ID;
           console.log('Using existing target param ID:', targetServiceParamId);
         } else {
-          const serviceParamResult = await generateClient().graphql({
+          const serviceParamResult = await getClient().graphql({
             query: mutations.createServiceParam,
             variables: { input: {
               SERVICE_ID: selectedTargetService.value.SERVICE_ID,
@@ -786,6 +796,23 @@ const createMapping = async () => {
             }}
           });
           targetServiceParamId = serviceParamResult.data.createSERVICE_PARAM.SERVICE_PARAM_ID;
+          
+          // Handle placeholder ID
+          if (targetServiceParamId === -1) {
+            const findParamResult = await getClient().graphql({
+              query: queries.listServiceParams,
+              variables: {
+                filter: {
+                  SERVICE_ID: { eq: selectedTargetService.value.SERVICE_ID },
+                  PARAM_NAME: { eq: mapping.TARGET_PARAM_NAME }
+                }
+              }
+            });
+            const realParam = findParamResult.data.listSERVICE_PARAMS?.items?.sort((a, b) => b.SERVICE_PARAM_ID - a.SERVICE_PARAM_ID)[0];
+            if (realParam) {
+              targetServiceParamId = realParam.SERVICE_PARAM_ID;
+            }
+          }
           console.log('Created target param with ID:', targetServiceParamId);
           console.log('Full createSERVICE_PARAM result:', serviceParamResult);
         }
@@ -797,7 +824,7 @@ const createMapping = async () => {
           console.log('Creating new source param:', mapping.SOURCE_PARAM_NAME);
           
           // Double-check in database to avoid duplicates
-          const existingSourceParams = await generateClient().graphql({
+          const existingSourceParams = await getClient().graphql({
             query: queries.listServiceParams,
             variables: {
               filter: {
@@ -811,7 +838,7 @@ const createMapping = async () => {
             sourceServiceParamId = existingSourceParams.data.listSERVICE_PARAMS.items[0].SERVICE_PARAM_ID;
             console.log('Found existing source param ID:', sourceServiceParamId);
           } else {
-            const sourceParamResult = await generateClient().graphql({
+            const sourceParamResult = await getClient().graphql({
               query: mutations.createServiceParam,
               variables: { input: {
                 SERVICE_ID: selectedSourceService.value.SERVICE_ID,
@@ -821,6 +848,23 @@ const createMapping = async () => {
               }}
             });
             sourceServiceParamId = sourceParamResult.data.createSERVICE_PARAM.SERVICE_PARAM_ID;
+            
+            // Handle placeholder ID
+            if (sourceServiceParamId === -1) {
+              const findParamResult = await getClient().graphql({
+                query: queries.listServiceParams,
+                variables: {
+                  filter: {
+                    SERVICE_ID: { eq: selectedSourceService.value.SERVICE_ID },
+                    PARAM_NAME: { eq: mapping.SOURCE_PARAM_NAME }
+                  }
+                }
+              });
+              const realParam = findParamResult.data.listSERVICE_PARAMS?.items?.sort((a, b) => b.SERVICE_PARAM_ID - a.SERVICE_PARAM_ID)[0];
+              if (realParam) {
+                sourceServiceParamId = realParam.SERVICE_PARAM_ID;
+              }
+            }
             console.log('Created source param with ID:', sourceServiceParamId);
           }
         } else {
@@ -830,7 +874,7 @@ const createMapping = async () => {
       }
       
       // Check if mapping already exists before adding to batch
-      const existingMappings = await generateClient().graphql({
+      const existingMappings = await getClient().graphql({
         query: queries.listServiceParamMappings,
         variables: {
           filter: {
@@ -913,94 +957,129 @@ const updateMapping = async () => {
   if (props.readonly) return;
   saving.value = true;
   try {
-    const selectedMappings = mappings.value.filter(m => m.selected);
-    const unselectedExisting = mappings.value.filter(m => !m.selected && m.isExisting);
+    const toDelete = mappings.value.filter(m => !m.selected && m.isExisting);
+    const toUpdate = mappings.value.filter(m => m.selected && m.isExisting && hasChanges(m));
+    const toCreate = mappings.value.filter(m => m.selected && !m.isExisting);
+    const unchanged = mappings.value.filter(m => m.selected && m.isExisting && !hasChanges(m));
     
-    console.log('Selected mappings for update:', selectedMappings);
-    console.log('Unselected existing mappings:', unselectedExisting);
+    console.log('To delete:', toDelete.length);
+    console.log('To update:', toUpdate.length);
+    console.log('To create:', toCreate.length);
+    console.log('Unchanged:', unchanged.length);
     
     // Show progress modal
-    totalProgress.value = unselectedExisting.length + selectedMappings.length;
+    totalProgress.value = toDelete.length + toUpdate.length + toCreate.length;
     currentProgress.value = 0;
-    progressMessage.value = 'Updating mappings...';
+    progressMessage.value = 'Processing mappings...';
     showProgressModal.value = true;
     
     // Delete unselected existing mappings
-    for (let i = 0; i < unselectedExisting.length; i++) {
-      const mapping = unselectedExisting[i];
+    for (let i = 0; i < toDelete.length; i++) {
+      const mapping = toDelete[i];
       currentProgress.value = i + 1;
       if (mapping.SERVICE_EXPR_MAPPING_ID) {
-        await generateClient().graphql({
+        await getClient().graphql({
           query: mutations.deleteServiceExprMapping,
           variables: { input: { SERVICE_EXPR_MAPPING_ID: mapping.SERVICE_EXPR_MAPPING_ID } }
         });
       }
       
-      await generateClient().graphql({
+      await getClient().graphql({
         query: mutations.deleteServiceParamMapping,
         variables: { input: { SERVICE_PARAM_MAPPING_ID: mapping.SERVICE_PARAM_MAPPING_ID } }
       });
     }
     
-    // Update or create selected mappings
-    for (let i = 0; i < selectedMappings.length; i++) {
-      const mapping = selectedMappings[i];
-      currentProgress.value = unselectedExisting.length + i + 1;
-      console.log('Processing mapping for update:', mapping);
+    // Update existing mappings with changes
+    for (let i = 0; i < toUpdate.length; i++) {
+      const mapping = toUpdate[i];
+      currentProgress.value = toDelete.length + i + 1;
+      console.log('Updating existing mapping:', mapping);
       
-      if (mapping.isExisting) {
-        // Update existing
-        const paramMappingInput = {
-          SERVICE_PARAM_MAPPING_ID: mapping.SERVICE_PARAM_MAPPING_ID,
-          SYSTEM_NBR: mapping.SYSTEM_NBR,
-          PRIN_NBR: mapping.PRIN_NBR,
-          AGENT_NBR: mapping.AGENT_NBR
-        };
-        
-        await generateClient().graphql({
-          query: mutations.updateServiceParamMapping,
-          variables: { input: paramMappingInput }
-        });
-        
-        // Update or create expression mapping
-        if (mapping.TARGET_EXPR || mapping.SOURCE_EXPR) {
-          if (mapping.SERVICE_EXPR_MAPPING_ID) {
-            const exprMappingInput = {
+      const paramMappingInput = {
+        SERVICE_PARAM_MAPPING_ID: mapping.SERVICE_PARAM_MAPPING_ID,
+        ORIGIN_PRODUCT_ID: props.productId || parseInt(selectedProductId.value),
+        SOURCE_SERVICE_PARAM_ID: mapping.SOURCE_SERVICE_PARAM_ID,
+        TARGET_SERVICE_PARAM_ID: mapping.TARGET_SERVICE_PARAM_ID,
+        SYSTEM_NBR: mapping.SYSTEM_NBR || 'ALL',
+        PRIN_NBR: mapping.PRIN_NBR || 'ALL',
+        AGENT_NBR: mapping.AGENT_NBR || 'ALL',
+        CHANGED_BY_USER_ID: 1,
+        CHANGED_DATE: getCurrentDateString()
+      };
+      
+      // Only add optional fields if they have values
+      if (mapping.PLASTIC_TYPE_ID) {
+        paramMappingInput.PLASTIC_TYPE_ID = mapping.PLASTIC_TYPE_ID;
+      }
+      if (mapping.COMMENT_TEXT) {
+        paramMappingInput.COMMENT_TEXT = mapping.COMMENT_TEXT;
+      }
+      
+      console.log('Update input values:', paramMappingInput);
+      console.log('Null check - SERVICE_PARAM_MAPPING_ID:', mapping.SERVICE_PARAM_MAPPING_ID);
+      console.log('Null check - SOURCE_SERVICE_PARAM_ID:', mapping.SOURCE_SERVICE_PARAM_ID);
+      console.log('Null check - TARGET_SERVICE_PARAM_ID:', mapping.TARGET_SERVICE_PARAM_ID);
+      
+      await getClient().graphql({
+        query: mutations.updateServiceParamMapping,
+        variables: { input: paramMappingInput }
+      });
+      
+      // Handle expression mapping updates
+      if (mapping.TARGET_EXPR || mapping.SOURCE_EXPR) {
+        if (mapping.SERVICE_EXPR_MAPPING_ID) {
+          await getClient().graphql({
+            query: mutations.updateServiceExprMapping,
+            variables: { input: {
               SERVICE_EXPR_MAPPING_ID: mapping.SERVICE_EXPR_MAPPING_ID,
               SOURCE_EXPR: mapping.SOURCE_EXPR,
-              TARGET_EXPR: mapping.TARGET_EXPR
-            };
-            
-            await generateClient().graphql({
-              query: mutations.updateServiceExprMapping,
-              variables: { input: exprMappingInput }
-            });
-          } else {
-            const exprMappingInput = {
+              TARGET_EXPR: mapping.TARGET_EXPR,
+              CHANGED_BY_USER_ID: 1,
+              CHANGED_DATE: getCurrentDateString()
+            }}
+          });
+        } else {
+          await getClient().graphql({
+            query: mutations.createServiceExprMapping,
+            variables: { input: {
               SERVICE_PARAM_MAPPING_ID: mapping.SERVICE_PARAM_MAPPING_ID,
               SOURCE_EXPR: mapping.SOURCE_EXPR,
               TARGET_EXPR: mapping.TARGET_EXPR,
               CREATED_BY_USER_ID: 1,
               CREATED_DATE: getCurrentDateString()
-            };
-            
-            await generateClient().graphql({
-              query: mutations.createServiceExprMapping,
-              variables: { input: exprMappingInput }
-            });
-          }
+            }}
+          });
         }
-      } else {
-        // Create new
-        let targetServiceParamId = mapping.TARGET_SERVICE_PARAM_ID;
-        let sourceServiceParamId = mapping.SOURCE_SERVICE_PARAM_ID;
+      }
+    }
+    
+    // Create new mappings
+    for (let i = 0; i < toCreate.length; i++) {
+      const mapping = toCreate[i];
+      currentProgress.value = toDelete.length + toUpdate.length + i + 1;
+      console.log('Creating new mapping:', mapping);
+      
+      let targetServiceParamId = mapping.TARGET_SERVICE_PARAM_ID;
+      let sourceServiceParamId = mapping.SOURCE_SERVICE_PARAM_ID;
+      
+      // Handle custom target param creation
+      if (mapping.isCustom && !targetServiceParamId && mapping.TARGET_PARAM_NAME) {
+        const serviceParamResult = await getClient().graphql({
+          query: mutations.createServiceParam,
+          variables: { input: {
+            SERVICE_ID: selectedTargetService.value.SERVICE_ID,
+            PARAM_NAME: mapping.TARGET_PARAM_NAME,
+            CREATED_BY_USER_ID: 1,
+            CREATED_DATE: getCurrentDateString()
+          }}
+        });
+        targetServiceParamId = serviceParamResult.data.createSERVICE_PARAM.SERVICE_PARAM_ID;
         
-        // If custom mapping without existing TARGET_SERVICE_PARAM_ID, create new SERVICE_PARAM
-        if (mapping.isCustom && !targetServiceParamId && mapping.TARGET_PARAM_NAME) {
-          console.log('Creating custom target param in update:', mapping.TARGET_PARAM_NAME);
-          
-          // First check if parameter already exists
-          const existingTargetParams = await generateClient().graphql({
+        // Handle placeholder ID
+        if (targetServiceParamId === -1) {
+          console.log('Got placeholder target param ID, finding real ID...');
+          const findParamResult = await getClient().graphql({
             query: queries.listServiceParams,
             variables: {
               filter: {
@@ -1009,33 +1088,35 @@ const updateMapping = async () => {
               }
             }
           });
-          
-          if (existingTargetParams.data.listSERVICE_PARAMS.items.length > 0) {
-            targetServiceParamId = existingTargetParams.data.listSERVICE_PARAMS.items[0].SERVICE_PARAM_ID;
-            console.log('Using existing target param ID in update:', targetServiceParamId);
-          } else {
-            const serviceParamResult = await generateClient().graphql({
-              query: mutations.createServiceParam,
-              variables: { input: {
-                SERVICE_ID: selectedTargetService.value.SERVICE_ID,
-                PARAM_NAME: mapping.TARGET_PARAM_NAME,
-                CREATED_BY_USER_ID: 1,
-                CREATED_DATE: getCurrentDateString()
-              }}
-            });
-            targetServiceParamId = serviceParamResult.data.createSERVICE_PARAM.SERVICE_PARAM_ID;
-            console.log('Created target param with ID in update:', targetServiceParamId);
+          const realParam = findParamResult.data.listSERVICE_PARAMS?.items?.sort((a, b) => b.SERVICE_PARAM_ID - a.SERVICE_PARAM_ID)[0];
+          if (realParam) {
+            targetServiceParamId = realParam.SERVICE_PARAM_ID;
+            console.log('Found real target param ID:', targetServiceParamId);
           }
         }
-        
-        // Check if source param exists, create if not
-        if (mapping.SOURCE_PARAM_NAME && !sourceServiceParamId) {
-          const existingSourceParam = sourceParams.value.find(sp => sp.PARAM_NAME === mapping.SOURCE_PARAM_NAME);
-          if (!existingSourceParam) {
-            console.log('Creating new source param in update:', mapping.SOURCE_PARAM_NAME);
-            
-            // Double-check in database to avoid duplicates
-            const existingSourceParams = await generateClient().graphql({
+      }
+      
+      // Handle source param creation if needed
+      if (mapping.SOURCE_PARAM_NAME && !sourceServiceParamId) {
+        const existingSourceParam = sourceParams.value.find(sp => sp.PARAM_NAME === mapping.SOURCE_PARAM_NAME);
+        if (existingSourceParam) {
+          sourceServiceParamId = existingSourceParam.SERVICE_PARAM_ID;
+        } else {
+          const sourceParamResult = await getClient().graphql({
+            query: mutations.createServiceParam,
+            variables: { input: {
+              SERVICE_ID: selectedSourceService.value.SERVICE_ID,
+              PARAM_NAME: mapping.SOURCE_PARAM_NAME,
+              CREATED_BY_USER_ID: 1,
+              CREATED_DATE: getCurrentDateString()
+            }}
+          });
+          sourceServiceParamId = sourceParamResult.data.createSERVICE_PARAM.SERVICE_PARAM_ID;
+          
+          // Handle placeholder ID
+          if (sourceServiceParamId === -1) {
+            console.log('Got placeholder source param ID, finding real ID...');
+            const findParamResult = await getClient().graphql({
               query: queries.listServiceParams,
               variables: {
                 filter: {
@@ -1044,87 +1125,99 @@ const updateMapping = async () => {
                 }
               }
             });
-            
-            if (existingSourceParams.data.listSERVICE_PARAMS.items.length > 0) {
-              sourceServiceParamId = existingSourceParams.data.listSERVICE_PARAMS.items[0].SERVICE_PARAM_ID;
-              console.log('Found existing source param ID in update:', sourceServiceParamId);
-            } else {
-              const sourceParamResult = await generateClient().graphql({
-                query: mutations.createServiceParam,
-                variables: { input: {
-                  SERVICE_ID: selectedSourceService.value.SERVICE_ID,
-                  PARAM_NAME: mapping.SOURCE_PARAM_NAME,
-                  CREATED_BY_USER_ID: 1,
-                  CREATED_DATE: getCurrentDateString()
-                }}
-              });
-              sourceServiceParamId = sourceParamResult.data.createSERVICE_PARAM.SERVICE_PARAM_ID;
-              console.log('Created source param with ID in update:', sourceServiceParamId);
-            }
-          } else {
-            sourceServiceParamId = existingSourceParam.SERVICE_PARAM_ID;
-            console.log('Using existing source param ID in update:', sourceServiceParamId);
-          }
-        }
-        
-        // Check if mapping already exists
-        const existingMappings = await generateClient().graphql({
-          query: queries.listServiceParamMappings,
-          variables: {
-            filter: {
-              ORIGIN_PRODUCT_ID: { eq: props.productId || parseInt(selectedProductId.value) },
-              SOURCE_SERVICE_PARAM_ID: { eq: sourceServiceParamId },
-              TARGET_SERVICE_PARAM_ID: { eq: targetServiceParamId }
+            const realParam = findParamResult.data.listSERVICE_PARAMS?.items?.sort((a, b) => b.SERVICE_PARAM_ID - a.SERVICE_PARAM_ID)[0];
+            if (realParam) {
+              sourceServiceParamId = realParam.SERVICE_PARAM_ID;
+              console.log('Found real source param ID:', sourceServiceParamId);
             }
           }
-        });
-        
-        let paramResult;
-        if (existingMappings.data.listSERVICE_PARAM_MAPPINGS.items.length > 0) {
-          // Use existing mapping
-          paramResult = {
-            data: {
-              createSERVICE_PARAM_MAPPING: existingMappings.data.listSERVICE_PARAM_MAPPINGS.items[0]
-            }
-          };
-          console.log('Using existing param mapping:', paramResult.data.createSERVICE_PARAM_MAPPING);
-        } else {
-          // Create new mapping
-          const paramMappingInput = {
-            ORIGIN_PRODUCT_ID: props.productId || parseInt(selectedProductId.value),
-            SOURCE_SERVICE_PARAM_ID: sourceServiceParamId,
-            TARGET_SERVICE_PARAM_ID: targetServiceParamId,
-            SYSTEM_NBR: mapping.SYSTEM_NBR,
-            PRIN_NBR: mapping.PRIN_NBR,
-            AGENT_NBR: mapping.AGENT_NBR,
-            CREATED_BY_USER_ID: 1,
-            CREATED_DATE: getCurrentDateString()
-          };
-          
-          console.log('Creating param mapping in update:', paramMappingInput);
-          
-          paramResult = await generateClient().graphql({
-            query: mutations.createServiceParamMapping,
-            variables: { input: paramMappingInput }
-          });
-        }
-        
-        if (mapping.TARGET_EXPR || mapping.SOURCE_EXPR) {
-          const exprMappingInput = {
-            SERVICE_PARAM_MAPPING_ID: paramResult.data.createSERVICE_PARAM_MAPPING.SERVICE_PARAM_MAPPING_ID,
-            SOURCE_EXPR: mapping.SOURCE_EXPR,
-            TARGET_EXPR: mapping.TARGET_EXPR,
-            CREATED_BY_USER_ID: 1,
-            CREATED_DATE: getCurrentDateString()
-          };
-          
-          await generateClient().graphql({
-            query: mutations.createServiceExprMapping,
-            variables: { input: exprMappingInput }
-          });
         }
       }
+      
+      // Create param mapping (no SERVICE_PARAM_MAPPING_ID for create)
+      const createInput = {
+        ORIGIN_PRODUCT_ID: props.productId || parseInt(selectedProductId.value),
+        SOURCE_SERVICE_PARAM_ID: sourceServiceParamId,
+        TARGET_SERVICE_PARAM_ID: targetServiceParamId,
+        SYSTEM_NBR: mapping.SYSTEM_NBR || 'ALL',
+        PRIN_NBR: mapping.PRIN_NBR || 'ALL',
+        AGENT_NBR: mapping.AGENT_NBR || 'ALL',
+        CREATED_BY_USER_ID: 1,
+        CREATED_DATE: getCurrentDateString()
+      };
+      
+      // Only add optional fields if they have values
+      if (mapping.PLASTIC_TYPE_ID) {
+        createInput.PLASTIC_TYPE_ID = mapping.PLASTIC_TYPE_ID;
+      }
+      if (mapping.COMMENT_TEXT) {
+        createInput.COMMENT_TEXT = mapping.COMMENT_TEXT;
+      }
+      
+      const paramResult = await getClient().graphql({
+        query: mutations.createServiceParamMapping,
+        variables: { input: createInput }
+      });
+      
+      console.log('Create param mapping result:', JSON.stringify(paramResult, null, 2));
+      
+      let mappingId = null;
+      
+      // Check if we got a valid response
+      if (paramResult.data?.createSERVICE_PARAM_MAPPING) {
+        mappingId = paramResult.data.createSERVICE_PARAM_MAPPING.SERVICE_PARAM_MAPPING_ID;
+        
+        // If we got the placeholder ID (-1), we need to find the real ID
+        if (mappingId === -1) {
+          console.log('Got placeholder ID, finding real mapping ID...');
+          // Query for the actual mapping that was just created (get the most recent one)
+          const findResult = await getClient().graphql({
+            query: queries.listServiceParamMappings,
+            variables: {
+              filter: {
+                ORIGIN_PRODUCT_ID: { eq: props.productId || parseInt(selectedProductId.value) },
+                SOURCE_SERVICE_PARAM_ID: { eq: sourceServiceParamId },
+                TARGET_SERVICE_PARAM_ID: { eq: targetServiceParamId }
+              },
+              limit: 10
+            }
+          });
+          
+          const mappings = findResult.data.listSERVICE_PARAM_MAPPINGS?.items || [];
+          // Get the mapping with the highest ID (most recently created)
+          const realMapping = mappings.sort((a, b) => b.SERVICE_PARAM_MAPPING_ID - a.SERVICE_PARAM_MAPPING_ID)[0];
+          if (realMapping) {
+            mappingId = realMapping.SERVICE_PARAM_MAPPING_ID;
+            console.log('Found real mapping ID:', mappingId, 'from', mappings.length, 'matches');
+          }
+        }
+      }
+      
+      // Create expression mapping if needed and we have a valid ID
+      if (mappingId && (mapping.TARGET_EXPR || mapping.SOURCE_EXPR)) {
+        console.log('Creating expression mapping with ID:', mappingId);
+        console.log('Expression values - TARGET_EXPR:', mapping.TARGET_EXPR, 'SOURCE_EXPR:', mapping.SOURCE_EXPR);
+        
+        try {
+          const exprResult = await getClient().graphql({
+            query: mutations.createServiceExprMapping,
+            variables: { input: {
+              SERVICE_PARAM_MAPPING_ID: mappingId,
+              SOURCE_EXPR: mapping.SOURCE_EXPR,
+              TARGET_EXPR: mapping.TARGET_EXPR,
+              CREATED_BY_USER_ID: 1,
+              CREATED_DATE: getCurrentDateString()
+            }}
+          });
+          console.log('Expression mapping created successfully:', exprResult);
+        } catch (error) {
+          console.error('Failed to create expression mapping:', error);
+        }
+      } else {
+        console.log('Skipping expression mapping - mappingId:', mappingId, 'TARGET_EXPR:', mapping.TARGET_EXPR, 'SOURCE_EXPR:', mapping.SOURCE_EXPR);
+      }
     }
+
     
     showProgressModal.value = false;
     successMessage.value = 'Mapping updated successfully!';
@@ -1155,7 +1248,7 @@ const deleteMapping = async () => {
   deleting.value = true;
   try {
     const productId = props.productId || parseInt(selectedProductId.value);
-    const result = await generateClient().graphql({ query: queries.listServiceParamMappings });
+    const result = await getClient().graphql({ query: queries.listServiceParamMappings });
     const mappingsToDelete = (result.data.listSERVICE_PARAM_MAPPINGS || []).filter(mapping => 
       mapping.ORIGIN_PRODUCT_ID === productId &&
       sourceParams.value.some(sp => sp.SERVICE_PARAM_ID === mapping.SOURCE_SERVICE_PARAM_ID) &&
@@ -1163,13 +1256,13 @@ const deleteMapping = async () => {
     );
     
     // Delete expression mappings first
-    const exprResult = await generateClient().graphql({ query: queries.listServiceExprMappings });
+    const exprResult = await getClient().graphql({ query: queries.listServiceExprMappings });
     const expressionsToDelete = (exprResult.data.listSERVICE_EXPR_MAPPINGS || []).filter(expr =>
       mappingsToDelete.some(m => m.SERVICE_PARAM_MAPPING_ID === expr.SERVICE_PARAM_MAPPING_ID)
     );
     
     for (const expr of expressionsToDelete) {
-      await generateClient().graphql({
+      await getClient().graphql({
         query: mutations.deleteServiceExprMapping,
         variables: { input: { SERVICE_EXPR_MAPPING_ID: expr.SERVICE_EXPR_MAPPING_ID } }
       });
@@ -1177,7 +1270,7 @@ const deleteMapping = async () => {
     
     // Delete param mappings
     for (const mapping of mappingsToDelete) {
-      await generateClient().graphql({
+      await getClient().graphql({
         query: mutations.deleteServiceParamMapping,
         variables: { input: { SERVICE_PARAM_MAPPING_ID: mapping.SERVICE_PARAM_MAPPING_ID } }
       });
@@ -1195,7 +1288,8 @@ const deleteMapping = async () => {
     mappings.value = [];
     mappingExists.value = false;
   } catch (error) {
-    showError('Failed to delete mapping');
+    console.error('Delete mapping error:', error);
+    showError(`Failed to delete mapping: ${error.message || error}`);
   } finally {
     deleting.value = false;
   }
@@ -1264,6 +1358,20 @@ const sortBy = (field) => {
 };
 
 const showError = (message: string) => handleError({ message }, 'mapping operation');
+
+const hasChanges = (mapping) => {
+  if (!mapping.isExisting || !mapping.originalValues) return false;
+  
+  const original = mapping.originalValues;
+  return (
+    mapping.TARGET_EXPR !== original.TARGET_EXPR ||
+    mapping.SOURCE_EXPR !== original.SOURCE_EXPR ||
+    mapping.SOURCE_PARAM_NAME !== original.SOURCE_PARAM_NAME ||
+    mapping.SYSTEM_NBR !== original.SYSTEM_NBR ||
+    mapping.PRIN_NBR !== original.PRIN_NBR ||
+    mapping.AGENT_NBR !== original.AGENT_NBR
+  );
+};
 
 const startResize = (event, field) => {
   isResizing.value = true;
@@ -1627,5 +1735,15 @@ td input {
     gap: 10px;
     align-items: flex-start;
   }
+}
+
+.fixed-action-buttons {
+  position: sticky;
+  top: 125px;
+  background: var(--bg-color, #fff);
+  z-index: 100;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-color, #dee2e6);
+  margin-bottom: 10px;
 }
 </style>

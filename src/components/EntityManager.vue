@@ -18,7 +18,7 @@
 
     
     <!-- Action Buttons -->
-    <div class="bordered-section">
+    <div v-if="!hideActionButtons" class="fixed-action-buttons">
       <div class="action-buttons">
         <button @click="loadEntities" class="btn-primary">Refresh</button>
         <button @click="showCreateModal = true" class="btn-success" :disabled="props.readonly">{{ props.readonly ? 'View Only Mode' : 'Add New' }}</button>
@@ -218,7 +218,7 @@
             />
           </div>
           <div class="form-actions">
-            <button type="submit" :disabled="props.readonly">{{ props.readonly ? 'View Only' : 'Update' }}</button>
+            <button type="submit" :disabled="props.readonly">{{ props.readonly ? 'View Only' : (props.entityName === 'SERVICE_PARAM' && paramMappings.get(formData.SERVICE_PARAM_ID) > 0) ? 'Create Copy' : 'Update' }}</button>
             <button type="button" @click="cancelForm">Cancel</button>
           </div>
         </form>
@@ -362,6 +362,10 @@ const props = defineProps({
   canDelete: {
     type: Boolean,
     default: true
+  },
+  hideActionButtons: {
+    type: Boolean,
+    default: false
   }
 });
 
@@ -387,6 +391,16 @@ const getEntityId = (entity) => {
 };
 
 const { selectedItems: selectedEntities, toggleSelectAll: toggleSelectAllItems, sortBy: sortByField, applyFilters: applyTableFilters } = useTableOperations(entities, getEntityId);
+
+// Watch selectedEntities and emit count changes
+watch(selectedEntities, (newVal) => {
+  emit('selectedCountChanged', newVal.length);
+}, { deep: true });
+
+// Watch entities and emit count changes
+watch(entities, (newVal) => {
+  emit('entityCountChanged', newVal.length);
+}, { deep: true });
 
 const allSelected = computed(() => 
   filteredEntities.value.length > 0 && selectedEntities.value.length === filteredEntities.value.length
@@ -485,7 +499,7 @@ const editEntity = (entity) => {
   showEditModal.value = true;
 };
 
-const emit = defineEmits(['openMapping', 'openRedirectUrls', 'openStepServices', 'openServiceParams', 'openServiceStepMapping']);
+const emit = defineEmits(['openMapping', 'openRedirectUrls', 'openStepServices', 'openServiceParams', 'openServiceStepMapping', 'entityCountChanged', 'selectedCountChanged']);
 
 const openMapping = (entity) => {
   emit('openMapping', { productId: entity.ORIGIN_PRODUCT_ID });
@@ -646,21 +660,31 @@ const submitForm = async () => {
       delete cleanedFormData['Service Provider'];
     }
     
-    // For updates, remove CREATED fields that aren't allowed in update input
-    if (showEditModal.value) {
-      if (props.entityName === 'SERVICE') {
-        delete cleanedFormData.CREATED_BY_USER_ID;
-        delete cleanedFormData.CREATED_DATE;
-      }
+    // Determine if this is create or update based on presence of ID field
+    const isUpdate = cleanedFormData[props.idField] !== undefined && cleanedFormData[props.idField] !== null;
+    
+    // Filter fields based on create vs update operation
+    if (isUpdate) {
+      // For updates, remove CREATED fields that aren't allowed in update input
+      delete cleanedFormData.CREATED_BY_USER_ID;
+      delete cleanedFormData.CREATED_DATE;
+    } else {
+      // For creates, remove ID and CHANGED fields that aren't allowed in create input
+      delete cleanedFormData[props.idField];
+      delete cleanedFormData.CHANGED_BY_USER_ID;
+      delete cleanedFormData.CHANGED_DATE;
     }
     
-    console.log('Submitting form data:', cleanedFormData);
+    console.log('Submitting form data AFTER filtering:', cleanedFormData);
+    console.log('isUpdate:', isUpdate, 'showEditModal:', showEditModal.value);
     
-    if (showEditModal.value) {
+    if (isUpdate) {
       // For SERVICE_PARAM with mappings, create new instead of update
       if (props.entityName === 'SERVICE_PARAM' && paramMappings.value.get(cleanedFormData.SERVICE_PARAM_ID) > 0) {
-        // Remove ID fields to create new parameter
+        // Remove ID and CHANGED fields to create new parameter
         delete cleanedFormData.SERVICE_PARAM_ID;
+        delete cleanedFormData.CHANGED_BY_USER_ID;
+        delete cleanedFormData.CHANGED_DATE;
         if (!skipDateFields) {
           cleanedFormData.CREATED_DATE = currentDate;
           cleanedFormData.CREATED_BY_USER_ID = 1;
@@ -1186,6 +1210,13 @@ onUnmounted(() => {
   document.removeEventListener('keydown', handleEscapeKey);
   window.removeEventListener('environmentChanged', handleEnvironmentChange);
 });
+
+// Expose methods to parent component
+defineExpose({
+  loadEntities,
+  showCreateModal,
+  confirmBulkDelete
+});
 </script>
 
 <style scoped>
@@ -1402,6 +1433,16 @@ button {
 .mappings-modal .table-container {
   max-height: 400px;
   margin-bottom: 20px;
+}
+
+.fixed-action-buttons {
+  position: sticky;
+  top: 0px;
+  background: var(--bg-color, #fff);
+  z-index: 100;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-color, #dee2e6);
+  margin-bottom: 10px;
 }
 
 

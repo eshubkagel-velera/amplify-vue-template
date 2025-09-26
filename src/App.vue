@@ -3,37 +3,20 @@
     <AuthLogin v-if="!isAuthenticated" @authenticated="handleAuthenticated" />
     <div v-else>
       <div style="height: 125px;"></div>
-      <header>
-      <nav>
-        <button v-if="showMappingManager" @click="closeMappingManager" class="btn-primary" style="margin-left: 10px;">
-          Back to {{ currentView }}
-        </button>
-        <button v-if="showRedirectUrlManager" @click="closeRedirectUrlManager" class="btn-primary" style="margin-left: 10px;">
-          Back to ORIGIN_PRODUCT
-        </button>
-        <button v-if="showStepServicesManager" @click="closeStepServicesManager" class="btn-primary" style="margin-left: 10px;">
-          Back to STEP_TYPE
-        </button>
-        <button v-if="showServiceParamsManager" @click="closeServiceParamsManager" class="btn-primary" style="margin-left: 10px;">
-          Back to SERVICE
-        </button>
-        <button v-if="showServiceStepMappingManager" @click="closeServiceStepMappingManager" class="btn-primary" style="margin-left: 10px;">
-          Back to SERVICE
-        </button>
-      </nav>
-    </header>
+
     
     <main>
       <MappingManagerStandalone v-if="showMappingManager" :productId="selectedProductId" :readonly="isReadonly" />
       <RedirectUrlStandalone v-else-if="showRedirectUrlManager" :productId="selectedProductId" :readonly="isReadonly" />
       <StepServiceMappingStandalone v-else-if="showStepServicesManager" :stepTypeId="selectedStepTypeId" :readonly="isReadonly" />
-      <ServiceParamsStandalone v-else-if="showServiceParamsManager" :serviceId="selectedServiceId" :readonly="isReadonly" />
+      <ServiceParamsStandalone v-else-if="showServiceParamsManager" ref="serviceParamsRef" :serviceId="selectedServiceId" :readonly="isReadonly" @entityCountChanged="handleEntityCountChanged" @selectedCountChanged="handleSelectedCountChanged" />
       <ServiceStepMappingStandalone v-else-if="showServiceStepMappingManager" :serviceId="selectedServiceId" :readonly="isReadonly" />
       <RedirectUrlStandalone v-else-if="currentView === 'REDIRECT_URL'" :readonly="isReadonly" />
       <MappingManagerStandalone v-else-if="currentView === 'SERVICE_PARAM_MAPPING'" :readonly="isReadonly" />
       <ServiceImport v-else-if="currentView === 'import'" :readonly="isReadonly" />
       <EntityManager
         v-else-if="currentView && currentEntityConfig && currentView !== 'REDIRECT_URL' && currentView !== 'SERVICE_PARAM_MAPPING'"
+        ref="entityManagerRef"
         :entityName="currentEntityConfig!.name"
         :fields="currentEntityConfig!.fields"
         :formFields="currentEntityConfig!.formFields"
@@ -47,15 +30,17 @@
         @openStepServices="handleOpenStepServices"
         @openServiceParams="handleOpenServiceParams"
         @openServiceStepMapping="handleOpenServiceStepMapping"
+        @entityCountChanged="handleEntityCountChanged"
+        @selectedCountChanged="handleSelectedCountChanged"
         :readonly="isReadonly"
         :canDelete="canDelete"
       />
       </main>
-      <div style="position: fixed; top: 0; left: 0; right: 0; display: flex; flex-direction: column; background: var(--bg-color, #fff); z-index: 1000; padding: 10px; border-bottom: 1px solid var(--border-color, #dee2e6);">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div style="flex: 1; text-align: center;">
+      <div style="position: fixed; top: 0; left: 0; right: 0; display: flex; flex-direction: column; background: var(--bg-color, #fff); z-index: 1000; padding: 10px; border-bottom: 1px solid var(--border-color, #dee2e6); height: 200px;">
+        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+          <div style="text-align: center; flex: 1; margin-right: 20px;">
             <h1 style="margin: 0; font-size: 2rem;">Hazel Mapping Editor</h1>
-            <h2 style="margin: 30px 0 0 0; font-size: 1.2rem; color: var(--text-color, #666);">{{ currentView === 'import' ? 'Import Services' : currentView + ' Manager' }}</h2>
+            <h2 style="margin: 5px 0 0 0; font-size: 1.2rem; color: var(--text-color, #666);">{{ currentView === 'import' ? 'Import Services' : currentView + ' Manager' }}</h2>
           </div>
           <div style="display: flex; gap: 10px; flex-direction: column; align-items: flex-end;">
             <div style="display: flex; gap: 10px;">
@@ -70,15 +55,42 @@
                 <span class="user-info">{{ user?.email }} ({{ filteredUserGroups.join(', ') }})</span>
               </div>
               <EnvironmentSelector />
-              <div class="screen-selector">
-                <label for="screen-select">Screen:</label>
-                <select id="screen-select" v-model="currentView" @change="changeView" :disabled="showMappingManager || showRedirectUrlManager || showStepServicesManager || showServiceParamsManager || showServiceStepMappingManager">
-                  <option v-for="entity in sortedEntities" :key="entity.name" :value="entity.name">
-                    {{ entity.name }}
-                  </option>
-                  <option value="import">Import Services</option>
-                </select>
-              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <template v-if="showServiceParamsManager">
+              <button @click="refreshEntities" class="btn-primary">Refresh</button>
+              <button @click="showCreateModal" class="btn-success" :disabled="isReadonly">{{ isReadonly ? 'View Only Mode' : 'Add New' }}</button>
+              <button @click="deleteSelected" :disabled="selectedCount === 0 || !canDelete" class="btn-danger">Delete Selected ({{ selectedCount }})</button>
+              <span class="record-count">{{ entityCount }} records</span>
+            </template>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <button v-if="showMappingManager" @click="closeMappingManager" class="btn-primary">
+              Back to {{ currentView }}
+            </button>
+            <button v-if="showRedirectUrlManager" @click="closeRedirectUrlManager" class="btn-primary">
+              Back to ORIGIN_PRODUCT
+            </button>
+            <button v-if="showStepServicesManager" @click="closeStepServicesManager" class="btn-primary">
+              Back to STEP_TYPE
+            </button>
+            <button v-if="showServiceParamsManager" @click="closeServiceParamsManager" class="btn-primary">
+              Back to SERVICE
+            </button>
+            <button v-if="showServiceStepMappingManager" @click="closeServiceStepMappingManager" class="btn-primary">
+              Back to SERVICE
+            </button>
+            <div class="screen-selector">
+              <label for="screen-select">Screen:</label>
+              <select id="screen-select" v-model="currentView" @change="changeView" :disabled="showMappingManager || showRedirectUrlManager || showStepServicesManager || showServiceParamsManager || showServiceStepMappingManager">
+                <option v-for="entity in sortedEntities" :key="entity.name" :value="entity.name">
+                  {{ entity.name }}
+                </option>
+                <option value="import">Import Services</option>
+              </select>
             </div>
           </div>
         </div>
@@ -423,6 +435,10 @@ const showServiceStepMappingManager = ref(false);
 const selectedProductId = ref(null);
 const selectedStepTypeId = ref(null);
 const selectedServiceId = ref(null);
+const entityManagerRef = ref(null);
+const serviceParamsRef = ref(null);
+const entityCount = ref(0);
+const selectedCount = ref(0);
 
 const entities = [
   {
@@ -570,6 +586,7 @@ const sortedEntities = computed(() => {
 
 const changeView = () => {
   console.log(`Changed to view: ${currentView.value}`);
+  window.scrollTo(0, 0);
 };
 
 const closeMappingManager = () => {
@@ -620,6 +637,48 @@ const handleOpenServiceParams = (data) => {
 const handleOpenServiceStepMapping = (data) => {
   selectedServiceId.value = data.serviceId;
   showServiceStepMappingManager.value = true;
+};
+
+const handleEntityCountChanged = (count) => {
+  entityCount.value = count;
+};
+
+const handleSelectedCountChanged = (count) => {
+  selectedCount.value = count;
+};
+
+const refreshEntities = () => {
+  if (entityManagerRef.value) {
+    entityManagerRef.value.loadEntities();
+  } else if (serviceParamsRef.value) {
+    serviceParamsRef.value.$refs.entityManager?.loadEntities();
+  }
+};
+
+const showCreateModal = () => {
+  if (isReadonly.value || ((currentView.value === 'REDIRECT_URL' || currentView.value === 'SERVICE_PARAM_MAPPING') && !actionButtonsEnabled.value)) return;
+  
+  if (entityManagerRef.value) {
+    entityManagerRef.value.showCreateModal = true;
+  } else if (serviceParamsRef.value) {
+    serviceParamsRef.value.$refs.entityManager.showCreateModal = true;
+  } else if (redirectUrlRef.value) {
+    redirectUrlRef.value.showCreateModal = true;
+  } else if (mappingManagerRef.value) {
+    mappingManagerRef.value.addCustomMapping?.();
+  }
+};
+
+const deleteSelected = () => {
+  if (selectedCount.value === 0 || !canDelete.value || ((currentView.value === 'REDIRECT_URL' || currentView.value === 'SERVICE_PARAM_MAPPING') && !actionButtonsEnabled.value)) return;
+  
+  if (entityManagerRef.value) {
+    entityManagerRef.value.confirmBulkDelete();
+  } else if (serviceParamsRef.value) {
+    serviceParamsRef.value.$refs.entityManager?.confirmBulkDelete();
+  } else if (redirectUrlRef.value) {
+    redirectUrlRef.value.confirmBulkDelete();
+  }
 };
 
 // Watch for environment changes and trigger refresh
