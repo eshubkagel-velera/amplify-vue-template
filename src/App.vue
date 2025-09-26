@@ -14,6 +14,7 @@
       <RedirectUrlStandalone v-else-if="currentView === 'REDIRECT_URL'" :readonly="isReadonly" />
       <MappingManagerStandalone v-else-if="currentView === 'SERVICE_PARAM_MAPPING'" :readonly="isReadonly" />
       <ServiceImport v-else-if="currentView === 'import'" :readonly="isReadonly" />
+      <HomeScreen v-else-if="currentView === 'home'" />
       <EntityManager
         v-else-if="currentView && currentEntityConfig && currentView !== 'REDIRECT_URL' && currentView !== 'SERVICE_PARAM_MAPPING'"
         ref="entityManagerRef"
@@ -40,7 +41,7 @@
         <div style="display: flex; align-items: center; margin-bottom: 10px;">
           <div style="text-align: center; flex: 1; margin-right: 20px;">
             <h1 style="margin: 0; font-size: 2rem;">Hazel Mapping Editor</h1>
-            <h2 style="margin: 5px 0 0 0; font-size: 1.2rem; color: var(--text-color, #666);">{{ currentView === 'import' ? 'Import Services' : currentView + ' Manager' }}</h2>
+            <h2 style="margin: 5px 0 0 0; font-size: 1.2rem; color: var(--text-color, #666);">{{ currentView === 'import' ? 'Import Services' : currentView === 'home' ? 'Home' : currentView + ' Manager' }}</h2>
           </div>
           <div style="display: flex; gap: 10px; flex-direction: column; align-items: flex-end;">
             <div style="display: flex; gap: 10px;">
@@ -86,10 +87,11 @@
             <div class="screen-selector">
               <label for="screen-select">Screen:</label>
               <select id="screen-select" v-model="currentView" @change="changeView" :disabled="showMappingManager || showRedirectUrlManager || showStepServicesManager || showServiceParamsManager || showServiceStepMappingManager">
+                <option value="home">Home</option>
                 <option v-for="entity in sortedEntities" :key="entity.name" :value="entity.name">
                   {{ entity.name }}
                 </option>
-                <option value="import">Import Services</option>
+                <option v-if="canAccessImport" value="import">Import Services</option>
               </select>
             </div>
           </div>
@@ -194,6 +196,7 @@ import ServiceParamsStandalone from './components/ServiceParamsStandalone.vue';
 import StepServiceMappingStandalone from './components/StepServiceMappingStandalone.vue';
 import ServiceStepMappingStandalone from './components/ServiceStepMappingStandalone.vue';
 import ThemeToggle from './components/ThemeToggle.vue';
+import HomeScreen from './components/HomeScreen.vue';
 
 import { getClient, getUserPoolClient } from './client.js';
 import * as queries from './graphql/queries';
@@ -202,6 +205,19 @@ import { fetchAllPages } from './utils/pagination.js';
 
 // Use auth composable for permission checking
 const { isAdmin, isDeployment, isDeveloper, isReadonly, canEdit, canDelete, userGroups: filteredUserGroups } = useAuth();
+
+const canAccessImport = computed(() => {
+  const env = localStorage.getItem('selectedEnvironment') || 'dev';
+  
+  // Admin and deployment can access import in all environments
+  if (isAdmin.value || isDeployment.value) return true;
+  
+  // Developer can access import only in dev and test
+  if (isDeveloper.value && (env === 'dev' || env === 'test')) return true;
+  
+  // Readonly cannot access import
+  return false;
+});
 
 // Initialize client lazily to ensure Amplify is configured first
 let client: any = null;
@@ -702,7 +718,7 @@ const currentEntityConfig = computed(() => {
 });
 
 onMounted(async () => {
-  currentView.value = 'import';
+  currentView.value = 'home';
   await checkAuthState();
   if (isAuthenticated.value) {
     await loadUserInfo();
