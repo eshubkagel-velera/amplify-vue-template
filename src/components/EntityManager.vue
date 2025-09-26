@@ -68,32 +68,34 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="entity in filteredEntities" :key="getEntityId(entity)">
+            <tr v-for="(entity, index) in displayEntities" :key="entity.__isBlank ? `blank-${index}` : getEntityId(entity)" :class="getRowClass(entity)">
               <td class="text-center">
                 <input 
+                  v-if="!entity.__isBlank"
                   type="checkbox" 
                   :value="getEntityId(entity)" 
                   v-model="selectedEntities"
                   :aria-label="`Select ${entityName} record ${getEntityId(entity)}`"
                 />
               </td>
-              <td v-for="field in fields" :key="field">
-                <span class="read-only-text">
+              <td v-for="field in fields" :key="field" :class="getCellClass(entity, field)">
+                <span v-if="!entity.__isBlank" class="read-only-text">
                   {{ field.includes('DATE') ? formatDate(entity[field]) : 
                      (field === 'SERVICE_ID' && props.entityName === 'SERVICE_PARAM' && entity.SERVICE_DISPLAY) ? 
                      entity.SERVICE_DISPLAY : entity[field] }}
                 </span>
+                <span v-else class="blank-cell">—</span>
               </td>
               <td>
-                <button @click="editEntity(entity)" :aria-label="`Edit ${entityName} ${getEntityId(entity)}`">
+                <button v-if="!entity.__isBlank" @click="editEntity(entity)" :aria-label="`Edit ${entityName} ${getEntityId(entity)}`" class="btn-primary">
                   {{ props.readonly ? 'View' : (props.entityName === 'SERVICE_PARAM' && paramMappings.get(getEntityId(entity)) > 0) ? 'Copy & Edit' : 'Edit' }}
                 </button>
-                <button v-if="props.entityName === 'SERVICE_PARAM' && paramMappings.get(getEntityId(entity)) > 0" @click="showParameterMappings(entity)" class="btn-info" style="margin-left: 5px;">Mappings ({{ paramMappings.get(getEntityId(entity)) }})</button>
-                <button v-if="props.entityName === 'ORIGIN_PRODUCT'" @click="openMapping(entity)" class="btn-success" style="margin-left: 5px;">Mapping</button>
-                <button v-if="props.entityName === 'ORIGIN_PRODUCT'" @click="openRedirectUrls(entity)" class="btn-info" style="margin-left: 5px;">Redirect URLs</button>
-                <button v-if="props.entityName === 'STEP_TYPE'" @click="openStepServices(entity)" class="btn-info" style="margin-left: 5px;">Edit Services</button>
-                <button v-if="props.entityName === 'SERVICE'" @click="openServiceParams(entity)" class="btn-info" style="margin-left: 5px;">Parameters</button>
-                <button v-if="props.entityName === 'SERVICE'" @click="openServiceStepMapping(entity)" class="btn-info" style="margin-left: 5px;">Step Mappings</button>
+                <button v-if="!entity.__isBlank && !props.hideRowActions && props.entityName === 'SERVICE_PARAM' && paramMappings.get(getEntityId(entity)) > 0" @click="showParameterMappings(entity)" class="btn-primary" style="margin-left: 5px;">Mappings ({{ paramMappings.get(getEntityId(entity)) }})</button>
+                <button v-if="!entity.__isBlank && !props.hideRowActions && props.entityName === 'ORIGIN_PRODUCT'" @click="openMapping(entity)" class="btn-primary" style="margin-left: 5px;">Mapping</button>
+                <button v-if="!entity.__isBlank && !props.hideRowActions && props.entityName === 'ORIGIN_PRODUCT'" @click="openRedirectUrls(entity)" class="btn-primary" style="margin-left: 5px;">Redirect URLs</button>
+                <button v-if="!entity.__isBlank && !props.hideRowActions && props.entityName === 'STEP_TYPE'" @click="openStepServices(entity)" class="btn-primary" style="margin-left: 5px;">Edit Services</button>
+                <button v-if="!entity.__isBlank && !props.hideRowActions && props.entityName === 'SERVICE'" @click="openServiceParams(entity)" class="btn-primary" style="margin-left: 5px;">Parameters</button>
+                <button v-if="!entity.__isBlank && !props.hideRowActions && props.entityName === 'SERVICE'" @click="openServiceStepMapping(entity)" class="btn-primary" style="margin-left: 5px;">Step Mappings</button>
               </td>
             </tr>
           </tbody>
@@ -148,8 +150,8 @@
           </div>
 
           <div class="form-actions">
-            <button type="submit">Create</button>
-            <button type="button" @click="cancelForm">Cancel</button>
+            <button type="submit" class="btn-success">Create</button>
+            <button type="button" @click="cancelForm" class="btn-primary">Cancel</button>
           </div>
         </form>
       </div>
@@ -218,8 +220,8 @@
             />
           </div>
           <div class="form-actions">
-            <button type="submit" :disabled="props.readonly">{{ props.readonly ? 'View Only' : (props.entityName === 'SERVICE_PARAM' && paramMappings.get(formData.SERVICE_PARAM_ID) > 0) ? 'Create Copy' : 'Update' }}</button>
-            <button type="button" @click="cancelForm">Cancel</button>
+            <button type="submit" :disabled="props.readonly" class="btn-success">{{ props.readonly ? 'View Only' : (props.entityName === 'SERVICE_PARAM' && paramMappings.get(formData.SERVICE_PARAM_ID) > 0) ? 'Create Copy' : 'Update' }}</button>
+            <button type="button" @click="cancelForm" class="btn-primary">Cancel</button>
           </div>
         </form>
       </div>
@@ -232,8 +234,8 @@
         <p v-if="!isDeleting">Are you sure you want to delete {{ selectedEntities.length }} record(s)?</p>
         <p v-if="isDeleting">Now deleting {{ deleteProgress.current }} of {{ deleteProgress.total }} records</p>
         <div class="form-actions">
-          <button @click="deleteBulkEntities" class="delete-btn" :disabled="isDeleting">{{ isDeleting ? 'Deleting...' : 'Yes, Delete' }}</button>
-          <button @click="showDeleteModal = false" :disabled="isDeleting">Cancel</button>
+          <button @click="deleteBulkEntities" class="btn-danger" :disabled="isDeleting">{{ isDeleting ? 'Deleting...' : 'Yes, Delete' }}</button>
+          <button @click="showDeleteModal = false" :disabled="isDeleting" class="btn-primary">Cancel</button>
         </div>
       </div>
     </div>
@@ -366,6 +368,38 @@ const props = defineProps({
   hideActionButtons: {
     type: Boolean,
     default: false
+  },
+  hideRowActions: {
+    type: Boolean,
+    default: false
+  },
+  fieldDifferences: {
+    type: Map,
+    default: () => new Map()
+  },
+  comparisonMode: {
+    type: String,
+    default: null
+  },
+  matchedPairs: {
+    type: Array,
+    default: () => []
+  },
+  unmatchedRecords: {
+    type: Array,
+    default: () => []
+  },
+  primaryData: {
+    type: Array,
+    default: () => []
+  },
+  syncFilters: {
+    type: Object,
+    default: () => ({})
+  },
+  syncSort: {
+    type: Object,
+    default: () => ({ field: '', direction: 'asc' })
   }
 });
 
@@ -499,7 +533,7 @@ const editEntity = (entity) => {
   showEditModal.value = true;
 };
 
-const emit = defineEmits(['openMapping', 'openRedirectUrls', 'openStepServices', 'openServiceParams', 'openServiceStepMapping', 'entityCountChanged', 'selectedCountChanged']);
+const emit = defineEmits(['openMapping', 'openRedirectUrls', 'openStepServices', 'openServiceParams', 'openServiceStepMapping', 'entityCountChanged', 'selectedCountChanged', 'filterChanged', 'sortChanged']);
 
 const openMapping = (entity) => {
   emit('openMapping', { productId: entity.ORIGIN_PRODUCT_ID });
@@ -773,6 +807,11 @@ const applyFilters = () => {
   }
   
   filteredEntities.value = filtered;
+  
+  // Emit changes for synchronization (only from primary table)
+  if (props.comparisonMode === 'primary') {
+    emit('filterChanged', { type: 'filter', filters: filters.value });
+  }
 };
 
 const clearFilters = () => {
@@ -788,6 +827,11 @@ const sortBy = (field) => {
     sortDirection.value = 'asc';
   }
   applyFilters();
+  
+  // Emit sort changes for synchronization (only from primary table)
+  if (props.comparisonMode === 'primary') {
+    emit('sortChanged', { type: 'sort', field: sortField.value, direction: sortDirection.value });
+  }
 };
 
 const startResize = (event, field) => {
@@ -1187,6 +1231,22 @@ const handleEnvironmentChange = async () => {
 
 window.addEventListener('environmentChanged', handleEnvironmentChange);
 
+// Watch for sync changes from primary table
+watch(() => props.syncFilters, (newFilters) => {
+  if (props.comparisonMode === 'compare' && newFilters) {
+    filters.value = { ...newFilters };
+    applyFilters();
+  }
+}, { deep: true });
+
+watch(() => props.syncSort, (newSort) => {
+  if (props.comparisonMode === 'compare' && newSort.field) {
+    sortField.value = newSort.field;
+    sortDirection.value = newSort.direction;
+    applyFilters();
+  }
+}, { deep: true });
+
 onMounted(async () => {
   if (props.entityName === 'SERVICE_PARAM') {
     await loadServiceOptionsLocal();
@@ -1210,6 +1270,101 @@ onUnmounted(() => {
   document.removeEventListener('keydown', handleEscapeKey);
   window.removeEventListener('environmentChanged', handleEnvironmentChange);
 });
+
+const displayEntities = computed(() => {
+  if (!props.comparisonMode) {
+    return filteredEntities.value;
+  }
+  
+  if (props.comparisonMode === 'primary') {
+    // Primary table uses normal filtered entities
+    return filteredEntities.value;
+  } else {
+    // Compare table reorders filtered entities to match primary
+    const filtered = filteredEntities.value;
+    const ordered = [];
+    
+    // Apply same filtering to primary data to get the filtered primary order
+    const filteredPrimary = props.primaryData.filter(entity => {
+      return props.fields.every(field => {
+        const filterValue = filters.value[field];
+        if (!filterValue) return true;
+        const entityValue = String(entity[field] || '').toLowerCase();
+        return entityValue.includes(filterValue.toLowerCase());
+      });
+    });
+    
+    // Apply same sorting to filtered primary data
+    if (sortField.value) {
+      filteredPrimary.sort((a, b) => {
+        const aVal = String(a[sortField.value] || '').toLowerCase();
+        const bVal = String(b[sortField.value] || '').toLowerCase();
+        const comparison = aVal.localeCompare(bVal);
+        return sortDirection.value === 'asc' ? comparison : -comparison;
+      });
+    }
+    
+    // Reorder compare entities to match filtered/sorted primary order
+    filteredPrimary.forEach(primaryRecord => {
+      const primaryId = primaryRecord[props.idField];
+      const matchInfo = props.fieldDifferences.get(primaryId);
+      
+      if (matchInfo && filtered.includes(matchInfo.compareRecord)) {
+        ordered.push(matchInfo.compareRecord);
+      } else {
+        ordered.push({ __isBlank: true });
+      }
+    });
+    
+    // Add any remaining filtered compare records that weren't matched
+    filtered.forEach(compareRecord => {
+      if (!ordered.includes(compareRecord)) {
+        ordered.push(compareRecord);
+      }
+    });
+    
+    return ordered;
+  }
+});
+
+const getRowClass = (entity) => {
+  if (!props.comparisonMode || entity.__isBlank) return '';
+  
+  const entityId = getEntityId(entity);
+  
+  // Check if this entity is part of a matched pair
+  const isMatched = props.matchedPairs.some(pair => {
+    if (props.comparisonMode === 'primary') {
+      return getEntityId(pair.primary) === entityId;
+    } else {
+      return getEntityId(pair.compare) === entityId;
+    }
+  });
+  
+  return isMatched ? '' : 'row-unmatched';
+};
+
+const getCellClass = (entity, field) => {
+  if (!props.fieldDifferences || !props.comparisonMode) return '';
+  
+  const entityId = getEntityId(entity);
+  const diffInfo = props.fieldDifferences.get(entityId);
+  
+  if (diffInfo && diffInfo.differentFields.includes(field)) {
+    return 'field-different';
+  }
+  
+  // Also check if this entity is the compare match for a primary record
+  if (props.comparisonMode === 'compare') {
+    for (const [primaryId, info] of props.fieldDifferences.entries()) {
+      if (info.compareId === entityId && info.differentFields.includes(field)) {
+        return 'field-different';
+      }
+    }
+  }
+  
+  return '';
+};
 
 // Expose methods to parent component
 defineExpose({
@@ -1251,6 +1406,10 @@ defineExpose({
   text-align: left;
   background-color: var(--bg-color);
   color: var(--text-color);
+  height: 45px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .entity-table th {
@@ -1353,7 +1512,7 @@ button {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding-top: 200px;
+  padding-top: 300px;
   z-index: 1000;
 }
 
@@ -1420,8 +1579,9 @@ button {
   display: block;
   width: 100%;
   padding: 4px;
-  word-wrap: break-word;
-  white-space: normal;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   line-height: 1.4;
 }
 
@@ -1443,6 +1603,28 @@ button {
   padding: 10px 0;
   border-bottom: 1px solid var(--border-color, #dee2e6);
   margin-bottom: 10px;
+}
+
+.field-different {
+  background-color: var(--diff-bg, rgba(255, 193, 7, 0.2)) !important;
+  border-left: 3px solid var(--diff-border, #ffc107) !important;
+  color: var(--text-color) !important;
+}
+
+.row-unmatched {
+  background-color: var(--unmatched-bg, rgba(220, 53, 69, 0.1)) !important;
+}
+
+.row-unmatched td {
+  border-left: 3px solid var(--unmatched-border, #dc3545) !important;
+}
+
+.blank-cell {
+  color: var(--text-muted, #6c757d);
+  font-style: italic;
+  text-align: center;
+  display: block;
+  width: 100%;
 }
 
 
