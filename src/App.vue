@@ -2,7 +2,7 @@
   <div id="app">
     <AuthLogin v-if="!isAuthenticated" @authenticated="handleAuthenticated" />
     <div v-else>
-      <div style="height: 125px;"></div>
+      <div style="height: 250px;"></div>
 
     
     <main>
@@ -15,6 +15,14 @@
       <MappingManagerStandalone v-else-if="currentView === 'SERVICE_PARAM_MAPPING'" :readonly="isReadonly" />
       <ServiceImport v-else-if="currentView === 'import'" :readonly="isReadonly" />
       <HomeScreen v-else-if="currentView === 'home'" />
+      <EnvironmentComparison 
+        v-else-if="currentView === 'compare'"
+        :primaryEnvironment="currentEnvironment"
+        :selectedEntity="previousView || 'SERVICE'"
+        :entityConfig="getReactiveEntityConfig(previousView || 'SERVICE')"
+        :compareEnvironment="compareEnvironment"
+
+      />
       <EntityManager
         v-else-if="currentView && currentEntityConfig && currentView !== 'REDIRECT_URL' && currentView !== 'SERVICE_PARAM_MAPPING'"
         ref="entityManagerRef"
@@ -37,11 +45,11 @@
         :canDelete="canDelete"
       />
       </main>
-      <div style="position: fixed; top: 0; left: 0; right: 0; display: flex; flex-direction: column; background: var(--bg-color, #fff); z-index: 1000; padding: 10px; border-bottom: 1px solid var(--border-color, #dee2e6); height: 200px;">
+      <div style="position: fixed; top: 0; left: 0; right: 0; display: flex; flex-direction: column; background: var(--bg-color, #fff); z-index: 1000; padding: 10px; border-bottom: 1px solid var(--border-color, #dee2e6); height: 250px;">
         <div style="display: flex; align-items: center; margin-bottom: 10px;">
           <div style="text-align: center; flex: 1; margin-right: 20px;">
             <h1 style="margin: 0; font-size: 2rem;">Hazel Mapping Editor</h1>
-            <h2 style="margin: 5px 0 0 0; font-size: 1.2rem; color: var(--text-color, #666);">{{ currentView === 'import' ? 'Import Services' : currentView === 'home' ? 'Home' : currentView + ' Manager' }}</h2>
+            <h2 style="margin: 5px 0 0 0; font-size: 1.2rem; color: var(--text-color, #666);">{{ currentView === 'import' ? 'Import Services' : currentView === 'home' ? 'Home' : currentView === 'compare' ? `Environment Comparison (${previousView || 'Unknown'})` : currentView + ' Manager' }}</h2>
           </div>
           <div style="display: flex; gap: 10px; flex-direction: column; align-items: flex-end;">
             <div style="display: flex; gap: 10px;">
@@ -56,6 +64,45 @@
                 <span class="user-info">{{ user?.email }} ({{ filteredUserGroups.join(', ') }})</span>
               </div>
               <EnvironmentSelector />
+              <div class="screen-selector">
+                <label for="screen-select">Screen:</label>
+                <select id="screen-select" :value="currentView === 'compare' ? previousView : currentView" @change="changeView" :disabled="showMappingManager || showRedirectUrlManager || showStepServicesManager || showServiceParamsManager || showServiceStepMappingManager || currentView === 'compare'">
+                  <option value="home">Home</option>
+                  <option v-for="entity in sortedEntities" :key="entity.name" :value="entity.name">
+                    {{ entity.name }}
+                  </option>
+                  <option v-if="canAccessImport" value="import">Import Services</option>
+                </select>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <button v-if="currentView === 'compare'" @click="closeComparisonView" class="btn-primary">
+                  Back to {{ previousView }}
+                </button>
+                <button v-if="showMappingManager" @click="closeMappingManager" class="btn-primary">
+                  Back to {{ currentView }}
+                </button>
+                <button v-if="showRedirectUrlManager" @click="closeRedirectUrlManager" class="btn-primary">
+                  Back to ORIGIN_PRODUCT
+                </button>
+                <button v-if="showStepServicesManager" @click="closeStepServicesManager" class="btn-primary">
+                  Back to STEP_TYPE
+                </button>
+                <button v-if="showServiceParamsManager" @click="closeServiceParamsManager" class="btn-primary">
+                  Back to SERVICE
+                </button>
+                <button v-if="showServiceStepMappingManager" @click="closeServiceStepMappingManager" class="btn-primary">
+                  Back to SERVICE
+                </button>
+                <div class="screen-selector">
+                  <label for="compare-select">Compare Environment:</label>
+                  <select id="compare-select" v-model="compareEnvironment" @change="handleCompareChange">
+                    <option value="">None</option>
+                    <option v-for="env in getAvailableEnvironments()" :key="env" :value="env">
+                      {{ env.toUpperCase() }} - {{ getDataSourceName(env) }}{{ getReadonlyStatus(env) }}
+                    </option>
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -68,32 +115,7 @@
               <span class="record-count">{{ entityCount }} records</span>
             </template>
           </div>
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <button v-if="showMappingManager" @click="closeMappingManager" class="btn-primary">
-              Back to {{ currentView }}
-            </button>
-            <button v-if="showRedirectUrlManager" @click="closeRedirectUrlManager" class="btn-primary">
-              Back to ORIGIN_PRODUCT
-            </button>
-            <button v-if="showStepServicesManager" @click="closeStepServicesManager" class="btn-primary">
-              Back to STEP_TYPE
-            </button>
-            <button v-if="showServiceParamsManager" @click="closeServiceParamsManager" class="btn-primary">
-              Back to SERVICE
-            </button>
-            <button v-if="showServiceStepMappingManager" @click="closeServiceStepMappingManager" class="btn-primary">
-              Back to SERVICE
-            </button>
-            <div class="screen-selector">
-              <label for="screen-select">Screen:</label>
-              <select id="screen-select" v-model="currentView" @change="changeView" :disabled="showMappingManager || showRedirectUrlManager || showStepServicesManager || showServiceParamsManager || showServiceStepMappingManager">
-                <option value="home">Home</option>
-                <option v-for="entity in sortedEntities" :key="entity.name" :value="entity.name">
-                  {{ entity.name }}
-                </option>
-                <option v-if="canAccessImport" value="import">Import Services</option>
-              </select>
-            </div>
+          <div style="display: flex; align-items: center; gap: 10px; justify-content: flex-end;">
           </div>
         </div>
       </div>
@@ -197,6 +219,7 @@ import StepServiceMappingStandalone from './components/StepServiceMappingStandal
 import ServiceStepMappingStandalone from './components/ServiceStepMappingStandalone.vue';
 import ThemeToggle from './components/ThemeToggle.vue';
 import HomeScreen from './components/HomeScreen.vue';
+import EnvironmentComparison from './components/EnvironmentComparison.vue';
 
 import { getClient, getUserPoolClient } from './client.js';
 import * as queries from './graphql/queries';
@@ -206,8 +229,48 @@ import { fetchAllPages } from './utils/pagination.js';
 // Use auth composable for permission checking
 const { isAdmin, isDeployment, isDeveloper, isReadonly, canEdit, canDelete, userGroups: filteredUserGroups } = useAuth();
 
+const getDataSourceName = (env) => {
+  const envVarName = `VITE_DB_NAME_${env.toUpperCase()}`;
+  return import.meta.env[envVarName] || env;
+};
+
+const getReadonlyStatus = (env) => {
+  // Explicit readonly role gets readonly on all environments
+  if (isReadonly.value && !isDeveloper.value) return ' (readonly)';
+  
+  // Developer in UAT/LIVE is readonly
+  if (isDeveloper.value && (env === 'uat' || env === 'live')) return ' (readonly)';
+  
+  return '';
+};
+
+const currentEnvironment = ref(localStorage.getItem('selectedEnvironment') || 'dev');
+const compareEnvironment = ref(localStorage.getItem('compareEnvironment') || '');
+
+// Watch for environment changes
+watch(() => localStorage.getItem('selectedEnvironment'), (newEnv) => {
+  currentEnvironment.value = newEnv || 'dev';
+}, { immediate: true });
+
+// Watch for compare environment changes
+watch(() => localStorage.getItem('compareEnvironment'), (newEnv) => {
+  compareEnvironment.value = newEnv || '';
+}, { immediate: true });
+
+// Listen for environment change events
+const handleEnvironmentChange = (event) => {
+  currentEnvironment.value = event.detail.environment;
+  
+  // Check if user has access to current screen in new environment
+  if (currentView.value === 'import' && !canAccessImport.value) {
+    currentView.value = 'home';
+  }
+};
+
+window.addEventListener('environmentChanged', handleEnvironmentChange);
+
 const canAccessImport = computed(() => {
-  const env = localStorage.getItem('selectedEnvironment') || 'dev';
+  const env = currentEnvironment.value;
   
   // Admin and deployment can access import in all environments
   if (isAdmin.value || isDeployment.value) return true;
@@ -443,6 +506,7 @@ const deleteStepType = async (input: any) => {
 };
 
 const currentView = ref('import');
+const previousView = ref('');
 const showMappingManager = ref(false);
 const showRedirectUrlManager = ref(false);
 const showStepServicesManager = ref(false);
@@ -600,9 +664,39 @@ const sortedEntities = computed(() => {
 
 
 
-const changeView = () => {
+const changeView = (event) => {
+  if (currentView.value !== 'compare') {
+    currentView.value = event.target.value;
+  }
   console.log(`Changed to view: ${currentView.value}`);
   window.scrollTo(0, 0);
+};
+
+// Watch currentView to track entity screens
+watch(currentView, (newView, oldView) => {
+  if (oldView && oldView !== 'home' && oldView !== 'import' && oldView !== 'compare') {
+    previousView.value = oldView;
+  }
+});
+
+const getAvailableEnvironments = () => {
+  const allEnvs = ['dev', 'test', 'uat', 'live'];
+  return allEnvs.filter(env => env !== currentEnvironment.value);
+};
+
+const handleCompareChange = () => {
+  // Update localStorage and window global
+  localStorage.setItem('compareEnvironment', compareEnvironment.value);
+  window.compareEnvironment = compareEnvironment.value;
+  
+  console.log('Compare change:', { compareEnv: compareEnvironment.value, currentView: currentView.value, previousView: previousView.value });
+  
+  if (compareEnvironment.value && currentView.value !== 'home' && currentView.value !== 'import' && currentView.value !== 'compare') {
+    previousView.value = currentView.value;
+    currentView.value = 'compare';
+  }
+  
+  console.log('After compare change:', { currentView: currentView.value, previousView: previousView.value });
 };
 
 const closeMappingManager = () => {
@@ -628,6 +722,13 @@ const closeServiceParamsManager = () => {
 const closeServiceStepMappingManager = () => {
   showServiceStepMappingManager.value = false;
   selectedServiceId.value = null;
+};
+
+const closeComparisonView = () => {
+  compareEnvironment.value = '';
+  localStorage.setItem('compareEnvironment', '');
+  window.compareEnvironment = '';
+  currentView.value = previousView.value || 'home';
 };
 
 const handleOpenMapping = (data) => {
@@ -729,6 +830,11 @@ onMounted(async () => {
   events.forEach(event => {
     document.addEventListener(event, resetInactivityTimer, true);
   });
+});
+
+// Debug currentView
+watch(currentView, (newVal) => {
+  console.log('currentView changed to:', newVal);
 });
 </script>
 
@@ -872,19 +978,27 @@ main {
   background: #218838;
 }
 
+.btn-success:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
 .btn-danger {
   background: #dc3545;
   color: white;
   border: none;
-  border-radius: 3px;
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #c82333;
 }
 
 .btn-danger:disabled {
   background: #6c757d;
   cursor: not-allowed;
-}
-
-.btn-danger:hover:not(:disabled) {
-  background: #c82333;
 }
 </style>

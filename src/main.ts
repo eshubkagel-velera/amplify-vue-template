@@ -42,6 +42,7 @@ const environments = {
 
 // Global environment state
 window.currentEnvironment = localStorage.getItem('selectedEnvironment') || 'dev';
+window.compareEnvironment = localStorage.getItem('compareEnvironment') || '';
 window.environments = environments;
 
 // Validate required environment variables

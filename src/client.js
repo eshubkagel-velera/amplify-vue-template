@@ -4,6 +4,11 @@ import * as queries from './graphql/queries';
 
 let client = null;
 
+export const clearClientCache = () => {
+  console.log('🗑️ Clearing client cache');
+  client = null;
+};
+
 export const getClient = () => {
   if (!client) {
     console.log('🔄 Creating Amplify client...');
@@ -19,6 +24,9 @@ export const getClient = () => {
   }
   return client;
 };
+
+// Make clearClientCache available globally
+window.clearClientCache = clearClientCache;
 
 // Helper function to make direct GraphQL API calls with pagination support
 export const callExternalApi = async (environment, query, variables = {}) => {
