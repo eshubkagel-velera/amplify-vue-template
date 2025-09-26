@@ -3,7 +3,7 @@
     <label for="env-select">Environment:</label>
     <select id="env-select" v-model="selectedEnvironment" @change="switchEnvironment">
       <option v-for="(config, key) in environments" :key="key" :value="key">
-        {{ key.toUpperCase() }} - {{ getDataSourceName(key) }}
+        {{ key.toUpperCase() }} - {{ getDataSourceName(key) }}{{ getReadonlyStatus(key) }}
       </option>
     </select>
     <span class="env-indicator" :class="`env-${selectedEnvironment}`">{{ selectedEnvironment.toUpperCase() }}</span>
@@ -16,7 +16,7 @@ import { useAuth } from '../composables/useAuth';
 
 const selectedEnvironment = ref('dev');
 const allEnvironments = ref({});
-const { isAdmin, isDeployment, isDeveloper } = useAuth();
+const { isAdmin, isDeployment, isDeveloper, isReadonly } = useAuth();
 
 const environments = computed(() => {
   const filtered = {};
@@ -49,6 +49,16 @@ onMounted(() => {
 const getDataSourceName = (env) => {
   const envVarName = `VITE_DB_NAME_${env.toUpperCase()}`;
   return import.meta.env[envVarName] || env;
+};
+
+const getReadonlyStatus = (env) => {
+  // Explicit readonly role gets readonly on all environments
+  if (isReadonly.value && !isDeveloper.value) return ' (readonly)';
+  
+  // Developer in UAT/LIVE is readonly
+  if (isDeveloper.value && (env === 'uat' || env === 'live')) return ' (readonly)';
+  
+  return '';
 };
 
 const switchEnvironment = () => {
