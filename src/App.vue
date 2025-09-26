@@ -95,7 +95,7 @@
                 </button>
                 <div class="screen-selector">
                   <label for="compare-select">Compare Environment:</label>
-                  <select id="compare-select" v-model="compareEnvironment" @change="handleCompareChange">
+                  <select id="compare-select" v-model="compareEnvironment" @change="handleCompareChange" :disabled="!canCompare">
                     <option value="">None</option>
                     <option v-for="env in getAvailableEnvironments()" :key="env" :value="env">
                       {{ env.toUpperCase() }} - {{ getDataSourceName(env) }}{{ getReadonlyStatus(env) }}
@@ -280,6 +280,10 @@ const canAccessImport = computed(() => {
   
   // Readonly cannot access import
   return false;
+});
+
+const canCompare = computed(() => {
+  return currentView.value !== 'home' && currentView.value !== 'import' && currentView.value !== 'compare';
 });
 
 // Initialize client lazily to ensure Amplify is configured first
@@ -819,7 +823,12 @@ const currentEntityConfig = computed(() => {
 });
 
 onMounted(async () => {
+  // Reset all dropdowns to defaults on page refresh
   currentView.value = 'home';
+  compareEnvironment.value = '';
+  localStorage.setItem('currentView', 'home');
+  localStorage.setItem('compareEnvironment', '');
+  
   await checkAuthState();
   if (isAuthenticated.value) {
     await loadUserInfo();

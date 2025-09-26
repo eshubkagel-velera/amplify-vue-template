@@ -117,3 +117,26 @@ export const loadComparisonData = async (entityName) => {
   
   return { data: {} };
 };
+
+export const createComparisonRecord = async (environment, entityName, formData) => {
+  console.log(`Creating ${entityName} record in ${environment}`);
+  
+  const client = createComparisonClient(environment);
+  const mutations = await import('../graphql/mutations.js');
+  
+  try {
+    if (entityName === 'ORIGIN_PRODUCT') {
+      const result = await client.graphql({
+        query: mutations.createOriginProduct,
+        variables: { input: formData }
+      });
+      return result;
+    }
+    // Add other entity types as needed
+    
+    throw new Error(`Create mutation not implemented for ${entityName}`);
+  } catch (error) {
+    console.error(`Error creating ${entityName} in ${environment}:`, error);
+    throw error;
+  }
+};
