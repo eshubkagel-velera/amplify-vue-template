@@ -95,7 +95,7 @@
                 </button>
                 <div class="screen-selector">
                   <label for="compare-select">Compare Environment:</label>
-                  <select id="compare-select" v-model="compareEnvironment" @change="handleCompareChange" :disabled="!canCompare">
+                  <select id="compare-select" v-model="compareEnvironment" @change="handleCompareChange" :disabled="!canCompare && currentView !== 'compare'">
                     <option value="">None</option>
                     <option v-for="env in getAvailableEnvironments()" :key="env" :value="env">
                       {{ env.toUpperCase() }} - {{ getDataSourceName(env) }}{{ getReadonlyStatus(env) }}
@@ -120,6 +120,8 @@
         </div>
       </div>
     </div>
+    
+
   </div>
 </template>
 
@@ -220,6 +222,7 @@ import ServiceStepMappingStandalone from './components/ServiceStepMappingStandal
 import ThemeToggle from './components/ThemeToggle.vue';
 import HomeScreen from './components/HomeScreen.vue';
 import EnvironmentComparison from './components/EnvironmentComparison.vue';
+
 
 import { getClient, getUserPoolClient } from './client.js';
 import * as queries from './graphql/queries';
@@ -521,6 +524,7 @@ const selectedStepTypeId = ref(null);
 const selectedServiceId = ref(null);
 const entityManagerRef = ref(null);
 const serviceParamsRef = ref(null);
+
 const entityCount = ref(0);
 const selectedCount = ref(0);
 
@@ -697,6 +701,7 @@ const handleCompareChange = () => {
   
   if (compareEnvironment.value && currentView.value !== 'home' && currentView.value !== 'import' && currentView.value !== 'compare') {
     previousView.value = currentView.value;
+    localStorage.setItem('previousView', previousView.value);
     currentView.value = 'compare';
   }
   
@@ -823,11 +828,21 @@ const currentEntityConfig = computed(() => {
 });
 
 onMounted(async () => {
-  // Reset all dropdowns to defaults on page refresh
-  currentView.value = 'home';
-  compareEnvironment.value = '';
-  localStorage.setItem('currentView', 'home');
-  localStorage.setItem('compareEnvironment', '');
+  // Preserve comparison state or reset to defaults
+  const savedCompareEnv = localStorage.getItem('compareEnvironment');
+  if (savedCompareEnv) {
+    compareEnvironment.value = savedCompareEnv;
+    const savedPreviousView = localStorage.getItem('previousView');
+    if (savedPreviousView) {
+      previousView.value = savedPreviousView;
+      currentView.value = 'compare';
+    }
+  } else {
+    currentView.value = 'home';
+    compareEnvironment.value = '';
+    localStorage.setItem('currentView', 'home');
+    localStorage.setItem('compareEnvironment', '');
+  }
   
   await checkAuthState();
   if (isAuthenticated.value) {

@@ -140,3 +140,41 @@ export const createComparisonRecord = async (environment, entityName, formData) 
     throw error;
   }
 };
+
+export const updateComparisonRecord = async (environment, entityName, updateData) => {
+  console.log(`Updating ${entityName} record in ${environment}`);
+  console.log('Update data:', updateData);
+  
+  const client = createComparisonClient(environment);
+  const mutations = await import('../graphql/mutations.js');
+  
+  try {
+    if (entityName === 'ORIGIN_PRODUCT') {
+      const result = await client.graphql({
+        query: mutations.updateOriginProduct,
+        variables: { input: updateData }
+      });
+      console.log('Update result:', result);
+      
+      // Check for GraphQL errors
+      if (result.errors && result.errors.length > 0) {
+        console.error('GraphQL errors:', result.errors);
+        throw new Error(result.errors.map(e => e.message).join(', '));
+      }
+      
+      return result;
+    } else if (entityName === 'STEP_TYPE') {
+      const result = await client.graphql({
+        query: mutations.updateStepType,
+        variables: { input: updateData }
+      });
+      return result;
+    }
+    // Add other entity types as needed
+    
+    throw new Error(`Update mutation not implemented for ${entityName}`);
+  } catch (error) {
+    console.error(`Error updating ${entityName} in ${environment}:`, error);
+    throw error;
+  }
+};

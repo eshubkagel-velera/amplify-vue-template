@@ -45,6 +45,10 @@
           <input v-model="password" type="password" required />
         </div>
         <div class="form-group">
+          <label>User ID (Optional)</label>
+          <input v-model="userId" type="number" placeholder="Enter your user ID" />
+        </div>
+        <div class="form-group">
           <label>Requested Access</label>
           <select v-model="requestedAccess" required>
             <option value="ReadOnly">ReadOnly</option>
@@ -84,6 +88,7 @@ const emit = defineEmits(['authenticated']);
 const email = ref('');
 const password = ref('');
 const confirmationCode = ref('');
+const userId = ref('');
 const requestedAccess = ref('ReadOnly');
 const loading = ref(false);
 const error = ref('');
@@ -122,14 +127,21 @@ const signUp = async () => {
   }
   
   try {
+    const userAttributes = { 
+      email: email.value,
+      name: `Requested: ${requestedAccess.value}`
+    };
+    
+    // Add user_id to profile attribute if provided
+    if (userId.value) {
+      userAttributes.profile = userId.value;
+    }
+    
     await cognitoSignUp({
       username: email.value,
       password: password.value,
       options: {
-        userAttributes: { 
-          email: email.value,
-          name: `Requested: ${requestedAccess.value}`
-        }
+        userAttributes
       }
     });
     

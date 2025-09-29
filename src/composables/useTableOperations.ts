@@ -1,17 +1,17 @@
 import { ref, computed } from 'vue';
 
-export const useTableOperations = <T>(items: T[], getItemId: (item: T) => any) => {
+export const useTableOperations = <T>(items: any, getItemId: (item: T) => any) => {
   const selectedItems = ref<any[]>([]);
   const sortField = ref('');
   const sortDirection = ref<'asc' | 'desc'>('asc');
   const filters = ref<Record<string, string>>({});
 
   const allSelected = computed(() => 
-    items.length > 0 && selectedItems.value.length === items.length
+    Array.isArray(items.value) && items.value.length > 0 && selectedItems.value.length === items.value.length
   );
 
   const toggleSelectAll = () => {
-    selectedItems.value = allSelected.value ? [] : items.map(getItemId);
+    selectedItems.value = allSelected.value ? [] : (Array.isArray(items.value) ? items.value.map(getItemId) : []);
   };
 
   const sortBy = (field: string) => {
