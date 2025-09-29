@@ -43,6 +43,20 @@
               <th class="w-12">
                 <input type="checkbox" @change="toggleSelectAll" :checked="allSelected" />
               </th>
+              <th class="resizable sortable" data-field="REDIRECT_URL_ID" @click="sortBy('REDIRECT_URL_ID')">
+                Redirect URL ID
+                <span v-if="sortField === 'REDIRECT_URL_ID'" class="sort-indicator">
+                  {{ sortDirection === 'asc' ? '↑' : '↓' }}
+                </span>
+                <div class="resize-handle" @mousedown="startResize($event, 'REDIRECT_URL_ID')"></div>
+              </th>
+              <th class="resizable sortable" data-field="PRODUCT_ID" @click="sortBy('PRODUCT_ID')">
+                Product ID
+                <span v-if="sortField === 'PRODUCT_ID'" class="sort-indicator">
+                  {{ sortDirection === 'asc' ? '↑' : '↓' }}
+                </span>
+                <div class="resize-handle" @mousedown="startResize($event, 'PRODUCT_ID')"></div>
+              </th>
               <th class="resizable sortable" data-field="URL_TYPE_CODE" @click="sortBy('URL_TYPE_CODE')">
                 URL Type Code
                 <span v-if="sortField === 'URL_TYPE_CODE'" class="sort-indicator">
@@ -64,26 +78,17 @@
                 </span>
                 <div class="resize-handle" @mousedown="startResize($event, 'RESPONSE_TEXT')"></div>
               </th>
-              <th class="resizable" data-field="CREATED_DATE">
-                Created Date
-                <div class="resize-handle" @mousedown="startResize($event, 'CREATED_DATE')"></div>
-              </th>
-              <th class="resizable" data-field="CREATED_BY_USER_ID">
-                Created By User ID
-                <div class="resize-handle" @mousedown="startResize($event, 'CREATED_BY_USER_ID')"></div>
-              </th>
-              <th class="resizable" data-field="CHANGED_DATE">
-                Changed Date
-                <div class="resize-handle" @mousedown="startResize($event, 'CHANGED_DATE')"></div>
-              </th>
-              <th class="resizable" data-field="CHANGED_BY_USER_ID">
-                Changed By User ID
-                <div class="resize-handle" @mousedown="startResize($event, 'CHANGED_BY_USER_ID')"></div>
-              </th>
+
               <th>Actions</th>
             </tr>
             <tr class="filter-row">
               <th></th>
+              <th>
+                <input v-model="filters.REDIRECT_URL_ID" @input="applyFilters" placeholder="Filter ID" class="filter-input" />
+              </th>
+              <th>
+                <input v-model="filters.PRODUCT_ID" @input="applyFilters" placeholder="Filter product" class="filter-input" />
+              </th>
               <th>
                 <input v-model="filters.URL_TYPE_CODE" @input="applyFilters" placeholder="Filter type" class="filter-input" />
               </th>
@@ -92,14 +97,6 @@
               </th>
               <th>
                 <input v-model="filters.RESPONSE_TEXT" @input="applyFilters" placeholder="Filter response" class="filter-input" />
-              </th>
-              <th></th>
-              <th>
-                <input v-model="filters.CREATED_BY_USER_ID" @input="applyFilters" placeholder="Filter user" class="filter-input" />
-              </th>
-              <th></th>
-              <th>
-                <input v-model="filters.CHANGED_BY_USER_ID" @input="applyFilters" placeholder="Filter user" class="filter-input" />
               </th>
               <th>
                 <button @click="clearFilters" class="clear-filters-btn">Clear</button>
@@ -111,13 +108,11 @@
               <td class="text-center">
                 <input type="checkbox" :value="url.REDIRECT_URL_ID" v-model="selectedUrls" />
               </td>
+              <td><span class="read-only-text">{{ url.REDIRECT_URL_ID }}</span></td>
+              <td><span class="read-only-text">{{ getProductId(url.ORIGIN_PRODUCT_ID) }}</span></td>
               <td><span class="read-only-text">{{ url.URL_TYPE_CODE === 'E' ? 'Existing Users' : url.URL_TYPE_CODE === 'N' ? 'New Users' : url.URL_TYPE_CODE }}</span></td>
               <td><span class="read-only-text">{{ url.URL }}</span></td>
               <td><span class="read-only-text">{{ url.RESPONSE_TEXT }}</span></td>
-              <td><span class="read-only-text">{{ formatDate(url.CREATED_DATE) }}</span></td>
-              <td><span class="read-only-text">{{ url.CREATED_BY_USER_ID }}</span></td>
-              <td><span class="read-only-text">{{ formatDate(url.CHANGED_DATE) }}</span></td>
-              <td><span class="read-only-text">{{ url.CHANGED_BY_USER_ID }}</span></td>
               <td>
                 <button @click="editUrl(url)">{{ props.readonly ? 'View' : 'Edit' }}</button>
               </td>
@@ -155,7 +150,7 @@
           </div>
           <div class="form-group">
             <label for="CREATED_BY_USER_ID">Created By User ID</label>
-            <input id="CREATED_BY_USER_ID" v-model="formData.CREATED_BY_USER_ID" type="number" required />
+            <input id="CREATED_BY_USER_ID" v-model="formData.CREATED_BY_USER_ID" type="number" required :disabled="userProfileId" />
           </div>
           <div class="form-actions">
             <button type="submit">Create</button>
@@ -236,6 +231,7 @@ import * as mutations from '../graphql/mutations';
 import { useErrorHandler } from '../composables/useErrorHandler';
 import { useTableOperations } from '../composables/useTableOperations';
 import { useAuth } from '../composables/useAuth';
+import { fetchUserAttributes } from 'aws-amplify/auth';
 import type { OriginProduct, RedirectUrl } from '../types';
 
 const props = defineProps({
@@ -268,16 +264,17 @@ const { canEdit, canDelete } = useAuth();
 console.log('Auth permissions:', { canEdit: canEdit.value, canDelete: canDelete.value, readonly: props.readonly });
 const formData = ref<Partial<RedirectUrl>>({});
 const filters = ref({
+  REDIRECT_URL_ID: '',
+  PRODUCT_ID: '',
   URL_TYPE_CODE: '',
   URL: '',
-  RESPONSE_TEXT: '',
-  CREATED_BY_USER_ID: '',
-  CHANGED_BY_USER_ID: ''
+  RESPONSE_TEXT: ''
 });
 const sortField = ref('');
 const sortDirection = ref('asc');
 const isResizing = ref(false);
 const resizeData = ref({ field: '', startX: 0, startWidth: 0 });
+const userProfileId = ref(null);
 
 // Methods
 const formatDate = (dateValue) => {
@@ -441,13 +438,19 @@ const toggleSelectAll = () => {
   allSelected.value = !allSelected.value;
 };
 
+const getProductId = (originProductId) => {
+  const product = products.value.find(p => p.ORIGIN_PRODUCT_ID === originProductId);
+  return product ? product.PRODUCT_ID : '';
+};
+
 const applyFilters = () => {
   let filtered = redirectUrls.value.filter(url => {
-    return (!filters.value.URL_TYPE_CODE || (url.URL_TYPE_CODE === 'E' ? 'Existing Users' : url.URL_TYPE_CODE === 'N' ? 'New Users' : url.URL_TYPE_CODE).toLowerCase().includes(filters.value.URL_TYPE_CODE.toLowerCase())) &&
+    const productId = getProductId(url.ORIGIN_PRODUCT_ID);
+    return (!filters.value.REDIRECT_URL_ID || String(url.REDIRECT_URL_ID || '').includes(filters.value.REDIRECT_URL_ID)) &&
+           (!filters.value.PRODUCT_ID || productId.toLowerCase().includes(filters.value.PRODUCT_ID.toLowerCase())) &&
+           (!filters.value.URL_TYPE_CODE || (url.URL_TYPE_CODE === 'E' ? 'Existing Users' : url.URL_TYPE_CODE === 'N' ? 'New Users' : url.URL_TYPE_CODE).toLowerCase().includes(filters.value.URL_TYPE_CODE.toLowerCase())) &&
            (!filters.value.URL || url.URL.toLowerCase().includes(filters.value.URL.toLowerCase())) &&
-           (!filters.value.RESPONSE_TEXT || (url.RESPONSE_TEXT || '').toLowerCase().includes(filters.value.RESPONSE_TEXT.toLowerCase())) &&
-           (!filters.value.CREATED_BY_USER_ID || String(url.CREATED_BY_USER_ID || '').includes(filters.value.CREATED_BY_USER_ID)) &&
-           (!filters.value.CHANGED_BY_USER_ID || String(url.CHANGED_BY_USER_ID || '').includes(filters.value.CHANGED_BY_USER_ID));
+           (!filters.value.RESPONSE_TEXT || (url.RESPONSE_TEXT || '').toLowerCase().includes(filters.value.RESPONSE_TEXT.toLowerCase()));
   });
   
   if (sortField.value) {
@@ -464,11 +467,11 @@ const applyFilters = () => {
 
 const clearFilters = () => {
   filters.value = {
+    REDIRECT_URL_ID: '',
+    PRODUCT_ID: '',
     URL_TYPE_CODE: '',
     URL: '',
-    RESPONSE_TEXT: '',
-    CREATED_BY_USER_ID: '',
-    CHANGED_BY_USER_ID: ''
+    RESPONSE_TEXT: ''
   };
   applyFilters();
 };
@@ -513,13 +516,28 @@ const stopResize = () => {
 
 const showError = (message: string) => handleError({ message }, 'redirect URL operation');
 
-// Watch for create modal to set current date
+const loadUserProfile = async () => {
+  try {
+    const attributes = await fetchUserAttributes();
+    const profileValue = attributes.profile;
+    console.log('RedirectUrlStandalone loaded user profile:', profileValue);
+    if (profileValue && !isNaN(parseInt(profileValue))) {
+      userProfileId.value = parseInt(profileValue);
+      console.log('RedirectUrlStandalone userProfileId set to:', userProfileId.value);
+    }
+  } catch (error) {
+    console.warn('Could not load user profile:', error);
+  }
+};
+
+// Watch for create modal to set current date and user ID
 watch(showCreateModal, (newVal) => {
   if (newVal) {
     const today = new Date().toISOString().split('T')[0];
     formData.value = {
       ...formData.value,
-      CREATED_DATE: today
+      CREATED_DATE: today,
+      CREATED_BY_USER_ID: userProfileId.value || 1
     };
   }
 });
@@ -541,6 +559,7 @@ const handleEnvironmentChange = () => {
 window.addEventListener('environmentChanged', handleEnvironmentChange);
 
 onMounted(async () => {
+  await loadUserProfile();
   await loadProducts();
   
   // If productId prop is provided, set up product info and load URLs immediately

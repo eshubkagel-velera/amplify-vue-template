@@ -285,6 +285,7 @@ import { fetchAllPages } from '../utils/pagination.js';
 
 import { useErrorHandler } from '../composables/useErrorHandler';
 import { getCurrentDateString } from '../utils/dateUtils';
+import { fetchUserAttributes } from 'aws-amplify/auth';
 import type { OriginProduct, Service, ServiceParam } from '../types';
 
 const props = defineProps({
@@ -344,6 +345,7 @@ const filters = ref({
 });
 const isResizing = ref(false);
 const resizeData = ref({ field: '', startX: 0, startWidth: 0 });
+const userProfileId = ref(null);
 
 // Computed properties
 const filteredStepTypes = computed(() => {
@@ -791,7 +793,7 @@ const createMapping = async () => {
             variables: { input: {
               SERVICE_ID: selectedTargetService.value.SERVICE_ID,
               PARAM_NAME: mapping.TARGET_PARAM_NAME,
-              CREATED_BY_USER_ID: 1,
+              CREATED_BY_USER_ID: userProfileId.value || 1,
               CREATED_DATE: getCurrentDateString()
             }}
           });
@@ -843,7 +845,7 @@ const createMapping = async () => {
               variables: { input: {
                 SERVICE_ID: selectedSourceService.value.SERVICE_ID,
                 PARAM_NAME: mapping.SOURCE_PARAM_NAME,
-                CREATED_BY_USER_ID: 1,
+                CREATED_BY_USER_ID: userProfileId.value || 1,
                 CREATED_DATE: getCurrentDateString()
               }}
             });
@@ -893,7 +895,7 @@ const createMapping = async () => {
           SYSTEM_NBR: mapping.SYSTEM_NBR,
           PRIN_NBR: mapping.PRIN_NBR,
           AGENT_NBR: mapping.AGENT_NBR,
-          CREATED_BY_USER_ID: 1,
+          CREATED_BY_USER_ID: userProfileId.value || 1,
           CREATED_DATE: getCurrentDateString()
         };
         
@@ -918,7 +920,7 @@ const createMapping = async () => {
           SERVICE_PARAM_MAPPING_ID: item.SERVICE_PARAM_MAPPING_ID,
           SOURCE_EXPR: mapping.SOURCE_EXPR,
           TARGET_EXPR: mapping.TARGET_EXPR,
-          CREATED_BY_USER_ID: 1,
+          CREATED_BY_USER_ID: userProfileId.value || 1,
           CREATED_DATE: getCurrentDateString()
         });
       }
@@ -1004,7 +1006,7 @@ const updateMapping = async () => {
         SYSTEM_NBR: mapping.SYSTEM_NBR || 'ALL',
         PRIN_NBR: mapping.PRIN_NBR || 'ALL',
         AGENT_NBR: mapping.AGENT_NBR || 'ALL',
-        CHANGED_BY_USER_ID: 1,
+        CHANGED_BY_USER_ID: userProfileId.value || 1,
         CHANGED_DATE: getCurrentDateString()
       };
       
@@ -1035,7 +1037,7 @@ const updateMapping = async () => {
               SERVICE_EXPR_MAPPING_ID: mapping.SERVICE_EXPR_MAPPING_ID,
               SOURCE_EXPR: mapping.SOURCE_EXPR,
               TARGET_EXPR: mapping.TARGET_EXPR,
-              CHANGED_BY_USER_ID: 1,
+              CHANGED_BY_USER_ID: userProfileId.value || 1,
               CHANGED_DATE: getCurrentDateString()
             }}
           });
@@ -1046,7 +1048,7 @@ const updateMapping = async () => {
               SERVICE_PARAM_MAPPING_ID: mapping.SERVICE_PARAM_MAPPING_ID,
               SOURCE_EXPR: mapping.SOURCE_EXPR,
               TARGET_EXPR: mapping.TARGET_EXPR,
-              CREATED_BY_USER_ID: 1,
+              CREATED_BY_USER_ID: userProfileId.value || 1,
               CREATED_DATE: getCurrentDateString()
             }}
           });
@@ -1070,7 +1072,7 @@ const updateMapping = async () => {
           variables: { input: {
             SERVICE_ID: selectedTargetService.value.SERVICE_ID,
             PARAM_NAME: mapping.TARGET_PARAM_NAME,
-            CREATED_BY_USER_ID: 1,
+            CREATED_BY_USER_ID: userProfileId.value || 1,
             CREATED_DATE: getCurrentDateString()
           }}
         });
@@ -1107,7 +1109,7 @@ const updateMapping = async () => {
             variables: { input: {
               SERVICE_ID: selectedSourceService.value.SERVICE_ID,
               PARAM_NAME: mapping.SOURCE_PARAM_NAME,
-              CREATED_BY_USER_ID: 1,
+              CREATED_BY_USER_ID: userProfileId.value || 1,
               CREATED_DATE: getCurrentDateString()
             }}
           });
@@ -1142,7 +1144,7 @@ const updateMapping = async () => {
         SYSTEM_NBR: mapping.SYSTEM_NBR || 'ALL',
         PRIN_NBR: mapping.PRIN_NBR || 'ALL',
         AGENT_NBR: mapping.AGENT_NBR || 'ALL',
-        CREATED_BY_USER_ID: 1,
+        CREATED_BY_USER_ID: userProfileId.value || 1,
         CREATED_DATE: getCurrentDateString()
       };
       
@@ -1205,7 +1207,7 @@ const updateMapping = async () => {
               SERVICE_PARAM_MAPPING_ID: mappingId,
               SOURCE_EXPR: mapping.SOURCE_EXPR,
               TARGET_EXPR: mapping.TARGET_EXPR,
-              CREATED_BY_USER_ID: 1,
+              CREATED_BY_USER_ID: userProfileId.value || 1,
               CREATED_DATE: getCurrentDateString()
             }}
           });
@@ -1359,6 +1361,20 @@ const sortBy = (field) => {
 
 const showError = (message: string) => handleError({ message }, 'mapping operation');
 
+const loadUserProfile = async () => {
+  try {
+    const attributes = await fetchUserAttributes();
+    const profileValue = attributes.profile;
+    console.log('MappingManagerStandalone loaded user profile:', profileValue);
+    if (profileValue && !isNaN(parseInt(profileValue))) {
+      userProfileId.value = parseInt(profileValue);
+      console.log('MappingManagerStandalone userProfileId set to:', userProfileId.value);
+    }
+  } catch (error) {
+    console.warn('Could not load user profile:', error);
+  }
+};
+
 const hasChanges = (mapping) => {
   if (!mapping.isExisting || !mapping.originalValues) return false;
   
@@ -1403,6 +1419,7 @@ const stopResize = () => {
 };
 
 onMounted(async () => {
+  await loadUserProfile();
   await Promise.all([
     loadProducts(),
     loadResourceNames(),

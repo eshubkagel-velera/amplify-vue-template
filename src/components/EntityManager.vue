@@ -15,6 +15,17 @@
       </select>
     </div>
     
+    <!-- Product Filter for REDIRECT_URL -->
+    <div v-if="entityName === 'REDIRECT_URL' && !hideFilters" class="filter-section">
+      <label for="productFilter">Filter by Product:</label>
+      <select id="productFilter" v-model="selectedProductFilter" @change="filterByProduct">
+        <option value="">-- Select a Product --</option>
+        <option v-for="product in productOptions" :key="product.value" :value="product.value">
+          {{ product.label }}
+        </option>
+      </select>
+    </div>
+    
 
     
     <!-- Action Buttons -->
@@ -345,6 +356,8 @@ import { getCurrentDateString, formatDate } from '../utils/dateUtils';
 import { getEntityConfig } from '../config/entityConfig';
 import { fetchUserAttributes } from 'aws-amplify/auth';
 import type { FormField } from '../types';
+import { generateClient } from 'aws-amplify/api';
+import * as subscriptions from '../graphql/subscriptions';
 
 const props = defineProps({
   entityName: {
@@ -442,6 +455,10 @@ const props = defineProps({
   canAddToOther: {
     type: Boolean,
     default: false
+  },
+  productFilter: {
+    type: String,
+    default: ''
   }
 });
 
@@ -478,6 +495,15 @@ watch(entities, (newVal) => {
   emit('entityCountChanged', newVal.length);
 }, { deep: true });
 
+// Watch field differences to trigger display update
+watch(() => props.fieldDifferences, () => {
+  // Force reactivity update for comparison mode
+  if (props.comparisonMode === 'compare') {
+    // Trigger a re-computation by updating a reactive dependency
+    applyFilters();
+  }
+}, { deep: true });
+
 const allSelected = computed(() => 
   filteredEntities.value.length > 0 && selectedEntities.value.length === filteredEntities.value.length
 );
@@ -489,18 +515,90 @@ const sortField = ref('');
 const sortDirection = ref('asc');
 const selectedServiceFilter = ref('');
 const selectedStepFilter = ref('');
+const selectedProductFilter = ref('');
 const serviceOptions = ref([]);
 const stepTypeOptions = ref([]);
+const productOptions = ref([]);
 const allEntities = ref([]);
 const vendorNames = ref([]);
 const loading = ref(false);
 const userProfileId = ref(null);
+
+// Watch compareDataLength prop changes
+watch(() => props.compareDataLength, (newVal, oldVal) => {
+  console.log('EntityManager: compareDataLength prop changed from', oldVal, 'to', newVal);
+}, { immediate: true });
+
+// Subscription management
+const activeSubscriptions = ref([]);
+const subscriptionClient = generateClient();
+
+const handleSubscriptionUpdate = (action, record) => {
+  console.log(`Subscription ${action}:`, record);
+  
+  if (action === 'create') {
+    entities.value.unshift(record);
+    allEntities.value.unshift(record);
+    applyFilters();
+  } else if (action === 'update') {
+    const index = entities.value.findIndex(item => item[props.idField] === record[props.idField]);
+    if (index !== -1) {
+      entities.value[index] = record;
+    }
+    const allIndex = allEntities.value.findIndex(item => item[props.idField] === record[props.idField]);
+    if (allIndex !== -1) {
+      allEntities.value[allIndex] = record;
+    }
+    applyFilters();
+    // Emit record updated for comparison mode
+    if (props.comparisonMode) {
+      emit('recordUpdated', record);
+    }
+  } else if (action === 'delete') {
+    const index = entities.value.findIndex(item => item[props.idField] === record[props.idField]);
+    if (index !== -1) {
+      entities.value.splice(index, 1);
+    }
+    const allIndex = allEntities.value.findIndex(item => item[props.idField] === record[props.idField]);
+    if (allIndex !== -1) {
+      allEntities.value.splice(allIndex, 1);
+    }
+    applyFilters();
+  }
+};
+
+const startSubscriptions = () => {
+  // Subscriptions disabled for serverless backend
+  console.log(`Subscriptions disabled for serverless backend (${props.entityName})`);
+};
+
+const stopSubscriptions = () => {
+  console.log(`Stopping subscriptions for ${props.entityName}`);
+  activeSubscriptions.value.forEach(subscription => {
+    try {
+      subscription.unsubscribe();
+    } catch (error) {
+      console.error('Error unsubscribing:', error);
+    }
+  });
+  activeSubscriptions.value = [];
+};
+
+
 
 
 
 const loadEntities = async () => {
   // For SERVICE_PARAM, don't load anything until service is selected (unless parentId is provided)
   if (props.entityName === 'SERVICE_PARAM' && !selectedServiceFilter.value && !props.parentId) {
+    allEntities.value = [];
+    entities.value = [];
+    filteredEntities.value = [];
+    return;
+  }
+  
+  // For REDIRECT_URL, don't load anything until product is selected (unless parentId is provided)
+  if (props.entityName === 'REDIRECT_URL' && !selectedProductFilter.value && !props.parentId && !props.comparisonMode) {
     allEntities.value = [];
     entities.value = [];
     filteredEntities.value = [];
@@ -659,7 +757,12 @@ const deleteBulkEntities = async () => {
     selectedEntities.value = [];
     allSelected.value = false;
     isDeleting.value = false;
+    
+    // Reload data and emit for comparison mode
     await loadEntities();
+    if (props.comparisonMode) {
+      emit('recordUpdated', { deleted: true });
+    }
   } catch (error) {
     handleError(error, `deleting ${props.entityName}`);
   } finally {
@@ -761,6 +864,9 @@ const submitForm = async () => {
     if (cleanedFormData['Service Provider']) {
       delete cleanedFormData['Service Provider'];
     }
+    if (cleanedFormData.PRODUCT_ID) {
+      delete cleanedFormData.PRODUCT_ID;
+    }
     
     // Determine if this is create or update based on presence of ID field
     const isUpdate = cleanedFormData[props.idField] !== undefined && cleanedFormData[props.idField] !== null;
@@ -794,6 +900,10 @@ const submitForm = async () => {
         await props.createFunction(cleanedFormData);
         successMessage.value = `New ${props.entityName} created (original has mappings)!`;
         showSuccessModal.value = true;
+        
+        // Reload data for comparison mode
+        await loadEntities();
+        emit('recordUpdated', cleanedFormData);
       } else {
         // Set audit fields for updates
         if (!skipDateFields) {
@@ -806,6 +916,9 @@ const submitForm = async () => {
         await props.updateFunction(cleanedFormData);
         successMessage.value = `${props.entityName} updated successfully!`;
         showSuccessModal.value = true;
+        
+        // Reload data and emit for comparison mode
+        await loadEntities();
         emit('recordUpdated', cleanedFormData);
       }
     } else {
@@ -819,10 +932,12 @@ const submitForm = async () => {
       await props.createFunction(cleanedFormData);
       successMessage.value = `${props.entityName} created successfully!`;
       showSuccessModal.value = true;
+      
+      // Reload data and emit for comparison mode
+      await loadEntities();
       emit('recordUpdated', cleanedFormData);
     }
     cancelForm();
-    await loadEntities();
   } catch (error) {
     console.error(`Error saving ${props.entityName}:`, error);
     console.error('Full error object:', JSON.stringify(error, null, 2));
@@ -1040,6 +1155,36 @@ const filterByService = async () => {
   applyFilters();
 };
 
+const filterByProduct = async () => {
+  if (props.entityName !== 'REDIRECT_URL') return;
+  
+  if (selectedProductFilter.value) {
+    try {
+      const response = await props.loadFunction({ limit: 1000 });
+      const listName = `list${props.entityName}S`;
+      
+      if (response.data && response.data[listName]) {
+        const allItems = response.data[listName].items || [];
+        const filteredItems = allItems.filter(item => 
+          item.PRODUCT_ID === selectedProductFilter.value
+        );
+        
+        allEntities.value = filteredItems;
+        entities.value = filteredItems;
+        filteredEntities.value = filteredItems;
+      }
+    } catch (error) {
+      console.error('Error loading redirect URLs:', error);
+      entities.value = [];
+      filteredEntities.value = [];
+    }
+  } else {
+    loadEntities();
+  }
+  
+  applyFilters();
+};
+
 // Watch for entityName changes and reload data
 watch(() => props.entityName, async () => {
   filters.value = {};
@@ -1066,6 +1211,11 @@ watch(() => props.entityName, async () => {
   // Load vendor names for ORIGIN_PRODUCT entity
   if (props.entityName === 'ORIGIN_PRODUCT') {
     await loadVendorNames();
+  }
+  
+  // Load product options for REDIRECT_URL entity
+  if (props.entityName === 'REDIRECT_URL') {
+    await loadProductOptions();
   }
   
 
@@ -1295,6 +1445,23 @@ const loadVendorNames = async () => {
   }
 };
 
+const loadProductOptions = async () => {
+  try {
+    const { callExternalApi } = await import('../client.js');
+    const environment = localStorage.getItem('selectedEnvironment') || 'dev';
+    const result = await callExternalApi(environment, 'listORIGIN_PRODUCTS');
+    const products = result.data.listORIGIN_PRODUCTS.items || [];
+    
+    productOptions.value = products.map(product => ({
+      value: product.ORIGIN_PRODUCT_ID,
+      label: `${product.PRODUCT_ID}: ${product.VENDOR_NAME} - ${product.PRODUCT_DESC}`
+    }));
+  } catch (error) {
+    console.error('Error loading product options:', error);
+    productOptions.value = [];
+  }
+};
+
 // Listen for environment changes via custom event
 const handleEnvironmentChange = async () => {
   // Reload dropdown options first
@@ -1311,11 +1478,16 @@ const handleEnvironmentChange = async () => {
   if (props.entityName === 'ORIGIN_PRODUCT') {
     await loadVendorNames();
   }
+  if (props.entityName === 'REDIRECT_URL') {
+    await loadProductOptions();
+  }
   
   // Then reload entity data
   if (props.entityName !== 'SERVICE_PARAM' || selectedServiceFilter.value || props.parentId) {
     if (props.entityName !== 'STEP_SERVICE_MAPPING' || selectedStepFilter.value || props.parentId) {
-      loadEntities();
+      if (props.entityName !== 'REDIRECT_URL' || selectedProductFilter.value || props.parentId) {
+        loadEntities();
+      }
     }
   }
 };
@@ -1330,6 +1502,16 @@ watch(() => props.syncFilters, (newFilters) => {
   }
 }, { deep: true });
 
+// Watch for product filter changes from comparison
+watch(() => props.productFilter, (newFilter) => {
+  if (props.entityName === 'REDIRECT_URL' && newFilter !== selectedProductFilter.value) {
+    selectedProductFilter.value = newFilter;
+    filterByProduct();
+  }
+}, { immediate: true });
+
+
+
 watch(() => props.syncSort, (newSort) => {
   if (props.comparisonMode === 'compare' && newSort.field) {
     sortField.value = newSort.field;
@@ -1339,6 +1521,7 @@ watch(() => props.syncSort, (newSort) => {
 }, { deep: true });
 
 onMounted(async () => {
+  console.log('EntityManager mounted with compareDataLength:', props.compareDataLength, 'comparisonMode:', props.comparisonMode);
   await loadUserProfile();
   
   if (props.entityName === 'SERVICE_PARAM') {
@@ -1354,14 +1537,24 @@ onMounted(async () => {
   if (props.entityName === 'ORIGIN_PRODUCT') {
     await loadVendorNames();
   }
+  if (props.entityName === 'REDIRECT_URL') {
+    await loadProductOptions();
+  }
 
   loadEntities();
+  
+  // Subscriptions disabled for serverless backend
+  // startSubscriptions();
+  
   document.addEventListener('keydown', handleEscapeKey);
 });
 
 onUnmounted(() => {
   document.removeEventListener('keydown', handleEscapeKey);
   window.removeEventListener('environmentChanged', handleEnvironmentChange);
+  
+  // Stop subscriptions
+  stopSubscriptions();
 });
 
 const filteredFields = computed(() => {
@@ -1383,20 +1576,36 @@ const filteredFields = computed(() => {
 });
 
 const displayEntities = computed(() => {
+  console.log('=== DISPLAY ENTITIES COMPUTED ===');
+  console.log('comparisonMode:', props.comparisonMode);
+  console.log('entities.value.length:', entities.value.length);
+  console.log('filteredEntities.value.length:', filteredEntities.value.length);
+  
   if (!props.comparisonMode) {
+    console.log('No comparison mode, returning filteredEntities:', filteredEntities.value.length);
     return filteredEntities.value;
   }
   
   if (props.comparisonMode === 'primary') {
-    // Primary table uses normal filtered entities
+    console.log('Primary mode, returning filteredEntities:', filteredEntities.value.length);
+    console.log('Primary filteredEntities IDs:', filteredEntities.value.map(e => e[props.idField]));
     return filteredEntities.value;
   } else {
+    console.log('Compare mode - processing...');
     // Compare table reorders filtered entities to match primary
     const filtered = filteredEntities.value;
+    console.log('Compare filtered entities:', filtered.length);
     const ordered = [];
     
-    // Apply same filtering to primary data to get the filtered primary order
-    const filteredPrimary = props.primaryData.filter(entity => {
+    // Get the filtered primary data from the primary environment
+    console.log('props.primaryData.length:', props.primaryData.length);
+    const primaryFiltered = props.primaryData.filter(entity => {
+      // Apply product filter if it exists
+      if (props.entityName === 'REDIRECT_URL' && selectedProductFilter.value) {
+        if (entity.PRODUCT_ID !== selectedProductFilter.value) return false;
+      }
+      
+      // Apply other filters
       return props.fields.every(field => {
         const filterValue = filters.value[field];
         if (!filterValue) return true;
@@ -1405,9 +1614,12 @@ const displayEntities = computed(() => {
       });
     });
     
+    console.log('Primary filtered after filters:', primaryFiltered.length);
+    console.log('Primary filtered IDs:', primaryFiltered.map(e => e[props.idField]));
+    
     // Apply same sorting to filtered primary data
     if (sortField.value) {
-      filteredPrimary.sort((a, b) => {
+      primaryFiltered.sort((a, b) => {
         const aVal = String(a[sortField.value] || '').toLowerCase();
         const bVal = String(b[sortField.value] || '').toLowerCase();
         const comparison = aVal.localeCompare(bVal);
@@ -1415,25 +1627,34 @@ const displayEntities = computed(() => {
       });
     }
     
-    // Reorder compare entities to match filtered/sorted primary order
-    filteredPrimary.forEach(primaryRecord => {
+    console.log('fieldDifferences size:', props.fieldDifferences.size);
+    
+    // Reorder compare entities to match filtered primary order
+    primaryFiltered.forEach(primaryRecord => {
       const primaryId = primaryRecord[props.idField];
       const matchInfo = props.fieldDifferences.get(primaryId);
+      console.log(`Processing primary record ${primaryId}, matchInfo:`, matchInfo ? 'found' : 'not found');
       
-      if (matchInfo && filtered.includes(matchInfo.compareRecord)) {
-        ordered.push(matchInfo.compareRecord);
+      if (matchInfo && matchInfo.compareRecord) {
+        // Find the actual record in filtered entities that matches
+        const matchedRecord = filtered.find(record => 
+          record[props.idField] === matchInfo.compareRecord[props.idField]
+        );
+        if (matchedRecord) {
+          console.log(`Found matched record for primary ${primaryId}:`, matchedRecord[props.idField]);
+          ordered.push(matchedRecord);
+        } else {
+          console.log(`No matched record found for primary ${primaryId}, adding blank`);
+          ordered.push({ __isBlank: true });
+        }
       } else {
+        console.log(`No match info for primary ${primaryId}, adding blank`);
         ordered.push({ __isBlank: true });
       }
     });
     
-    // Add any remaining filtered compare records that weren't matched
-    filtered.forEach(compareRecord => {
-      if (!ordered.includes(compareRecord)) {
-        ordered.push(compareRecord);
-      }
-    });
-    
+    console.log('Final ordered length:', ordered.length);
+    console.log('=== DISPLAY ENTITIES END ===');
     return ordered;
   }
 });
@@ -1572,7 +1793,9 @@ const getCellClass = (entity, field) => {
 defineExpose({
   loadEntities,
   showCreateModal,
-  confirmBulkDelete
+  confirmBulkDelete,
+  selectedProductFilter,
+  filterByProduct
 });
 </script>
 
@@ -1869,6 +2092,29 @@ button {
   margin: 8px 0;
   padding: 5px;
   font-family: monospace;
+}
+
+.filter-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-color);
+}
+
+.filter-section label {
+  display: inline-block;
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.filter-section select {
+  padding: 8px;
+  min-width: 300px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--input-bg);
+  color: var(--text-color);
 }
 
 

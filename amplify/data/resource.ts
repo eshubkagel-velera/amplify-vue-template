@@ -42,7 +42,8 @@ const schema = a.schema({
       PARTNER_CODE: a.string()
     })
     .authorization((allow) => [
-      allow.publicApiKey()
+      allow.publicApiKey(),
+      allow.publicApiKey().to(['subscribe'])
     ]),
 
   ServiceProvider: a

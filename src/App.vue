@@ -447,11 +447,23 @@ const deleteServiceParamMapping = async (input: any) => {
 };
 
 const listRedirectUrls = async () => {
-  const items = await fetchAllPages(getClientInstance(), queries.listRedirectUrls, {}, 'listREDIRECT_URLS');
+  const [redirectUrls, products] = await Promise.all([
+    fetchAllPages(getClientInstance(), queries.listRedirectUrls, {}, 'listREDIRECT_URLS'),
+    fetchAllPages(getClientInstance(), queries.listOriginProducts, {}, 'listORIGIN_PRODUCTS')
+  ]);
+  
+  const enhancedUrls = redirectUrls.map(url => {
+    const product = products.find(p => p.ORIGIN_PRODUCT_ID === url.ORIGIN_PRODUCT_ID);
+    return {
+      ...url,
+      PRODUCT_ID: product ? product.PRODUCT_ID : ''
+    };
+  });
+  
   return {
     data: {
       listREDIRECT_URLS: {
-        items
+        items: enhancedUrls
       }
     }
   };
@@ -549,7 +561,7 @@ const entities = [
   },
   {
     name: 'REDIRECT_URL',
-    fields: ['REDIRECT_URL_ID', 'ORIGIN_PRODUCT_ID', 'URL_TYPE_CODE', 'URL', 'RESPONSE_TEXT', 'CREATED_BY_USER_ID', 'CREATED_DATE', 'CHANGED_BY_USER_ID', 'CHANGED_DATE'],
+    fields: ['REDIRECT_URL_ID', 'PRODUCT_ID', 'URL_TYPE_CODE', 'URL', 'RESPONSE_TEXT', 'CREATED_BY_USER_ID', 'CREATED_DATE', 'CHANGED_BY_USER_ID', 'CHANGED_DATE'],
     formFields: [
       { name: 'ORIGIN_PRODUCT_ID', type: 'number', required: true, disabled: false },
       { name: 'URL_TYPE_CODE', type: 'text', required: true, disabled: false },

@@ -7,6 +7,22 @@
       </div>
     </div>
 
+    <!-- Product Filter for REDIRECT_URL -->
+    <div v-if="compareEnvironment && selectedEntity === 'REDIRECT_URL'" class="product-filter-section">
+      <div v-if="allPrimaryProducts.length > 0" class="filter-group">
+        <label for="productFilter">Filter by Product:</label>
+        <select id="productFilter" v-model="selectedProductFilter" @change="applyProductFilter">
+          <option value="">-- All Products --</option>
+          <option v-for="product in allPrimaryProducts" :key="product.PRODUCT_ID" :value="product.PRODUCT_ID" :disabled="!productExistsInCompare(product.PRODUCT_ID)">
+            {{ product.PRODUCT_ID }}: {{ product.VENDOR_NAME }} - {{ product.PRODUCT_DESC }}{{ !productExistsInCompare(product.PRODUCT_ID) ? ' (not in ' + compareEnvironment.toUpperCase() + ')' : '' }}
+          </option>
+        </select>
+      </div>
+      <div v-else class="no-common-products">
+        <p>No products found in primary environment.</p>
+      </div>
+    </div>
+
     <div v-if="compareEnvironment" class="comparison-content">
       <div class="environment-columns">
         <div class="environment-column">
@@ -14,6 +30,7 @@
           <div class="entity-container" ref="primaryContainer" @scroll="syncScroll('primary', $event)">
             <EntityManager
               v-if="selectedEntity"
+              ref="primaryEntityManager"
               :key="`primary-${primaryEnvironment}-${selectedEntity}`"
               :entityName="selectedEntity"
               :fields="filteredFields"
@@ -26,12 +43,17 @@
               :readonly="!canEditEnvironment(primaryEnvironment)"
               :hideActionButtons="true"
               :hideRowActions="true"
+              :hideFilters="true"
               :fieldDifferences="fieldDifferences"
               :comparisonMode="'primary'"
               :matchedPairs="matchedPairs"
               :unmatchedRecords="unmatchedPrimary"
               :otherEnvironment="compareEnvironment"
               :canAddToOther="canAddToEnvironment('primary')"
+              :compareDataLength="debugCompareLength"
+              :productFilter="selectedProductFilter"
+              :debugInfo="{ primaryDataLength: primaryData.length, matchedPairsLength: matchedPairs.length, unmatchedPrimaryLength: unmatchedPrimary.length }"
+
               @filterChanged="syncToCompare"
               @sortChanged="syncToCompare"
               @addToOtherEnvironment="handleAddToOther"
@@ -54,11 +76,12 @@
               :idField="entityConfig?.idField || 'id'"
               :loadFunction="getCompareLoadFunction"
               :createFunction="entityConfig?.createFunction"
-              :updateFunction="entityConfig?.updateFunction"
+              :updateFunction="getCompareUpdateFunction"
               :deleteFunction="entityConfig?.deleteFunction"
               :readonly="!canEditEnvironment(compareEnvironment)"
               :hideActionButtons="true"
               :hideRowActions="true"
+              :hideFilters="true"
               :fieldDifferences="fieldDifferences"
               :comparisonMode="'compare'"
               :matchedPairs="matchedPairs"
@@ -66,6 +89,7 @@
               :primaryData="primaryData"
               :syncFilters="syncFilters"
               :syncSort="syncSort"
+              :productFilter="selectedProductFilter"
               :otherEnvironment="primaryEnvironment"
               :canAddToOther="canAddToEnvironment('compare')"
               @addToOtherEnvironment="handleAddToOther"
@@ -136,6 +160,15 @@ const props = defineProps({
 
 const primaryData = ref([]);
 const compareData = ref([]);
+const allPrimaryProducts = ref([]);
+const compareProducts = ref([]);
+const selectedProductFilter = ref('');
+
+// Watch compareData changes
+watch(compareData, (newVal) => {
+  console.log('EnvironmentComparison: compareData changed, length =', newVal.length);
+  console.log('EnvironmentComparison: About to pass compareDataLength =', newVal.length);
+}, { deep: true });
 const differences = ref(new Map());
 
 const getCompareLoadFunction = computed(() => {
@@ -144,6 +177,10 @@ const getCompareLoadFunction = computed(() => {
   return async (params) => {
     try {
       const { loadComparisonData } = await import('../utils/comparisonClient.js');
+      
+      // Set the comparison environment
+      window.compareEnvironment = props.compareEnvironment;
+      localStorage.setItem('compareEnvironment', props.compareEnvironment);
       
       console.log('Loading comparison data for', props.selectedEntity, 'from', props.compareEnvironment);
       
@@ -166,6 +203,20 @@ const getCompareLoadFunction = computed(() => {
   };
 });
 
+const getCompareUpdateFunction = computed(() => {
+  if (!props.compareEnvironment) return props.entityConfig?.updateFunction;
+  
+  return async (updateData) => {
+    try {
+      const { updateComparisonRecord } = await import('../utils/comparisonClient.js');
+      return await updateComparisonRecord(props.compareEnvironment, props.selectedEntity, updateData);
+    } catch (error) {
+      console.error('Comparison update failed:', error);
+      throw error;
+    }
+  };
+});
+
 const fieldDifferences = ref(new Map());
 const matchedPairs = ref([]);
 const unmatchedPrimary = ref([]);
@@ -179,6 +230,10 @@ const filteredFields = computed(() => {
 });
 
 const analyzeDifferences = () => {
+  console.log('=== ANALYZE DIFFERENCES START ===');
+  console.log('Primary data length:', primaryData.value.length);
+  console.log('Compare data length:', compareData.value.length);
+  
   const ignoreFields = ['_ID', 'CREATED_BY_USER_ID', 'CREATED_DATE', 'CHANGED_BY_USER_ID', 'CHANGED_DATE'];
   const diffs = new Map();
   const fieldDiffs = new Map();
@@ -206,6 +261,7 @@ const analyzeDifferences = () => {
   // Find best matches for each primary record
   primaryData.value.forEach(primaryRecord => {
     const primaryId = primaryRecord[props.entityConfig?.idField || 'id'];
+    console.log(`Processing primary record ${primaryId}`);
     let bestMatch = null;
     let bestMatchPercentage = 0;
     
@@ -265,8 +321,10 @@ const analyzeDifferences = () => {
         differentFields: diffInfo.differentFields
       });
       usedCompareIds.add(diffInfo.compareId);
+      console.log(`Added to matched pairs: primary ${primaryId}`);
     } else {
       unmatched1.push(primaryRecord);
+      console.log(`Added to unmatched primary: ${primaryId}`);
     }
   });
   
@@ -275,6 +333,7 @@ const analyzeDifferences = () => {
     const compareId = compareRecord[props.entityConfig?.idField || 'id'];
     if (!usedCompareIds.has(compareId)) {
       unmatched2.push(compareRecord);
+      console.log(`Added to unmatched compare: ${compareId}`);
     }
   });
   
@@ -283,7 +342,72 @@ const analyzeDifferences = () => {
   unmatchedCompare.value = unmatched2;
   differences.value = diffs;
   fieldDifferences.value = fieldDiffs;
-  console.log('Found differences:', differences.value.size, 'records with differences');
+  
+  console.log('=== ANALYZE DIFFERENCES RESULTS ===');
+  console.log('Matched pairs:', pairs.length);
+  console.log('Unmatched primary:', unmatched1.length);
+  console.log('Unmatched compare:', unmatched2.length);
+  console.log('Total differences:', differences.value.size);
+  console.log('=== ANALYZE DIFFERENCES END ===');
+};
+
+const loadCommonProducts = async () => {
+  if (props.selectedEntity !== 'REDIRECT_URL') return;
+  
+  try {
+    // Load products from primary environment
+    const primaryResult = await props.entityConfig.loadFunction ? 
+      await callPrimaryProductsApi() : null;
+    
+    // Load products from compare environment
+    const { loadComparisonData } = await import('../utils/comparisonClient.js');
+    const originalEnv = window.compareEnvironment;
+    window.compareEnvironment = props.compareEnvironment;
+    const compareResult = await loadComparisonData('ORIGIN_PRODUCT');
+    window.compareEnvironment = originalEnv;
+    
+    if (primaryResult?.data) {
+      allPrimaryProducts.value = primaryResult.data.listORIGIN_PRODUCTS?.items || [];
+    }
+    
+    if (compareResult?.data) {
+      compareProducts.value = compareResult.data.listORIGIN_PRODUCTS?.items || [];
+    }
+    
+    console.log('Primary products loaded:', allPrimaryProducts.value.length);
+    console.log('Compare products loaded:', compareProducts.value.length);
+  } catch (error) {
+    console.error('Error loading products:', error);
+    allPrimaryProducts.value = [];
+    compareProducts.value = [];
+  }
+};
+
+const productExistsInCompare = (productId) => {
+  return compareProducts.value.some(product => product.PRODUCT_ID === productId);
+};
+
+const callPrimaryProductsApi = async () => {
+  try {
+    const { callExternalApi } = await import('../client.js');
+    const environment = localStorage.getItem('selectedEnvironment') || 'dev';
+    return await callExternalApi(environment, 'listORIGIN_PRODUCTS');
+  } catch (error) {
+    console.error('Error loading primary products:', error);
+    return null;
+  }
+};
+
+const applyProductFilter = () => {
+  // Set the product filter for both EntityManagers
+  if (primaryEntityManager.value) {
+    primaryEntityManager.value.selectedProductFilter = selectedProductFilter.value;
+    primaryEntityManager.value.filterByProduct();
+  }
+  if (compareEntityManager.value) {
+    compareEntityManager.value.selectedProductFilter = selectedProductFilter.value;
+    compareEntityManager.value.filterByProduct();
+  }
 };
 
 const loadComparisonData = () => {
@@ -295,14 +419,22 @@ const loadComparisonData = () => {
 
 // Watch for primary data changes
 watch(() => props.entityConfig?.loadFunction, async () => {
+  console.log('=== PRIMARY DATA WATCH TRIGGERED ===');
   if (props.entityConfig?.loadFunction) {
     try {
+      console.log('Loading primary data...');
       const result = await props.entityConfig.loadFunction();
+      console.log('Primary load result:', result);
       if (result?.data) {
         const dataKey = Object.keys(result.data)[0];
-        primaryData.value = result.data[dataKey]?.items || [];
+        const items = result.data[dataKey]?.items || [];
+        console.log('Primary data loaded:', items.length, 'items');
+        primaryData.value = items;
         if (compareData.value.length > 0) {
+          console.log('Both primary and compare data available, analyzing differences');
           analyzeDifferences();
+        } else {
+          console.log('Compare data not yet available, skipping analysis');
         }
       }
     } catch (error) {
@@ -311,10 +443,19 @@ watch(() => props.entityConfig?.loadFunction, async () => {
   }
 }, { immediate: true });
 
+// Watch for entity or environment changes to load products
+watch([() => props.selectedEntity, () => props.compareEnvironment], async () => {
+  if (props.selectedEntity === 'REDIRECT_URL' && props.compareEnvironment) {
+    await loadCommonProducts();
+  }
+}, { immediate: true });
+
 const syncFilters = ref({});
 const syncSort = ref({ field: '', direction: 'asc' });
 const primaryContainer = ref(null);
 const compareContainer = ref(null);
+const primaryEntityManager = ref(null);
+const compareEntityManager = ref(null);
 const isScrolling = ref(false);
 
 const syncToCompare = (syncData) => {
@@ -391,9 +532,17 @@ const handleCopyDifferences = async (data) => {
       updateData[field] = entity[field];
     });
     
+    // Remove display fields and audit fields that shouldn't be sent to GraphQL
+    if (updateData.PRODUCT_ID) {
+      delete updateData.PRODUCT_ID;
+    }
+    // Remove CREATED fields from updates
+    delete updateData.CREATED_BY_USER_ID;
+    delete updateData.CREATED_DATE;
+    
     // Add audit fields
     updateData.CHANGED_DATE = new Date().toISOString().split('T')[0];
-    updateData.CHANGED_BY_USER_ID = 1;
+    updateData.CHANGED_BY_USER_ID = userProfileId.value || 1;
     
     console.log('Updating record with differences:', updateData);
     
@@ -403,10 +552,10 @@ const handleCopyDifferences = async (data) => {
     
     console.log(`Successfully copied differences to ${targetEnvironment}`);
     
-    // Refresh the comparison data without leaving the screen
-    setTimeout(() => {
-      window.location.reload();
-    }, 1500);
+    // Force reload of comparison data
+    setTimeout(async () => {
+      await handleRecordUpdated();
+    }, 1000);
     
   } catch (error) {
     console.error('Error copying differences:', error);
@@ -438,11 +587,32 @@ const confirmAddToOther = async () => {
       }
     });
     
-    // Generate a new unique PRODUCT_ID to avoid duplicates
-    if (formData.PRODUCT_ID) {
-      formData.PRODUCT_ID = crypto.randomUUID();
-      console.log('Generated new PRODUCT_ID:', formData.PRODUCT_ID);
+    // For REDIRECT_URL, find matching ORIGIN_PRODUCT_ID in target environment
+    if (props.selectedEntity === 'REDIRECT_URL' && formData.ORIGIN_PRODUCT_ID) {
+      try {
+        const { loadComparisonData } = await import('../utils/comparisonClient.js');
+        const originalEnv = window.compareEnvironment;
+        window.compareEnvironment = targetEnvironment;
+        const targetProducts = await loadComparisonData('ORIGIN_PRODUCT');
+        window.compareEnvironment = originalEnv;
+        
+        // Find product with same PRODUCT_ID in target environment
+        const sourceProduct = primaryData.value.find(p => p.ORIGIN_PRODUCT_ID === formData.ORIGIN_PRODUCT_ID);
+        if (sourceProduct && targetProducts?.data?.listORIGIN_PRODUCTS?.items) {
+          const targetProduct = targetProducts.data.listORIGIN_PRODUCTS.items.find(p => 
+            p.PRODUCT_ID === sourceProduct.PRODUCT_ID
+          );
+          if (targetProduct) {
+            formData.ORIGIN_PRODUCT_ID = targetProduct.ORIGIN_PRODUCT_ID;
+          }
+        }
+      } catch (error) {
+        console.warn('Could not find matching ORIGIN_PRODUCT_ID in target environment:', error);
+      }
     }
+    
+    // Keep the same PRODUCT_ID when copying ORIGIN_PRODUCT to maintain consistency
+    // The PRODUCT_ID should remain the same across environments
     
     // Add current date and user ID for audit fields
     const currentDate = new Date().toISOString().split('T')[0];
@@ -459,16 +629,31 @@ const confirmAddToOther = async () => {
     
     // Use the same approach as the comparison data loading
     const { createComparisonRecord } = await import('../utils/comparisonClient.js');
-    const result = await createComparisonRecord(targetEnvironment, 'ORIGIN_PRODUCT', formData);
+    const result = await createComparisonRecord(targetEnvironment, props.selectedEntity, formData);
     
     console.log('Create result:', result);
+    
+    // Check for errors in the result
+    if (result.errors && result.errors.length > 0) {
+      throw new Error(result.errors.map(e => e.message).join('; '));
+    }
+    
+    if (!result.data) {
+      throw new Error('No data returned from create operation');
+    }
     
     closeAddToOtherModal();
     console.log(`Successfully added record to ${targetEnvironment}`);
     
-    // Refresh the comparison data to show the new record
-    setTimeout(() => {
-      window.location.reload();
+    // Force reload of comparison data
+    setTimeout(async () => {
+      await handleRecordUpdated();
+      // Force EntityManagers to reload based on target environment
+      if (targetEnvironment === props.compareEnvironment && compareEntityManager.value) {
+        await compareEntityManager.value.loadEntities();
+      } else if (targetEnvironment === props.primaryEnvironment && primaryEntityManager.value) {
+        await primaryEntityManager.value.loadEntities();
+      }
     }, 1000);
   } catch (error) {
     console.error('Error adding record to other environment:', error);
@@ -497,19 +682,58 @@ const loadUserProfile = async () => {
   }
 };
 
-const handleRecordUpdated = () => {
-  console.log('Record updated, re-analyzing differences');
-  if (primaryData.value.length > 0 && compareData.value.length > 0) {
+const handleRecordUpdated = async () => {
+  console.log('Record updated, reloading data and re-analyzing differences');
+  
+  // Reload primary data
+  if (props.entityConfig?.loadFunction) {
+    try {
+      const result = await props.entityConfig.loadFunction();
+      if (result?.data) {
+        const dataKey = Object.keys(result.data)[0];
+        primaryData.value = result.data[dataKey]?.items || [];
+      }
+    } catch (error) {
+      console.error('Error reloading primary data:', error);
+    }
+  }
+  
+  // Always reload compare data
+  try {
+    const { loadComparisonData } = await import('../utils/comparisonClient.js');
+    window.compareEnvironment = props.compareEnvironment;
+    const result = await loadComparisonData(props.selectedEntity);
+    
+    if (result?.data) {
+      const dataKey = Object.keys(result.data)[0];
+      compareData.value = result.data[dataKey]?.items || [];
+    }
+  } catch (error) {
+    console.error('Error reloading compare data:', error);
+  }
+  
+  // Re-analyze differences with fresh data
+  if (primaryData.value.length >= 0 && compareData.value.length >= 0) {
     analyzeDifferences();
   }
-};
+}
 
 onMounted(async () => {
   await loadUserProfile();
+  if (props.selectedEntity === 'REDIRECT_URL' && props.compareEnvironment) {
+    await loadCommonProducts();
+  }
   console.log('Environment comparison mounted', {
     primary: props.primaryEnvironment,
-    entity: props.selectedEntity
+    entity: props.selectedEntity,
+    compareDataLength: compareData.value.length
   });
+});
+
+// Debug computed to check compareData reactivity
+const debugCompareLength = computed(() => {
+  console.log('EnvironmentComparison: computed compareData.length =', compareData.value.length);
+  return compareData.value.length;
 });
 </script>
 
@@ -666,5 +890,47 @@ onMounted(async () => {
   border-radius: 4px;
   background: var(--input-bg, #fff);
   color: var(--text-color, #333);
+}
+
+.product-filter-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid var(--border-color, #dee2e6);
+  border-radius: 4px;
+  background: var(--bg-color, #f8f9fa);
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-group label {
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.filter-group select {
+  padding: 8px;
+  min-width: 300px;
+  border: 1px solid var(--border-color, #dee2e6);
+  border-radius: 4px;
+  background: var(--input-bg, #fff);
+  color: var(--text-color, #333);
+}
+
+.no-common-products {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-color, #666);
+}
+
+.no-common-products p {
+  margin: 10px 0;
+}
+
+.no-common-products strong {
+  color: var(--primary-color, #007bff);
 }
 </style>

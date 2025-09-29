@@ -58,6 +58,9 @@ export const loadComparisonData = async (entityName) => {
     return { data: {} };
   }
   
+  // Store the environment for other functions to use
+  window.compareEnvironment = environment;
+  
   const client = createComparisonClient(environment);
   
   console.log('Loading', entityName, 'from', environment);
@@ -90,8 +93,20 @@ export const loadComparisonData = async (entityName) => {
     const items = await fetchAllPages(client, queries.listStepTypes, {}, 'listSTEP_TYPES');
     return { data: { listSTEP_TYPES: { items } } };
   } else if (entityName === 'REDIRECT_URL') {
-    const items = await fetchAllPages(client, queries.listRedirectUrls, {}, 'listREDIRECT_URLS');
-    return { data: { listREDIRECT_URLS: { items } } };
+    const [redirectUrls, products] = await Promise.all([
+      fetchAllPages(client, queries.listRedirectUrls, {}, 'listREDIRECT_URLS'),
+      fetchAllPages(client, queries.listOriginProducts, {}, 'listORIGIN_PRODUCTS')
+    ]);
+    
+    const enhancedUrls = redirectUrls.map(url => {
+      const product = products.find(p => p.ORIGIN_PRODUCT_ID === url.ORIGIN_PRODUCT_ID);
+      return {
+        ...url,
+        PRODUCT_ID: product ? product.PRODUCT_ID : ''
+      };
+    });
+    
+    return { data: { listREDIRECT_URLS: { items: enhancedUrls } } };
   } else if (entityName === 'SERVICE_PARAM_MAPPING') {
     const items = await fetchAllPages(client, queries.listServiceParamMappings, {}, 'listSERVICE_PARAM_MAPPINGS');
     return { data: { listSERVICE_PARAM_MAPPINGS: { items } } };
@@ -131,6 +146,12 @@ export const createComparisonRecord = async (environment, entityName, formData) 
         variables: { input: formData }
       });
       return result;
+    } else if (entityName === 'REDIRECT_URL') {
+      const result = await client.graphql({
+        query: mutations.createRedirectUrl(environment),
+        variables: { input: formData }
+      });
+      return result;
     }
     // Add other entity types as needed
     
@@ -166,6 +187,12 @@ export const updateComparisonRecord = async (environment, entityName, updateData
     } else if (entityName === 'STEP_TYPE') {
       const result = await client.graphql({
         query: mutations.updateStepType,
+        variables: { input: updateData }
+      });
+      return result;
+    } else if (entityName === 'REDIRECT_URL') {
+      const result = await client.graphql({
+        query: mutations.updateRedirectUrl(environment),
         variables: { input: updateData }
       });
       return result;
