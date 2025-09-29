@@ -29,7 +29,7 @@
     
     <!-- Entity List -->
     <div class="entity-list">
-      <LoadingSkeleton v-if="loading" :rows="5" :columns="fields.length + 2" />
+      <LoadingSkeleton v-if="loading" :rows="5" :columns="(props.comparisonMode ? props.fields.length : filteredFields.length) + 2" />
       <div v-else-if="entities.length > 0" class="table-container">
         <table class="entity-table">
           <thead>
@@ -42,18 +42,18 @@
                   :aria-label="`Select all ${entityName} records`"
                 />
               </th>
-              <th v-for="field in fields" :key="field" class="resizable sortable" :data-field="field" @click="sortBy(field)">
+              <th v-for="field in props.comparisonMode ? props.fields : filteredFields" :key="field" class="resizable sortable" :data-field="field" @click="sortBy(field)">
                 {{ field }}
                 <span v-if="sortField === field" class="sort-indicator">
                   {{ sortDirection === 'asc' ? '↑' : '↓' }}
                 </span>
                 <div class="resize-handle" @mousedown="startResize($event, field)"></div>
               </th>
-              <th>Actions</th>
+              <th style="width: auto; min-width: 300px;">Actions</th>
             </tr>
             <tr class="filter-row">
               <th v-if="!comparisonMode"></th>
-              <th v-for="field in fields" :key="`filter-${field}`">
+              <th v-for="field in props.comparisonMode ? props.fields : filteredFields" :key="`filter-${field}`">
                 <input 
                   v-model="filters[field]" 
                   @input="applyFilters"
@@ -78,20 +78,31 @@
                   :aria-label="`Select ${entityName} record ${getEntityId(entity)}`"
                 />
               </td>
-              <td v-for="field in fields" :key="field" :class="getCellClass(entity, field)">
+              <td v-for="field in props.comparisonMode ? props.fields : filteredFields" :key="field" :class="getCellClass(entity, field)">
                 <span v-if="!entity.__isBlank" class="read-only-text">
                   {{ field.includes('DATE') ? formatDate(entity[field]) : 
                      (field === 'SERVICE_ID' && props.entityName === 'SERVICE_PARAM' && entity.SERVICE_DISPLAY) ? 
-                     entity.SERVICE_DISPLAY : entity[field] }}
+                     entity.SERVICE_DISPLAY : 
+                     (field === 'CHANGED_BY_USER_ID' && !entity[field] && entity.CREATED_BY_USER_ID) ? 
+                     entity.CREATED_BY_USER_ID : 
+                     (field === 'CHANGED_DATE' && !entity[field] && entity.CREATED_DATE) ? 
+                     formatDate(entity.CREATED_DATE) : entity[field] }}
                 </span>
                 <span v-else class="blank-cell">—</span>
               </td>
-              <td>
-                <button v-if="!entity.__isBlank" @click="editEntity(entity)" :aria-label="`Edit ${entityName} ${getEntityId(entity)}`" class="btn-primary">
+              <td style="width: auto; min-width: 300px; white-space: normal;">
+                <div class="button-container">
+                <button v-if="!entity.__isBlank && !props.comparisonMode" @click="editEntity(entity)" :aria-label="`Edit ${entityName} ${getEntityId(entity)}`" class="btn-primary">
                   {{ props.readonly ? 'View' : (props.entityName === 'SERVICE_PARAM' && paramMappings.get(getEntityId(entity)) > 0) ? 'Copy & Edit' : 'Edit' }}
+                </button>
+                <button v-if="!entity.__isBlank && props.comparisonMode" @click="editEntity(entity)" class="btn-primary">
+                  Edit
                 </button>
                 <button v-if="!entity.__isBlank && props.comparisonMode && canAddToOtherEnvironment && !isRecordMatched(entity)" @click="addToOtherEnvironment(entity)" class="btn-success" style="margin-left: 5px;">
                   Add to {{ getOtherEnvironmentName() }}
+                </button>
+                <button v-if="!entity.__isBlank && props.comparisonMode && canAddToOtherEnvironment && isRecordMatched(entity) && hasFieldDifferences(entity)" @click="copyDifferencesToOther(entity)" class="btn-warning" style="margin-left: 5px;">
+                  Copy to {{ getOtherEnvironmentName() }}
                 </button>
                 <button v-if="!entity.__isBlank && !props.hideRowActions && props.entityName === 'SERVICE_PARAM' && paramMappings.get(getEntityId(entity)) > 0" @click="showParameterMappings(entity)" class="btn-primary" style="margin-left: 5px;">Mappings ({{ paramMappings.get(getEntityId(entity)) }})</button>
                 <button v-if="!entity.__isBlank && !props.hideRowActions && props.entityName === 'ORIGIN_PRODUCT'" @click="openMapping(entity)" class="btn-primary" style="margin-left: 5px;">Mapping</button>
@@ -99,12 +110,30 @@
                 <button v-if="!entity.__isBlank && !props.hideRowActions && props.entityName === 'STEP_TYPE'" @click="openStepServices(entity)" class="btn-primary" style="margin-left: 5px;">Edit Services</button>
                 <button v-if="!entity.__isBlank && !props.hideRowActions && props.entityName === 'SERVICE'" @click="openServiceParams(entity)" class="btn-primary" style="margin-left: 5px;">Parameters</button>
                 <button v-if="!entity.__isBlank && !props.hideRowActions && props.entityName === 'SERVICE'" @click="openServiceStepMapping(entity)" class="btn-primary" style="margin-left: 5px;">Step Mappings</button>
+                </div>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
       <p v-else-if="!loading">No {{ entityName }} records found.</p>
+    </div>
+    
+    <!-- Copy Confirmation Modal -->
+    <div v-if="showCopyModal" class="modal-overlay">
+      <div class="modal-content">
+        <h3>Copy Differences to {{ copyData?.targetEnvironment?.toUpperCase() }}</h3>
+        <p>The following fields will be updated in the matching record in {{ copyData?.targetEnvironment?.toUpperCase() }}:</p>
+        <div v-if="copyData?.entity" class="differences-preview">
+          <div v-for="field in getDifferentFields(copyData.entity)" :key="field" class="field-update">
+            <strong>{{ field }}:</strong> {{ copyData.entity[field] }}
+          </div>
+        </div>
+        <div class="form-actions">
+          <button @click="confirmCopy" class="btn-warning">Yes, Copy These Changes</button>
+          <button @click="cancelCopy" class="btn-primary">Cancel</button>
+        </div>
+      </div>
     </div>
     
     <!-- Create Modal -->
@@ -148,7 +177,7 @@
               v-model="formData[field.name]" 
               :type="field.name.includes('DATE') ? 'date' : field.type" 
               :required="field.required"
-              :disabled="field.disabled || field.name === 'CREATED_DATE' || field.name === 'CHANGED_DATE'"
+              :disabled="field.disabled || field.name === 'CREATED_DATE' || field.name === 'CHANGED_DATE' || (field.name === 'CREATED_BY_USER_ID' && userProfileId) || (field.name === 'CHANGED_BY_USER_ID' && userProfileId)"
             />
           </div>
 
@@ -201,7 +230,7 @@
               v-model="formData[field.name]" 
               :type="field.name.includes('DATE') ? 'date' : field.type" 
               :required="field.required"
-              :disabled="field.disabled || field.name === 'CREATED_DATE' || field.name === 'CHANGED_DATE'"
+              :disabled="field.disabled || field.name === 'CREATED_DATE' || field.name === 'CHANGED_DATE' || (field.name === 'CREATED_BY_USER_ID' && userProfileId) || (field.name === 'CHANGED_BY_USER_ID' && userProfileId)"
             />
           </div>
           <!-- Show CHANGED fields for entities with modify audit fields -->
@@ -220,6 +249,7 @@
               id="CHANGED_BY_USER_ID" 
               v-model="formData.CHANGED_BY_USER_ID" 
               type="number"
+              :disabled="userProfileId"
             />
           </div>
           <div class="form-actions">
@@ -313,6 +343,7 @@ import { useServiceEnhancement } from '../composables/useServiceEnhancement';
 import { useAuth } from '../composables/useAuth';
 import { getCurrentDateString, formatDate } from '../utils/dateUtils';
 import { getEntityConfig } from '../config/entityConfig';
+import { fetchUserAttributes } from 'aws-amplify/auth';
 import type { FormField } from '../types';
 
 const props = defineProps({
@@ -463,6 +494,7 @@ const stepTypeOptions = ref([]);
 const allEntities = ref([]);
 const vendorNames = ref([]);
 const loading = ref(false);
+const userProfileId = ref(null);
 
 
 
@@ -512,6 +544,9 @@ const loadEntities = async () => {
 };
 
 const editEntity = (entity) => {
+  console.log('editEntity called with entity:', entity);
+  console.log('userProfileId.value:', userProfileId.value);
+  
   if (props.readonly) {
     // For readonly users, just show the modal in view mode
     const formattedEntity = { ...entity };
@@ -520,6 +555,17 @@ const editEntity = (entity) => {
         formattedEntity[key] = formatDate(formattedEntity[key]);
       }
     });
+    
+    // Even in readonly mode, set user profile ID and current date for display
+    if (userProfileId.value && formattedEntity.CHANGED_BY_USER_ID !== undefined) {
+      formattedEntity.CHANGED_BY_USER_ID = userProfileId.value;
+      console.log('Readonly mode: Setting CHANGED_BY_USER_ID to:', userProfileId.value);
+    }
+    if (formattedEntity.CHANGED_DATE !== undefined) {
+      formattedEntity.CHANGED_DATE = getCurrentDateString();
+      console.log('Readonly mode: Setting CHANGED_DATE to:', formattedEntity.CHANGED_DATE);
+    }
+    
     formData.value = formattedEntity;
     showEditModal.value = true;
     return;
@@ -535,16 +581,27 @@ const editEntity = (entity) => {
   
   // Set current date and user ID for modifications
   const entityConfig = getEntityConfig(props.entityName);
+  console.log('Entity config for', props.entityName, ':', entityConfig);
   if (entityConfig.hasChangedFields) {
     formattedEntity.CHANGED_DATE = getCurrentDateString();
-    formattedEntity.CHANGED_BY_USER_ID = 1;
+    formattedEntity.CHANGED_BY_USER_ID = userProfileId.value || 1;
   }
   
+  // Always set CHANGED_BY_USER_ID to current user's profile ID for edits if field exists
+  if (userProfileId.value && formattedEntity.CHANGED_BY_USER_ID !== undefined) {
+    formattedEntity.CHANGED_BY_USER_ID = userProfileId.value;
+    console.log('Setting CHANGED_BY_USER_ID to:', userProfileId.value);
+  } else {
+    console.log('userProfileId:', userProfileId.value, 'CHANGED_BY_USER_ID exists:', formattedEntity.CHANGED_BY_USER_ID !== undefined);
+  }
+  
+  console.log('Final formattedEntity before setting formData:', formattedEntity);
   formData.value = formattedEntity;
+  console.log('formData.value after setting:', formData.value);
   showEditModal.value = true;
 };
 
-const emit = defineEmits(['openMapping', 'openRedirectUrls', 'openStepServices', 'openServiceParams', 'openServiceStepMapping', 'entityCountChanged', 'selectedCountChanged', 'filterChanged', 'sortChanged', 'addToOtherEnvironment']);
+const emit = defineEmits(['openMapping', 'openRedirectUrls', 'openStepServices', 'openServiceParams', 'openServiceStepMapping', 'entityCountChanged', 'selectedCountChanged', 'filterChanged', 'sortChanged', 'addToOtherEnvironment', 'copyDifferencesToOther', 'recordUpdated']);
 
 const openMapping = (entity) => {
   emit('openMapping', { productId: entity.ORIGIN_PRODUCT_ID });
@@ -639,10 +696,10 @@ watch(showCreateModal, (newVal) => {
       formData.value.SERVICE_ID = parseInt(selectedServiceFilter.value);
     }
     
-    // Set CREATED_BY_USER_ID to 1 for entities with audit fields
+    // Set CREATED_BY_USER_ID from user profile for entities with audit fields
     const entityConfig = getEntityConfig(props.entityName);
     if (entityConfig.hasAuditFields) {
-      formData.value.CREATED_BY_USER_ID = 1;
+      formData.value.CREATED_BY_USER_ID = userProfileId.value || 1;
     }
   }
 });
@@ -675,7 +732,7 @@ const submitForm = async () => {
     
     // Ensure CREATED_BY_USER_ID is always an integer
     if (cleanedFormData.CREATED_BY_USER_ID !== undefined) {
-      cleanedFormData.CREATED_BY_USER_ID = parseInt(cleanedFormData.CREATED_BY_USER_ID) || 1;
+      cleanedFormData.CREATED_BY_USER_ID = parseInt(cleanedFormData.CREATED_BY_USER_ID) || (userProfileId.value || 1);
     }
     
     // Ensure PSCU_CLIENT_ID is always an integer for ORIGIN_PRODUCT
@@ -732,7 +789,7 @@ const submitForm = async () => {
         delete cleanedFormData.CHANGED_DATE;
         if (!skipDateFields) {
           cleanedFormData.CREATED_DATE = currentDate;
-          cleanedFormData.CREATED_BY_USER_ID = 1;
+          cleanedFormData.CREATED_BY_USER_ID = userProfileId.value || 1;
         }
         await props.createFunction(cleanedFormData);
         successMessage.value = `New ${props.entityName} created (original has mappings)!`;
@@ -742,19 +799,27 @@ const submitForm = async () => {
         if (!skipDateFields) {
           cleanedFormData.CHANGED_DATE = currentDate;
         }
+        if (!cleanedFormData.CHANGED_BY_USER_ID) {
+          cleanedFormData.CHANGED_BY_USER_ID = userProfileId.value || 1;
+        }
         const client = getClient();
         await props.updateFunction(cleanedFormData);
         successMessage.value = `${props.entityName} updated successfully!`;
         showSuccessModal.value = true;
+        emit('recordUpdated', cleanedFormData);
       }
     } else {
       // Set audit fields for new records
       if (!skipDateFields && !cleanedFormData.CREATED_DATE) {
         cleanedFormData.CREATED_DATE = currentDate;
       }
+      if (!cleanedFormData.CREATED_BY_USER_ID) {
+        cleanedFormData.CREATED_BY_USER_ID = userProfileId.value || 1;
+      }
       await props.createFunction(cleanedFormData);
       successMessage.value = `${props.entityName} created successfully!`;
       showSuccessModal.value = true;
+      emit('recordUpdated', cleanedFormData);
     }
     cancelForm();
     await loadEntities();
@@ -799,7 +864,8 @@ const cancelForm = () => {
 
 const applyFilters = () => {
   let filtered = entities.value.filter(entity => {
-    return props.fields.every(field => {
+    const fieldsToFilter = props.comparisonMode ? props.fields : filteredFields.value;
+    return fieldsToFilter.every(field => {
       const filterValue = filters.value[field];
       if (!filterValue) return true;
       const entityValue = String(entity[field] || '').toLowerCase();
@@ -1195,6 +1261,20 @@ const checkParameterMappings = async () => {
 
 
 
+const loadUserProfile = async () => {
+  try {
+    const attributes = await fetchUserAttributes();
+    const profileValue = attributes.profile;
+    console.log('EntityManager loaded user profile:', profileValue);
+    if (profileValue && !isNaN(parseInt(profileValue))) {
+      userProfileId.value = parseInt(profileValue);
+      console.log('EntityManager userProfileId set to:', userProfileId.value);
+    }
+  } catch (error) {
+    console.warn('Could not load user profile:', error);
+  }
+};
+
 const loadVendorNames = async () => {
   try {
     const response = await props.loadFunction({ limit: 1000 });
@@ -1259,6 +1339,8 @@ watch(() => props.syncSort, (newSort) => {
 }, { deep: true });
 
 onMounted(async () => {
+  await loadUserProfile();
+  
   if (props.entityName === 'SERVICE_PARAM') {
     await loadServiceOptionsLocal();
   }
@@ -1280,6 +1362,24 @@ onMounted(async () => {
 onUnmounted(() => {
   document.removeEventListener('keydown', handleEscapeKey);
   window.removeEventListener('environmentChanged', handleEnvironmentChange);
+});
+
+const filteredFields = computed(() => {
+  // Filter fields to show either CHANGED or CREATED audit fields based on data
+  const baseFields = props.fields.filter(field => 
+    !['CREATED_BY_USER_ID', 'CREATED_DATE', 'CHANGED_BY_USER_ID', 'CHANGED_DATE'].includes(field)
+  );
+  
+  // Check if any entity has CHANGED fields populated
+  const hasChangedData = entities.value.some(entity => 
+    entity.CHANGED_BY_USER_ID || entity.CHANGED_DATE
+  );
+  
+  if (hasChangedData) {
+    return [...baseFields, 'CHANGED_BY_USER_ID', 'CHANGED_DATE'];
+  } else {
+    return [...baseFields, 'CREATED_BY_USER_ID', 'CREATED_DATE'];
+  }
 });
 
 const displayEntities = computed(() => {
@@ -1387,6 +1487,65 @@ const isRecordMatched = (entity) => {
   return false;
 };
 
+const hasFieldDifferences = (entity) => {
+  if (!props.comparisonMode || !props.fieldDifferences) return false;
+  
+  const entityId = getEntityId(entity);
+  
+  if (props.comparisonMode === 'primary') {
+    const diffInfo = props.fieldDifferences.get(entityId);
+    return diffInfo && diffInfo.differentFields.length > 0;
+  } else {
+    // For compare mode, check if this record has differences
+    for (const [primaryId, info] of props.fieldDifferences.entries()) {
+      if (info.compareId === entityId && info.differentFields.length > 0) {
+        return true;
+      }
+    }
+  }
+  
+  return false;
+};
+
+const showCopyModal = ref(false);
+const copyData = ref(null);
+
+const copyDifferencesToOther = (entity) => {
+  copyData.value = { entity, targetEnvironment: props.otherEnvironment };
+  showCopyModal.value = true;
+};
+
+const confirmCopy = () => {
+  emit('copyDifferencesToOther', copyData.value);
+  showCopyModal.value = false;
+  copyData.value = null;
+};
+
+const cancelCopy = () => {
+  showCopyModal.value = false;
+  copyData.value = null;
+};
+
+const getDifferentFields = (entity) => {
+  if (!props.fieldDifferences || !entity) return [];
+  
+  const entityId = getEntityId(entity);
+  
+  if (props.comparisonMode === 'primary') {
+    const diffInfo = props.fieldDifferences.get(entityId);
+    return diffInfo ? diffInfo.differentFields : [];
+  } else {
+    // For compare mode, find the differences
+    for (const [primaryId, info] of props.fieldDifferences.entries()) {
+      if (info.compareId === entityId) {
+        return info.differentFields;
+      }
+    }
+  }
+  
+  return [];
+};
+
 const getCellClass = (entity, field) => {
   if (!props.fieldDifferences || !props.comparisonMode) return '';
   
@@ -1439,7 +1598,19 @@ defineExpose({
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 20px;
-  table-layout: auto;
+  table-layout: fixed;
+}
+
+.button-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: flex-start;
+}
+
+.button-container button {
+  margin: 0;
+  flex-shrink: 0;
 }
 
 .entity-table th,
@@ -1449,10 +1620,12 @@ defineExpose({
   text-align: left;
   background-color: var(--bg-color);
   color: var(--text-color);
-  height: 45px;
+  height: 80px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  width: auto;
+  vertical-align: top;
 }
 
 .entity-table th {
@@ -1668,6 +1841,34 @@ button {
   text-align: center;
   display: block;
   width: 100%;
+}
+
+.btn-warning {
+  background: #ffc107;
+  color: #212529;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.btn-warning:hover {
+  background: #e0a800;
+}
+
+.differences-preview {
+  margin: 15px 0;
+  padding: 15px;
+  background: var(--bg-color, #f8f9fa);
+  border-radius: 4px;
+  border: 1px solid var(--border-color, #dee2e6);
+}
+
+.field-update {
+  margin: 8px 0;
+  padding: 5px;
+  font-family: monospace;
 }
 
 

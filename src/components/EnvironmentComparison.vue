@@ -11,7 +11,7 @@
       <div class="environment-columns">
         <div class="environment-column">
           <h3>{{ primaryEnvironment.toUpperCase() }} (Primary)</h3>
-          <div class="entity-container">
+          <div class="entity-container" ref="primaryContainer" @scroll="syncScroll('primary', $event)">
             <EntityManager
               v-if="selectedEntity"
               :key="`primary-${primaryEnvironment}-${selectedEntity}`"
@@ -23,7 +23,7 @@
               :createFunction="entityConfig?.createFunction"
               :updateFunction="entityConfig?.updateFunction"
               :deleteFunction="entityConfig?.deleteFunction"
-              :readonly="true"
+              :readonly="!canEditEnvironment(primaryEnvironment)"
               :hideActionButtons="true"
               :hideRowActions="true"
               :fieldDifferences="fieldDifferences"
@@ -35,13 +35,15 @@
               @filterChanged="syncToCompare"
               @sortChanged="syncToCompare"
               @addToOtherEnvironment="handleAddToOther"
+              @copyDifferencesToOther="handleCopyDifferences"
+              @recordUpdated="handleRecordUpdated"
             />
           </div>
         </div>
 
         <div class="environment-column">
           <h3>{{ compareEnvironment.toUpperCase() }} (Compare)</h3>
-          <div class="entity-container">
+          <div class="entity-container" ref="compareContainer" @scroll="syncScroll('compare', $event)">
             <EntityManager
               v-if="selectedEntity"
               ref="compareEntityManager"
@@ -54,7 +56,7 @@
               :createFunction="entityConfig?.createFunction"
               :updateFunction="entityConfig?.updateFunction"
               :deleteFunction="entityConfig?.deleteFunction"
-              :readonly="true"
+              :readonly="!canEditEnvironment(compareEnvironment)"
               :hideActionButtons="true"
               :hideRowActions="true"
               :fieldDifferences="fieldDifferences"
@@ -67,6 +69,8 @@
               :otherEnvironment="primaryEnvironment"
               :canAddToOther="canAddToEnvironment('compare')"
               @addToOtherEnvironment="handleAddToOther"
+              @copyDifferencesToOther="handleCopyDifferences"
+              @recordUpdated="handleRecordUpdated"
             />
           </div>
         </div>
@@ -92,7 +96,7 @@
           </div>
           <div class="form-group">
             <label for="createdByUser"><strong>CREATED_BY_USER_ID:</strong></label>
-            <input id="createdByUser" v-model="createdByUserId" type="number" value="1" />
+            <input id="createdByUser" v-model="createdByUserId" type="number" :disabled="userProfileId" />
           </div>
         </div>
         <div class="form-actions">
@@ -109,6 +113,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import EntityManager from './EntityManager.vue';
 import { getClient } from '../client.js';
 import { useAuth } from '../composables/useAuth';
+import { fetchUserAttributes } from 'aws-amplify/auth';
 
 const props = defineProps({
   primaryEnvironment: {
@@ -308,6 +313,9 @@ watch(() => props.entityConfig?.loadFunction, async () => {
 
 const syncFilters = ref({});
 const syncSort = ref({ field: '', direction: 'asc' });
+const primaryContainer = ref(null);
+const compareContainer = ref(null);
+const isScrolling = ref(false);
 
 const syncToCompare = (syncData) => {
   if (syncData.type === 'filter') {
@@ -317,23 +325,93 @@ const syncToCompare = (syncData) => {
   }
 };
 
+const syncScroll = (source, event) => {
+  if (isScrolling.value) return;
+  
+  isScrolling.value = true;
+  const sourceContainer = event.target;
+  const targetContainer = source === 'primary' ? compareContainer.value : primaryContainer.value;
+  
+  if (targetContainer) {
+    targetContainer.scrollTop = sourceContainer.scrollTop;
+    targetContainer.scrollLeft = sourceContainer.scrollLeft;
+  }
+  
+  setTimeout(() => {
+    isScrolling.value = false;
+  }, 10);
+};
+
+const canEditEnvironment = (env) => {
+  const { isAdmin, isDeployment, isDeveloper } = useAuth();
+  
+  // Check if user can edit in the specified environment
+  if (isAdmin.value || isDeployment.value) return true;
+  if (isDeveloper.value && (env === 'dev' || env === 'test')) return true;
+  
+  return false;
+};
+
 const canAddToEnvironment = (mode) => {
   const targetEnv = mode === 'primary' ? props.compareEnvironment : props.primaryEnvironment;
-  const { canEdit } = useAuth();
-  
-  // Check if user can edit in the target environment
-  // This is a simplified check - you may need more complex logic based on your auth system
-  return canEdit.value;
+  return canEditEnvironment(targetEnv);
 };
 
 const showAddToOtherModal = ref(false);
 const addToOtherData = ref(null);
 const createdByUserId = ref(1);
+const userProfileId = ref(null);
 
 const handleAddToOther = (data) => {
   console.log('Add to other environment:', data);
   addToOtherData.value = data;
+  createdByUserId.value = userProfileId.value || 1;
   showAddToOtherModal.value = true;
+};
+
+const handleCopyDifferences = async (data) => {
+  console.log('Copy differences to other environment:', data);
+  
+  try {
+    const { entity, targetEnvironment } = data;
+    const entityId = entity[props.entityConfig?.idField || 'id'];
+    
+    // Get the field differences for this entity
+    const diffInfo = fieldDifferences.value.get(entityId);
+    if (!diffInfo || diffInfo.differentFields.length === 0) {
+      console.log('No differences to copy');
+      return;
+    }
+    
+    // Build update data with ALL required fields from the compare record
+    const updateData = { ...diffInfo.compareRecord };
+    
+    // Override with the different field values from the source entity
+    diffInfo.differentFields.forEach(field => {
+      updateData[field] = entity[field];
+    });
+    
+    // Add audit fields
+    updateData.CHANGED_DATE = new Date().toISOString().split('T')[0];
+    updateData.CHANGED_BY_USER_ID = 1;
+    
+    console.log('Updating record with differences:', updateData);
+    
+    // Use comparison client to update the record in target environment
+    const { updateComparisonRecord } = await import('../utils/comparisonClient.js');
+    await updateComparisonRecord(targetEnvironment, props.selectedEntity, updateData);
+    
+    console.log(`Successfully copied differences to ${targetEnvironment}`);
+    
+    // Refresh the comparison data without leaving the screen
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
+    
+  } catch (error) {
+    console.error('Error copying differences:', error);
+    alert(`Error copying differences: ${error.message}`);
+  }
 };
 
 const closeAddToOtherModal = () => {
@@ -369,7 +447,7 @@ const confirmAddToOther = async () => {
     // Add current date and user ID for audit fields
     const currentDate = new Date().toISOString().split('T')[0];
     formData.CREATED_DATE = currentDate;
-    formData.CREATED_BY_USER_ID = parseInt(createdByUserId.value) || 1;
+    formData.CREATED_BY_USER_ID = userProfileId.value || 1;
     
     console.log('Adding record to target environment:', targetEnvironment);
     console.log('Form data being sent:', formData);
@@ -407,7 +485,27 @@ const confirmAddToOther = async () => {
   }
 };
 
-onMounted(() => {
+const loadUserProfile = async () => {
+  try {
+    const attributes = await fetchUserAttributes();
+    const profileValue = attributes.profile;
+    if (profileValue && !isNaN(parseInt(profileValue))) {
+      userProfileId.value = parseInt(profileValue);
+    }
+  } catch (error) {
+    console.warn('Could not load user profile:', error);
+  }
+};
+
+const handleRecordUpdated = () => {
+  console.log('Record updated, re-analyzing differences');
+  if (primaryData.value.length > 0 && compareData.value.length > 0) {
+    analyzeDifferences();
+  }
+};
+
+onMounted(async () => {
+  await loadUserProfile();
   console.log('Environment comparison mounted', {
     primary: props.primaryEnvironment,
     entity: props.selectedEntity
