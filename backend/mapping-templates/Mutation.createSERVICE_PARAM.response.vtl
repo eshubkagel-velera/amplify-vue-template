@@ -1,5 +1,11 @@
+#if($ctx.result.generatedKeys && $ctx.result.generatedKeys.size() > 0)
+  #set($generatedId = $ctx.result.generatedKeys[0])
+#else
+  #set($generatedId = -1)
+#end
+
 {
-  "SERVICE_PARAM_ID": -1,
+  "SERVICE_PARAM_ID": $generatedId,
   "SERVICE_ID": $ctx.args.input.SERVICE_ID,
   "PARAM_NAME": "$ctx.args.input.PARAM_NAME",
   "CREATED_BY_USER_ID": $ctx.args.input.CREATED_BY_USER_ID,
