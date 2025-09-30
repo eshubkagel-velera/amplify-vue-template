@@ -91,7 +91,7 @@ export const createServiceProvider = `
 
 export const updateServiceProvider = `
   mutation UpdateServiceProvider($input: UpdateSERVICE_PROVIDERInput!) {
-    updateSERVICE_PROVIDER(input: \$input) {
+    updateSERVICE_PROVIDER(input: $input) {
       SERVICE_PROVIDER_ID
       SERVICE_PROVIDER_NAME
       CREATED_BY_USER_ID

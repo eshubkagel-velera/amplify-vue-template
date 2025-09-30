@@ -61,21 +61,36 @@ export const loadComparisonData = async (entityName) => {
   // Store the environment for other functions to use
   window.compareEnvironment = environment;
   
+  const envUrls = {
+    dev: import.meta.env.VITE_DEV_GRAPHQL_URL,
+    test: import.meta.env.VITE_TEST_GRAPHQL_URL,
+    uat: import.meta.env.VITE_UAT_GRAPHQL_URL,
+    live: import.meta.env.VITE_LIVE_GRAPHQL_URL
+  };
+  
   const client = createComparisonClient(environment);
   
   console.log('Loading', entityName, 'from', environment);
+  console.log('Using GraphQL endpoint:', envUrls[environment]);
   
   if (entityName === 'ORIGIN_PRODUCT') {
     const items = await fetchAllPages(client, queries.listOriginProducts, {}, 'listORIGIN_PRODUCTS');
     return { data: { listORIGIN_PRODUCTS: { items } } };
   } else if (entityName === 'SERVICE_PROVIDER') {
+    console.log('Fetching SERVICE_PROVIDER data from', environment);
     const items = await fetchAllPages(client, queries.listServiceProviders, {}, 'listSERVICE_PROVIDERS');
+    console.log('Raw SERVICE_PROVIDER items loaded:', items.length);
+    console.log('SERVICE_PROVIDER items:', items);
     return { data: { listSERVICE_PROVIDERS: { items } } };
   } else if (entityName === 'SERVICE') {
+    console.log('Fetching services and providers from', environment);
     const [services, providers] = await Promise.all([
       fetchAllPages(client, queries.listServices, {}, 'listSERVICES'),
       fetchAllPages(client, queries.listServiceProviders, {}, 'listSERVICE_PROVIDERS')
     ]);
+    
+    console.log('Raw services loaded:', services.length);
+    console.log('Raw providers loaded:', providers.length);
     
     const enhancedServices = services.map(service => {
       const provider = providers.find(p => p.SERVICE_PROVIDER_ID === service.SERVICE_PROVIDER_ID);
@@ -85,6 +100,7 @@ export const loadComparisonData = async (entityName) => {
       };
     });
     
+    console.log('Enhanced services:', enhancedServices.length);
     return { data: { listSERVICES: { items: enhancedServices } } };
   } else if (entityName === 'SERVICE_PARAM') {
     const items = await fetchAllPages(client, queries.listServiceParams, {}, 'listSERVICE_PARAMS');
@@ -133,29 +149,51 @@ export const loadComparisonData = async (entityName) => {
   return { data: {} };
 };
 
+import { executeGraphQL } from './unifiedGraphQLClient.js';
+
 export const createComparisonRecord = async (environment, entityName, formData) => {
   console.log(`Creating ${entityName} record in ${environment}`);
   
-  const client = createComparisonClient(environment);
-  const mutations = await import('../graphql/mutations.js');
-  
   try {
-    if (entityName === 'ORIGIN_PRODUCT') {
-      const result = await client.graphql({
-        query: mutations.createOriginProduct,
-        variables: { input: formData }
-      });
-      return result;
-    } else if (entityName === 'REDIRECT_URL') {
-      const result = await client.graphql({
-        query: mutations.createRedirectUrl(environment),
-        variables: { input: formData }
-      });
-      return result;
-    }
-    // Add other entity types as needed
+    const mutations = await import('../graphql/mutations.js');
     
-    throw new Error(`Create mutation not implemented for ${entityName}`);
+    const processedFormData = {
+      ...formData,
+      CREATED_BY_USER_ID: parseInt(formData.CREATED_BY_USER_ID)
+    };
+    
+    const mutationMap = {
+      'ORIGIN_PRODUCT': mutations.createOriginProduct,
+      'REDIRECT_URL': mutations.createRedirectUrl(environment),
+      'SERVICE': mutations.createService,
+      'SERVICE_PROVIDER': mutations.createServiceProvider
+    };
+    
+    const mutation = mutationMap[entityName];
+    if (!mutation) {
+      throw new Error(`Create mutation not implemented for ${entityName}`);
+    }
+    
+    const result = await executeGraphQL(mutation, { input: processedFormData }, environment);
+    
+    if (result.errors && result.errors.length > 0) {
+      throw new Error(`GraphQL errors: ${result.errors.map(e => e.message).join(', ')}`);
+    }
+    
+    const mutationKey = `create${entityName}`;
+    if (result.data && result.data[mutationKey] === null) {
+      console.log('Create mutation returned null - this is expected with Aurora VTL templates');
+      return {
+        data: {
+          [mutationKey]: {
+            ...processedFormData,
+            [`${entityName}_ID`]: -1
+          }
+        }
+      };
+    }
+    
+    return result;
   } catch (error) {
     console.error(`Error creating ${entityName} in ${environment}:`, error);
     throw error;
@@ -164,42 +202,24 @@ export const createComparisonRecord = async (environment, entityName, formData) 
 
 export const updateComparisonRecord = async (environment, entityName, updateData) => {
   console.log(`Updating ${entityName} record in ${environment}`);
-  console.log('Update data:', updateData);
-  
-  const client = createComparisonClient(environment);
-  const mutations = await import('../graphql/mutations.js');
   
   try {
-    if (entityName === 'ORIGIN_PRODUCT') {
-      const result = await client.graphql({
-        query: mutations.updateOriginProduct,
-        variables: { input: updateData }
-      });
-      console.log('Update result:', result);
-      
-      // Check for GraphQL errors
-      if (result.errors && result.errors.length > 0) {
-        console.error('GraphQL errors:', result.errors);
-        throw new Error(result.errors.map(e => e.message).join(', '));
-      }
-      
-      return result;
-    } else if (entityName === 'STEP_TYPE') {
-      const result = await client.graphql({
-        query: mutations.updateStepType,
-        variables: { input: updateData }
-      });
-      return result;
-    } else if (entityName === 'REDIRECT_URL') {
-      const result = await client.graphql({
-        query: mutations.updateRedirectUrl(environment),
-        variables: { input: updateData }
-      });
-      return result;
-    }
-    // Add other entity types as needed
+    const mutations = await import('../graphql/mutations.js');
     
-    throw new Error(`Update mutation not implemented for ${entityName}`);
+    const mutationMap = {
+      'ORIGIN_PRODUCT': mutations.updateOriginProduct,
+      'REDIRECT_URL': mutations.updateRedirectUrl(environment),
+      'SERVICE': mutations.updateService,
+      'SERVICE_PROVIDER': mutations.updateServiceProvider
+    };
+    
+    const mutation = mutationMap[entityName];
+    if (!mutation) {
+      throw new Error(`Update mutation not implemented for ${entityName}`);
+    }
+    
+    const result = await executeGraphQL(mutation, { input: updateData }, environment);
+    return result;
   } catch (error) {
     console.error(`Error updating ${entityName} in ${environment}:`, error);
     throw error;
