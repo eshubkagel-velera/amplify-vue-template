@@ -41,8 +41,7 @@
     <!-- Entity List -->
     <div class="entity-list">
       <LoadingSkeleton v-if="loading" :rows="5" :columns="(props.comparisonMode ? props.fields.length : filteredFields.length) + 2" />
-      <div v-else-if="entities.length > 0" class="table-container">
-        <table class="entity-table">
+      <div v-else-if="entities.length > 0" class="table-container" @scroll="(e) => emit('scroll', e)">        <table class="entity-table">
           <thead>
             <tr>
               <th v-if="!comparisonMode" class="w-12">
@@ -53,6 +52,7 @@
                   :aria-label="`Select all ${entityName} records`"
                 />
               </th>
+              <th style="width: 200px; max-width: 200px;">Actions</th>
               <th v-for="field in props.comparisonMode ? props.fields : filteredFields" :key="field" class="resizable sortable" :data-field="field" @click="sortBy(field)">
                 {{ field }}
                 <span v-if="sortField === field" class="sort-indicator">
@@ -60,10 +60,12 @@
                 </span>
                 <div class="resize-handle" @mousedown="startResize($event, field)"></div>
               </th>
-              <th style="width: auto; min-width: 300px;">Actions</th>
             </tr>
             <tr class="filter-row">
               <th v-if="!comparisonMode"></th>
+              <th>
+                <button @click="clearFilters" class="clear-filters-btn">Clear</button>
+              </th>
               <th v-for="field in props.comparisonMode ? props.fields : filteredFields" :key="`filter-${field}`">
                 <input 
                   v-model="filters[field]" 
@@ -72,9 +74,6 @@
                   class="filter-input"
                   :aria-label="`Filter by ${field}`"
                 />
-              </th>
-              <th>
-                <button @click="clearFilters" class="clear-filters-btn">Clear</button>
               </th>
             </tr>
           </thead>
@@ -89,19 +88,7 @@
                   :aria-label="`Select ${entityName} record ${getEntityId(entity)}`"
                 />
               </td>
-              <td v-for="field in props.comparisonMode ? props.fields : filteredFields" :key="field" :class="getCellClass(entity, field)">
-                <span v-if="!entity.__isBlank" class="read-only-text">
-                  {{ field.includes('DATE') ? formatDate(entity[field]) : 
-                     (field === 'SERVICE_ID' && props.entityName === 'SERVICE_PARAM' && entity.SERVICE_DISPLAY) ? 
-                     entity.SERVICE_DISPLAY : 
-                     (field === 'CHANGED_BY_USER_ID' && !entity[field] && entity.CREATED_BY_USER_ID) ? 
-                     entity.CREATED_BY_USER_ID : 
-                     (field === 'CHANGED_DATE' && !entity[field] && entity.CREATED_DATE) ? 
-                     formatDate(entity.CREATED_DATE) : entity[field] }}
-                </span>
-                <span v-else class="blank-cell">—</span>
-              </td>
-              <td style="width: auto; min-width: 300px; white-space: normal;">
+              <td style="width: 200px; max-width: 200px; white-space: normal;">
                 <div class="button-container">
                 <button v-if="!entity.__isBlank && !props.comparisonMode" @click="editEntity(entity)" :aria-label="`Edit ${entityName} ${getEntityId(entity)}`" class="btn-primary">
                   {{ props.readonly ? 'View' : (props.entityName === 'SERVICE_PARAM' && paramMappings.get(getEntityId(entity)) > 0) ? 'Copy & Edit' : 'Edit' }}
@@ -122,6 +109,18 @@
                 <button v-if="!entity.__isBlank && !props.hideRowActions && props.entityName === 'SERVICE'" @click="openServiceParams(entity)" class="btn-primary" style="margin-left: 5px;">Parameters</button>
                 <button v-if="!entity.__isBlank && !props.hideRowActions && props.entityName === 'SERVICE'" @click="openServiceStepMapping(entity)" class="btn-primary" style="margin-left: 5px;">Step Mappings</button>
                 </div>
+              </td>
+              <td v-for="field in props.comparisonMode ? props.fields : filteredFields" :key="field" :class="getCellClass(entity, field)">
+                <span v-if="!entity.__isBlank" class="read-only-text">
+                  {{ field.includes('DATE') ? formatDate(entity[field]) : 
+                     (field === 'SERVICE_ID' && props.entityName === 'SERVICE_PARAM' && entity.SERVICE_DISPLAY) ? 
+                     entity.SERVICE_DISPLAY : 
+                     (field === 'CHANGED_BY_USER_ID' && !entity[field] && entity.CREATED_BY_USER_ID) ? 
+                     entity.CREATED_BY_USER_ID : 
+                     (field === 'CHANGED_DATE' && !entity[field] && entity.CREATED_DATE) ? 
+                     formatDate(entity.CREATED_DATE) : entity[field] }}
+                </span>
+                <span v-else class="blank-cell">—</span>
               </td>
             </tr>
           </tbody>
@@ -699,7 +698,7 @@ const editEntity = (entity) => {
   showEditModal.value = true;
 };
 
-const emit = defineEmits(['openMapping', 'openRedirectUrls', 'openStepServices', 'openServiceParams', 'openServiceStepMapping', 'entityCountChanged', 'selectedCountChanged', 'filterChanged', 'sortChanged', 'addToOtherEnvironment', 'copyDifferencesToOther', 'recordUpdated']);
+const emit = defineEmits(['openMapping', 'openRedirectUrls', 'openStepServices', 'openServiceParams', 'openServiceStepMapping', 'entityCountChanged', 'selectedCountChanged', 'filterChanged', 'sortChanged', 'addToOtherEnvironment', 'copyDifferencesToOther', 'recordUpdated', 'scroll']);
 
 const openMapping = (entity) => {
   emit('openMapping', { productId: entity.ORIGIN_PRODUCT_ID });
@@ -864,7 +863,8 @@ const submitForm = async () => {
     if (cleanedFormData['Service Provider']) {
       delete cleanedFormData['Service Provider'];
     }
-    if (cleanedFormData.PRODUCT_ID) {
+    // Don't remove PRODUCT_ID for ORIGIN_PRODUCT as it's required
+    if (props.entityName !== 'ORIGIN_PRODUCT' && cleanedFormData.PRODUCT_ID) {
       delete cleanedFormData.PRODUCT_ID;
     }
     
@@ -876,6 +876,10 @@ const submitForm = async () => {
       // For updates, remove CREATED fields that aren't allowed in update input
       delete cleanedFormData.CREATED_BY_USER_ID;
       delete cleanedFormData.CREATED_DATE;
+      // Ensure the ID field is present for updates
+      if (!cleanedFormData[props.idField]) {
+        cleanedFormData[props.idField] = formData.value[props.idField];
+      }
     } else {
       // For creates, remove ID and CHANGED fields that aren't allowed in create input
       delete cleanedFormData[props.idField];
@@ -960,7 +964,13 @@ const submitForm = async () => {
     // Extract GraphQL error details
     if (error.errors && error.errors.length > 0) {
       console.error('GraphQL errors:', error.errors);
-      errorMsg = error.errors.map(e => e.message).join('\n');
+      errorMsg = error.errors.map(e => {
+        // Include more error details for debugging
+        const message = e.message || 'Unknown GraphQL error';
+        const path = e.path ? ` (Path: ${e.path.join('.')})` : '';
+        const extensions = e.extensions ? ` (Code: ${e.extensions.code || 'Unknown'})` : '';
+        return `${message}${path}${extensions}`;
+      }).join('\n');
     }
     
     handleError({ message: errorMsg }, `saving ${props.entityName}`);
@@ -1255,7 +1265,10 @@ const loadServiceOptionsLocal = async () => {
 const loadServiceProviderOptions = async () => {
   try {
     const { callExternalApi } = await import('../client.js');
-    const environment = localStorage.getItem('selectedEnvironment') || 'dev';
+    // Use comparison environment if in comparison mode, otherwise use selected environment
+    const environment = (props.comparisonMode === 'compare' && window.compareEnvironment) ? 
+      window.compareEnvironment : 
+      (localStorage.getItem('selectedEnvironment') || 'dev');
     const result = await callExternalApi(environment, 'listSERVICE_PROVIDERS');
     const providers = result.data.listSERVICE_PROVIDERS.items || [];
     
@@ -1635,10 +1648,10 @@ const displayEntities = computed(() => {
       const matchInfo = props.fieldDifferences.get(primaryId);
       console.log(`Processing primary record ${primaryId}, matchInfo:`, matchInfo ? 'found' : 'not found');
       
-      if (matchInfo && matchInfo.compareRecord) {
+      if (matchInfo && matchInfo.compareId) {
         // Find the actual record in filtered entities that matches
         const matchedRecord = filtered.find(record => 
-          record[props.idField] === matchInfo.compareRecord[props.idField]
+          record[props.idField] === matchInfo.compareId
         );
         if (matchedRecord) {
           console.log(`Found matched record for primary ${primaryId}:`, matchedRecord[props.idField]);
@@ -1652,6 +1665,21 @@ const displayEntities = computed(() => {
         ordered.push({ __isBlank: true });
       }
     });
+    
+    // Add unmatched compare records at the end
+    const usedCompareIds = new Set();
+    props.fieldDifferences.forEach(info => {
+      if (info.compareId) {
+        usedCompareIds.add(info.compareId);
+      }
+    });
+    
+    const unmatchedCompareRecords = filtered.filter(record => 
+      !usedCompareIds.has(record[props.idField])
+    );
+    
+    console.log('Unmatched compare records to add:', unmatchedCompareRecords.length);
+    ordered.push(...unmatchedCompareRecords);
     
     console.log('Final ordered length:', ordered.length);
     console.log('=== DISPLAY ENTITIES END ===');
@@ -1827,13 +1855,17 @@ defineExpose({
 .button-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 3px;
   align-items: flex-start;
+  max-width: 200px;
 }
 
 .button-container button {
   margin: 0;
-  flex-shrink: 0;
+  flex-shrink: 1;
+  font-size: 12px;
+  padding: 4px 6px;
+  min-width: 0;
 }
 
 .entity-table th,
@@ -1870,7 +1902,9 @@ defineExpose({
 }
 
 .w-12 {
-  width: 3%;
+  width: 30px;
+  max-width: 30px;
+  min-width: 30px;
 }
 
 .text-center {

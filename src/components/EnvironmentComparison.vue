@@ -27,8 +27,9 @@
       <div class="environment-columns">
         <div class="environment-column">
           <h3>{{ primaryEnvironment.toUpperCase() }} (Primary)</h3>
-          <div class="entity-container" ref="primaryContainer" @scroll="syncScroll('primary', $event)">
+          <div class="entity-container" ref="primaryContainer">
             <EntityManager
+              @scroll="(e) => syncScroll('primary', e)"
               v-if="selectedEntity"
               ref="primaryEntityManager"
               :key="`primary-${primaryEnvironment}-${selectedEntity}`"
@@ -65,8 +66,9 @@
 
         <div class="environment-column">
           <h3>{{ compareEnvironment.toUpperCase() }} (Compare)</h3>
-          <div class="entity-container" ref="compareContainer" @scroll="syncScroll('compare', $event)">
+          <div class="entity-container" ref="compareContainer">
             <EntityManager
+              @scroll="(e) => syncScroll('compare', e)"
               v-if="selectedEntity"
               ref="compareEntityManager"
               :key="`compare-${compareEnvironment}-${selectedEntity}`"
@@ -234,7 +236,7 @@ const analyzeDifferences = () => {
   console.log('Primary data length:', primaryData.value.length);
   console.log('Compare data length:', compareData.value.length);
   
-  const ignoreFields = ['_ID', 'CREATED_BY_USER_ID', 'CREATED_DATE', 'CHANGED_BY_USER_ID', 'CHANGED_DATE'];
+  const ignoreFields = ['_ID', 'CREATED_BY_USER_ID', 'CREATED_DATE', 'CHANGED_BY_USER_ID', 'CHANGED_DATE', 'Service Provider'];
   const diffs = new Map();
   const fieldDiffs = new Map();
   
@@ -469,18 +471,23 @@ const syncToCompare = (syncData) => {
 const syncScroll = (source, event) => {
   if (isScrolling.value) return;
   
+  console.log('Scroll event from:', source, 'scrollTop:', event.target.scrollTop);
+  
   isScrolling.value = true;
   const sourceContainer = event.target;
   const targetContainer = source === 'primary' ? compareContainer.value : primaryContainer.value;
   
-  if (targetContainer) {
+  console.log('Target container exists:', !!targetContainer);
+  
+  if (targetContainer && sourceContainer) {
     targetContainer.scrollTop = sourceContainer.scrollTop;
     targetContainer.scrollLeft = sourceContainer.scrollLeft;
+    console.log('Synced scroll to:', sourceContainer.scrollTop);
   }
   
   setTimeout(() => {
     isScrolling.value = false;
-  }, 10);
+  }, 50);
 };
 
 const canEditEnvironment = (env) => {
@@ -532,8 +539,8 @@ const handleCopyDifferences = async (data) => {
       updateData[field] = entity[field];
     });
     
-    // Remove display fields and audit fields that shouldn't be sent to GraphQL
-    if (updateData.PRODUCT_ID) {
+    // Don't remove PRODUCT_ID for ORIGIN_PRODUCT as it's required
+    if (props.selectedEntity !== 'ORIGIN_PRODUCT' && updateData.PRODUCT_ID) {
       delete updateData.PRODUCT_ID;
     }
     // Remove CREATED fields from updates
@@ -614,6 +621,39 @@ const confirmAddToOther = async () => {
     // Keep the same PRODUCT_ID when copying ORIGIN_PRODUCT to maintain consistency
     // The PRODUCT_ID should remain the same across environments
     
+    // For SERVICE entities, validate that the service provider exists in target environment
+    if (props.selectedEntity === 'SERVICE' && formData.SERVICE_PROVIDER_ID) {
+      try {
+        const { loadComparisonData } = await import('../utils/comparisonClient.js');
+        const originalEnv = window.compareEnvironment;
+        window.compareEnvironment = targetEnvironment;
+        const targetProviders = await loadComparisonData('SERVICE_PROVIDER');
+        window.compareEnvironment = originalEnv;
+        
+        // Find the source provider name
+        const sourceProvider = primaryData.value.find(s => s.SERVICE_PROVIDER_ID === formData.SERVICE_PROVIDER_ID);
+        const sourceProviderName = sourceProvider?.['Service Provider']?.split(': ')[1];
+        
+        if (sourceProviderName && targetProviders?.data?.listSERVICE_PROVIDERS?.items) {
+          const targetProvider = targetProviders.data.listSERVICE_PROVIDERS.items.find(p => 
+            p.SERVICE_PROVIDER_NAME === sourceProviderName
+          );
+          
+          if (!targetProvider) {
+            throw new Error(`Service Provider '${sourceProviderName}' does not exist in ${targetEnvironment.toUpperCase()}. Please create the service provider first.`);
+          }
+          
+          // Update the SERVICE_PROVIDER_ID to match the target environment
+          formData.SERVICE_PROVIDER_ID = targetProvider.SERVICE_PROVIDER_ID;
+        }
+      } catch (error) {
+        if (error.message.includes('does not exist')) {
+          throw error;
+        }
+        console.warn('Could not validate service provider:', error);
+      }
+    }
+    
     // Add current date and user ID for audit fields
     const currentDate = new Date().toISOString().split('T')[0];
     formData.CREATED_DATE = currentDate;
@@ -632,6 +672,8 @@ const confirmAddToOther = async () => {
     const result = await createComparisonRecord(targetEnvironment, props.selectedEntity, formData);
     
     console.log('Create result:', result);
+    console.log('Create result data:', JSON.stringify(result.data, null, 2));
+    console.log('Create result errors:', result.errors);
     
     // Check for errors in the result
     if (result.errors && result.errors.length > 0) {
@@ -642,19 +684,46 @@ const confirmAddToOther = async () => {
       throw new Error('No data returned from create operation');
     }
     
+    // Check if the create operation actually returned the created record
+    const createKey = Object.keys(result.data)[0];
+    const createdRecord = result.data[createKey];
+    console.log('Created record:', createdRecord);
+    
+    if (!createdRecord) {
+      throw new Error('Create operation failed - no record data returned');
+    }
+    
+    // Check for negative ID which indicates failure (except -1 which is our Aurora VTL placeholder)
+    const idField = props.entityConfig?.idField || 'SERVICE_ID';
+    if (createdRecord[idField] && createdRecord[idField] < 0 && createdRecord[idField] !== -1) {
+      let errorMsg = `Create operation failed - received invalid ID: ${createdRecord[idField]}`;
+      if (props.selectedEntity === 'SERVICE') {
+        errorMsg += '. This usually means the SERVICE_PROVIDER_ID does not exist in the target environment.';
+      }
+      throw new Error(errorMsg);
+    }
+    
     closeAddToOtherModal();
+    
+    // Show success message
+    const recordName = formData.SERVICE_PROVIDER_NAME || formData.SERVICE_NAME || 'record';
+    alert(`Successfully added "${recordName}" to ${targetEnvironment.toUpperCase()}!`);
+    
     console.log(`Successfully added record to ${targetEnvironment}`);
     
-    // Force reload of comparison data
+    // Force reload of comparison data with longer delay to account for database propagation
     setTimeout(async () => {
+      console.log('Reloading data after create operation...');
       await handleRecordUpdated();
       // Force EntityManagers to reload based on target environment
       if (targetEnvironment === props.compareEnvironment && compareEntityManager.value) {
+        console.log('Reloading compare EntityManager...');
         await compareEntityManager.value.loadEntities();
       } else if (targetEnvironment === props.primaryEnvironment && primaryEntityManager.value) {
+        console.log('Reloading primary EntityManager...');
         await primaryEntityManager.value.loadEntities();
       }
-    }, 1000);
+    }, 2000);
   } catch (error) {
     console.error('Error adding record to other environment:', error);
     
@@ -684,6 +753,12 @@ const loadUserProfile = async () => {
 
 const handleRecordUpdated = async () => {
   console.log('Record updated, reloading data and re-analyzing differences');
+  
+  // Store current scroll positions
+  const primaryScrollTop = primaryContainer.value?.scrollTop || 0;
+  const primaryScrollLeft = primaryContainer.value?.scrollLeft || 0;
+  const compareScrollTop = compareContainer.value?.scrollTop || 0;
+  const compareScrollLeft = compareContainer.value?.scrollLeft || 0;
   
   // Reload primary data
   if (props.entityConfig?.loadFunction) {
@@ -716,6 +791,18 @@ const handleRecordUpdated = async () => {
   if (primaryData.value.length >= 0 && compareData.value.length >= 0) {
     analyzeDifferences();
   }
+  
+  // Restore scroll positions after a short delay to allow DOM updates
+  setTimeout(() => {
+    if (primaryContainer.value) {
+      primaryContainer.value.scrollTop = primaryScrollTop;
+      primaryContainer.value.scrollLeft = primaryScrollLeft;
+    }
+    if (compareContainer.value) {
+      compareContainer.value.scrollTop = compareScrollTop;
+      compareContainer.value.scrollLeft = compareScrollLeft;
+    }
+  }, 100);
 }
 
 onMounted(async () => {
@@ -741,6 +828,8 @@ const debugCompareLength = computed(() => {
 .environment-comparison {
   padding: 20px;
   height: 100%;
+  width: 100%;
+  max-width: 100vw;
 }
 
 .comparison-header {

@@ -1,37 +1,21 @@
-import { generateClient } from 'aws-amplify/api';
 import { fetchAllPages } from './utils/pagination.js';
 import * as queries from './graphql/queries';
 
-let client = null;
-
-export const clearClientCache = () => {
-  console.log('🗑️ Clearing client cache');
-  client = null;
-};
-
 export const getClient = () => {
-  if (!client) {
-    console.log('🔄 Creating Amplify client...');
-    try {
-      client = generateClient({
-        authMode: 'userPool'
-      });
-      console.log('✅ Amplify client created successfully');
-    } catch (error) {
-      console.error('❌ Failed to create Amplify client:', error);
-      throw error;
+  // Return a wrapper that uses the unified GraphQL client
+  return {
+    graphql: async ({ query, variables = {} }) => {
+      const { executeGraphQL } = await import('./utils/unifiedGraphQLClient.js');
+      return await executeGraphQL(query, variables);
     }
-  }
-  return client;
+  };
 };
 
-// Make clearClientCache available globally
-window.clearClientCache = clearClientCache;
-
-// Helper function to make direct GraphQL API calls with pagination support
+// Helper function using unified GraphQL client
 export const callExternalApi = async (environment, query, variables = {}) => {
-  const client = getClient();
   try {
+    const { executeGraphQL } = await import('./utils/unifiedGraphQLClient.js');
+    
     // Map query names to their corresponding GraphQL queries and data keys
     const queryMap = {
       'listSERVICE_PROVIDERS': { query: queries.listServiceProviders, dataKey: 'listSERVICE_PROVIDERS' },
@@ -59,7 +43,8 @@ export const callExternalApi = async (environment, query, variables = {}) => {
     if (queryConfig) {
       console.log('🔍 Executing paginated GraphQL query for:', queryConfig.dataKey);
       
-      // Use pagination helper to fetch all pages
+      // Use unified client with pagination
+      const client = { graphql: async (params) => executeGraphQL(params.query, params.variables, environment) };
       const items = await fetchAllPages(client, queryConfig.query, variables, queryConfig.dataKey);
       
       const transformedData = {
@@ -76,10 +61,7 @@ export const callExternalApi = async (environment, query, variables = {}) => {
       // Handle mutation operations or other non-list queries
       console.log('🔍 Executing non-paginated GraphQL operation:', query);
       
-      const result = await client.graphql({
-        query,
-        variables
-      });
+      const result = await executeGraphQL(query, variables, environment);
       
       if (result.errors && result.errors.length > 0) {
         console.error('❌ GraphQL has errors!');

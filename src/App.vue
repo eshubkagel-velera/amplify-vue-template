@@ -318,7 +318,15 @@ const createOriginProduct = async (input: any) => {
 
 const updateOriginProduct = async (input: any) => {
   if (!canEdit.value) throw new Error('Permission denied: Read-only access');
-  return await getClientInstance().graphql({ query: mutations.updateOriginProduct, variables: { input } });
+  console.log('updateOriginProduct called with input:', input);
+  try {
+    const result = await getClientInstance().graphql({ query: mutations.updateOriginProduct, variables: { input } });
+    console.log('updateOriginProduct result:', result);
+    return result;
+  } catch (error) {
+    console.error('updateOriginProduct error:', error);
+    throw error;
+  }
 };
 
 const deleteOriginProduct = async (input: any) => {
@@ -967,7 +975,7 @@ main {
   width: 100%;
   min-height: calc(100vh - 120px);
   overflow: auto;
-  padding: 20px;
+  padding: 0;
   box-sizing: border-box;
 }
 
