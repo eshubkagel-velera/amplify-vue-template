@@ -43,6 +43,14 @@
       <LoadingSkeleton v-if="loading" :rows="5" :columns="(props.comparisonMode ? props.fields.length : filteredFields.length) + 2" />
       <div v-else-if="entities.length > 0" class="table-container" @scroll="(e) => emit('scroll', e)">        <table class="entity-table">
           <thead>
+            <!-- Environment header row for comparison mode -->
+            <tr v-if="comparisonMode" class="environment-header">
+              <th style="width: 200px; max-width: 200px;"></th>
+              <th :colspan="(props.fields || []).length" :class="comparisonMode === 'primary' ? 'primary-env-header' : 'compare-env-header'">
+                {{ comparisonMode === 'primary' ? 'PRIMARY' : 'COMPARE' }}
+              </th>
+            </tr>
+            <!-- Regular header row -->
             <tr>
               <th v-if="!comparisonMode" class="w-12">
                 <input 
@@ -52,8 +60,8 @@
                   :aria-label="`Select all ${entityName} records`"
                 />
               </th>
-              <th style="width: 200px; max-width: 200px;">Actions</th>
-              <th v-for="field in props.comparisonMode ? props.fields : filteredFields" :key="field" class="resizable sortable" :data-field="field" @click="sortBy(field)">
+              <th style="width: 200px; max-width: 200px;" :class="comparisonMode ? 'env-border-' + comparisonMode : ''">Actions</th>
+              <th v-for="field in props.comparisonMode ? props.fields : filteredFields" :key="field" class="resizable sortable" :class="comparisonMode ? 'env-border-' + comparisonMode : ''" :data-field="field" @click="sortBy(field)">
                 {{ field }}
                 <span v-if="sortField === field" class="sort-indicator">
                   {{ sortDirection === 'asc' ? '↑' : '↓' }}
@@ -88,7 +96,7 @@
                   :aria-label="`Select ${entityName} record ${getEntityId(entity)}`"
                 />
               </td>
-              <td style="width: 200px; max-width: 200px; white-space: normal;">
+              <td style="width: 200px; max-width: 200px; white-space: normal;" :class="comparisonMode ? 'env-border-' + comparisonMode : ''">
                 <div class="button-container">
                 <button v-if="!entity.__isBlank && !props.comparisonMode" @click="editEntity(entity)" :aria-label="`Edit ${entityName} ${getEntityId(entity)}`" class="btn-primary">
                   {{ props.readonly ? 'View' : (props.entityName === 'SERVICE_PARAM' && paramMappings.get(getEntityId(entity)) > 0) ? 'Copy & Edit' : 'Edit' }}
@@ -110,7 +118,7 @@
                 <button v-if="!entity.__isBlank && !props.hideRowActions && props.entityName === 'SERVICE'" @click="openServiceStepMapping(entity)" class="btn-primary" style="margin-left: 5px;">Step Mappings</button>
                 </div>
               </td>
-              <td v-for="field in props.comparisonMode ? props.fields : filteredFields" :key="field" :class="getCellClass(entity, field)">
+              <td v-for="field in props.comparisonMode ? props.fields : filteredFields" :key="field" :class="[getCellClass(entity, field), comparisonMode ? 'env-border-' + comparisonMode : ''].filter(Boolean).join(' ')">
                 <span v-if="!entity.__isBlank" class="read-only-text">
                   {{ field.includes('DATE') ? formatDate(entity[field]) : 
                      (field === 'SERVICE_ID' && props.entityName === 'SERVICE_PARAM' && entity.SERVICE_DISPLAY) ? 
@@ -456,6 +464,10 @@ const props = defineProps({
     default: false
   },
   productFilter: {
+    type: String,
+    default: ''
+  },
+  serviceFilter: {
     type: String,
     default: ''
   }
@@ -1264,12 +1276,17 @@ const loadServiceOptionsLocal = async () => {
 
 const loadServiceProviderOptions = async () => {
   try {
-    const { callExternalApi } = await import('../client.js');
-    // Use comparison environment if in comparison mode, otherwise use selected environment
-    const environment = (props.comparisonMode === 'compare' && window.compareEnvironment) ? 
-      window.compareEnvironment : 
-      (localStorage.getItem('selectedEnvironment') || 'dev');
-    const result = await callExternalApi(environment, 'listSERVICE_PROVIDERS');
+    let result;
+    if (props.comparisonMode === 'compare' && window.compareEnvironment) {
+      // Use comparison client for compare environment
+      const { loadComparisonData } = await import('../utils/comparisonClient.js');
+      result = await loadComparisonData('SERVICE_PROVIDER');
+    } else {
+      // Use regular client for primary environment
+      const { callExternalApi } = await import('../client.js');
+      const environment = localStorage.getItem('selectedEnvironment') || 'dev';
+      result = await callExternalApi(environment, 'listSERVICE_PROVIDERS');
+    }
     const providers = result.data.listSERVICE_PROVIDERS.items || [];
     
     // Update the SERVICE_PROVIDER_ID field options
@@ -1523,6 +1540,14 @@ watch(() => props.productFilter, (newFilter) => {
   }
 }, { immediate: true });
 
+// Watch for service filter changes from comparison
+watch(() => props.serviceFilter, (newFilter) => {
+  if (props.entityName === 'SERVICE_PARAM' && newFilter !== selectedServiceFilter.value) {
+    selectedServiceFilter.value = newFilter;
+    filterByService();
+  }
+}, { immediate: true });
+
 
 
 watch(() => props.syncSort, (newSort) => {
@@ -1600,9 +1625,21 @@ const displayEntities = computed(() => {
   }
   
   if (props.comparisonMode === 'primary') {
-    console.log('Primary mode, returning filteredEntities:', filteredEntities.value.length);
-    console.log('Primary filteredEntities IDs:', filteredEntities.value.map(e => e[props.idField]));
-    return filteredEntities.value;
+    console.log('Primary mode - processing...');
+    const filtered = filteredEntities.value;
+    const ordered = [];
+    
+    // Add all filtered primary records
+    ordered.push(...filtered);
+    
+    // Add blank rows for unmatched compare records
+    const unmatchedCompareCount = props.unmatchedRecords.length;
+    for (let i = 0; i < unmatchedCompareCount; i++) {
+      ordered.push({ __isBlank: true });
+    }
+    
+    console.log('Primary final ordered length:', ordered.length);
+    return ordered;
   } else {
     console.log('Compare mode - processing...');
     // Compare table reorders filtered entities to match primary
@@ -1823,7 +1860,9 @@ defineExpose({
   showCreateModal,
   confirmBulkDelete,
   selectedProductFilter,
-  filterByProduct
+  filterByProduct,
+  selectedServiceFilter,
+  filterByService
 });
 </script>
 
@@ -2112,6 +2151,32 @@ button {
 
 .btn-warning:hover {
   background: #e0a800;
+}
+
+.environment-header {
+  background-color: var(--table-header-bg, #f8f9fa);
+  font-weight: bold;
+  text-align: center;
+}
+
+.primary-env-header {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  border: 2px solid #1976d2;
+}
+
+.compare-env-header {
+  background-color: #fff3e0;
+  color: #f57c00;
+  border: 2px solid #f57c00;
+}
+
+.env-border-primary {
+  border-right: 3px solid #1976d2 !important;
+}
+
+.env-border-compare {
+  border-left: 3px solid #f57c00 !important;
 }
 
 .differences-preview {

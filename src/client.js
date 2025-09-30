@@ -45,7 +45,13 @@ export const callExternalApi = async (environment, query, variables = {}) => {
       
       // Use unified client with pagination
       const client = { graphql: async (params) => executeGraphQL(params.query, params.variables, environment) };
-      const items = await fetchAllPages(client, queryConfig.query, variables, queryConfig.dataKey);
+      let items = await fetchAllPages(client, queryConfig.query, variables, queryConfig.dataKey);
+      
+      // Filter SERVICE_PARAM by service if a service filter is set
+      if (queryConfig.dataKey === 'listSERVICE_PARAMS' && window.selectedServiceFilter) {
+        items = items.filter(param => param.SERVICE_ID === parseInt(window.selectedServiceFilter));
+        console.log(`Filtered SERVICE_PARAM items by SERVICE_ID ${window.selectedServiceFilter}:`, items.length);
+      }
       
       const transformedData = {
         data: {

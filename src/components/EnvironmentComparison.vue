@@ -7,6 +7,22 @@
       </div>
     </div>
 
+    <!-- Service Filter for SERVICE_PARAM -->
+    <div v-if="compareEnvironment && selectedEntity === 'SERVICE_PARAM'" class="service-filter-section">
+      <div v-if="allPrimaryServices.length > 0" class="filter-group">
+        <label for="serviceFilter">Filter by Service:</label>
+        <select id="serviceFilter" v-model="selectedServiceFilter" @change="applyServiceFilter">
+          <option value="">-- All Services --</option>
+          <option v-for="service in allPrimaryServices" :key="service.SERVICE_ID" :value="service.SERVICE_ID" :disabled="!serviceExistsInCompare(service.SERVICE_ID)">
+            {{ service.SERVICE_ID }}: {{ service.URI }}{{ !serviceExistsInCompare(service.SERVICE_ID) ? ' (not in ' + compareEnvironment.toUpperCase() + ')' : '' }}
+          </option>
+        </select>
+      </div>
+      <div v-else class="no-common-services">
+        <p>No services found in primary environment.</p>
+      </div>
+    </div>
+
     <!-- Product Filter for REDIRECT_URL -->
     <div v-if="compareEnvironment && selectedEntity === 'REDIRECT_URL'" class="product-filter-section">
       <div v-if="allPrimaryProducts.length > 0" class="filter-group">
@@ -24,82 +40,48 @@
     </div>
 
     <div v-if="compareEnvironment" class="comparison-content">
-      <div class="environment-columns">
-        <div class="environment-column">
-          <h3>{{ primaryEnvironment.toUpperCase() }} (Primary)</h3>
-          <div class="entity-container" ref="primaryContainer">
-            <EntityManager
-              @scroll="(e) => syncScroll('primary', e)"
-              v-if="selectedEntity"
-              ref="primaryEntityManager"
-              :key="`primary-${primaryEnvironment}-${selectedEntity}`"
-              :entityName="selectedEntity"
-              :fields="filteredFields"
-              :formFields="entityConfig?.formFields || []"
-              :idField="entityConfig?.idField || 'id'"
-              :loadFunction="entityConfig?.loadFunction"
-              :createFunction="entityConfig?.createFunction"
-              :updateFunction="entityConfig?.updateFunction"
-              :deleteFunction="entityConfig?.deleteFunction"
-              :readonly="!canEditEnvironment(primaryEnvironment)"
-              :hideActionButtons="true"
-              :hideRowActions="true"
-              :hideFilters="true"
-              :fieldDifferences="fieldDifferences"
-              :comparisonMode="'primary'"
-              :matchedPairs="matchedPairs"
-              :unmatchedRecords="unmatchedPrimary"
-              :otherEnvironment="compareEnvironment"
-              :canAddToOther="canAddToEnvironment('primary')"
-              :compareDataLength="debugCompareLength"
-              :productFilter="selectedProductFilter"
-              :debugInfo="{ primaryDataLength: primaryData.length, matchedPairsLength: matchedPairs.length, unmatchedPrimaryLength: unmatchedPrimary.length }"
-
-              @filterChanged="syncToCompare"
-              @sortChanged="syncToCompare"
-              @addToOtherEnvironment="handleAddToOther"
-              @copyDifferencesToOther="handleCopyDifferences"
-              @recordUpdated="handleRecordUpdated"
-            />
-          </div>
-        </div>
-
-        <div class="environment-column">
-          <h3>{{ compareEnvironment.toUpperCase() }} (Compare)</h3>
-          <div class="entity-container" ref="compareContainer">
-            <EntityManager
-              @scroll="(e) => syncScroll('compare', e)"
-              v-if="selectedEntity"
-              ref="compareEntityManager"
-              :key="`compare-${compareEnvironment}-${selectedEntity}`"
-              :entityName="selectedEntity"
-              :fields="filteredFields"
-              :formFields="entityConfig?.formFields || []"
-              :idField="entityConfig?.idField || 'id'"
-              :loadFunction="getCompareLoadFunction"
-              :createFunction="entityConfig?.createFunction"
-              :updateFunction="getCompareUpdateFunction"
-              :deleteFunction="entityConfig?.deleteFunction"
-              :readonly="!canEditEnvironment(compareEnvironment)"
-              :hideActionButtons="true"
-              :hideRowActions="true"
-              :hideFilters="true"
-              :fieldDifferences="fieldDifferences"
-              :comparisonMode="'compare'"
-              :matchedPairs="matchedPairs"
-              :unmatchedRecords="unmatchedCompare"
-              :primaryData="primaryData"
-              :syncFilters="syncFilters"
-              :syncSort="syncSort"
-              :productFilter="selectedProductFilter"
-              :otherEnvironment="primaryEnvironment"
-              :canAddToOther="canAddToEnvironment('compare')"
-              @addToOtherEnvironment="handleAddToOther"
-              @copyDifferencesToOther="handleCopyDifferences"
-              @recordUpdated="handleRecordUpdated"
-            />
-          </div>
-        </div>
+      <!-- Show message for SERVICE_PARAM when no service is selected -->
+      <div v-if="selectedEntity === 'SERVICE_PARAM' && !selectedServiceFilter" class="no-service-selected">
+        <p>Please select a service from the filter above to view SERVICE_PARAM comparisons.</p>
+      </div>
+      
+      <div v-else class="unified-table-container">
+        <table class="unified-comparison-table">
+          <thead>
+            <tr class="environment-header">
+              <th :colspan="filteredFields.length + 1" class="primary-env-header">{{ primaryEnvironment.toUpperCase() }}</th>
+              <th :colspan="filteredFields.length + 1" class="compare-env-header">{{ compareEnvironment.toUpperCase() }}</th>
+            </tr>
+            <tr class="field-header">
+              <th class="actions-header">Actions</th>
+              <th v-for="field in filteredFields" :key="`primary-${field}`" class="primary-field">{{ field }}</th>
+              <th class="actions-header">Actions</th>
+              <th v-for="field in filteredFields" :key="`compare-${field}`" class="compare-field">{{ field }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(row, index) in unifiedRows" :key="index" :class="getUnifiedRowClass(row)">
+              <td class="actions-cell">
+                <button v-if="row.primary && !row.primary.__isBlank" @click="editRecord(row.primary, 'primary')" class="btn-primary">Edit</button>
+                <button v-if="row.primary && !row.primary.__isBlank && (!row.compare || row.compare.__isBlank)" @click="addToOther(row.primary, compareEnvironment)" class="btn-success">Add to {{ compareEnvironment.toUpperCase() }}</button>
+                <button v-if="row.primary && !row.primary.__isBlank && row.compare && !row.compare.__isBlank && hasDifferences(row.primary)" @click="copyToOther(row.primary, compareEnvironment)" class="btn-warning">Copy to {{ compareEnvironment.toUpperCase() }}</button>
+              </td>
+              <td v-for="field in filteredFields" :key="`primary-${field}`" :class="getCellClass(row, field, 'primary')" class="primary-cell">
+                <span v-if="row.primary && !row.primary.__isBlank">{{ formatFieldValue(row.primary[field], field) }}</span>
+                <span v-else class="blank-cell">—</span>
+              </td>
+              <td class="actions-cell">
+                <button v-if="row.compare && !row.compare.__isBlank" @click="editRecord(row.compare, 'compare')" class="btn-primary">Edit</button>
+                <button v-if="row.compare && !row.compare.__isBlank && (!row.primary || row.primary.__isBlank)" @click="addToOther(row.compare, primaryEnvironment)" class="btn-success">Add to {{ primaryEnvironment.toUpperCase() }}</button>
+                <button v-if="row.compare && !row.compare.__isBlank && row.primary && !row.primary.__isBlank && hasDifferences(row.compare)" @click="copyToOther(row.compare, primaryEnvironment)" class="btn-warning">Copy to {{ primaryEnvironment.toUpperCase() }}</button>
+              </td>
+              <td v-for="field in filteredFields" :key="`compare-${field}`" :class="getCellClass(row, field, 'compare')" class="compare-cell">
+                <span v-if="row.compare && !row.compare.__isBlank">{{ formatFieldValue(row.compare[field], field) }}</span>
+                <span v-else class="blank-cell">—</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -107,6 +89,39 @@
       <p>Select an environment to compare with {{ primaryEnvironment.toUpperCase() }}</p>
     </div>
     
+    <!-- Edit Modal -->
+    <div v-if="showEditModal" class="modal-overlay">
+      <div class="modal-content edit-modal">
+        <h3>Edit {{ selectedEntity }} Record</h3>
+        <div class="edit-form">
+          <div v-for="formField in entityConfig?.formFields?.filter(f => !['CREATED_DATE', 'CREATED_BY_USER_ID'].includes(f.name)) || []" :key="formField.name" class="form-group">
+            <label :for="formField.name">{{ formField.name }}:</label>
+            <input 
+              :id="formField.name" 
+              v-model="editFormData[formField.name]" 
+              :type="formField.type || 'text'"
+              :disabled="formField.name.includes('_ID') && formField.name !== 'PSCU_CLIENT_ID'"
+              class="form-input"
+            />
+          </div>
+          <div class="form-group">
+            <label for="changedByUserId">CHANGED_BY_USER_ID:</label>
+            <input 
+              id="changedByUserId" 
+              v-model="editFormData.CHANGED_BY_USER_ID" 
+              type="number"
+              :disabled="userProfileId"
+              class="form-input"
+            />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button @click="saveEditRecord" class="btn-success">Save Changes</button>
+          <button @click="closeEditModal" class="btn-primary">Cancel</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Add to Other Environment Modal -->
     <div v-if="showAddToOtherModal" class="modal-overlay">
       <div class="modal-content">
@@ -128,6 +143,38 @@
         <div class="form-actions">
           <button @click="confirmAddToOther" class="btn-success">Yes, Add Record</button>
           <button @click="closeAddToOtherModal" class="btn-primary">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Copy Differences Modal -->
+    <div v-if="showCopyDifferencesModal" class="modal-overlay">
+      <div class="modal-content">
+        <h3>Copy Differences to {{ copyDifferencesData?.targetEnvironment?.toUpperCase() }}</h3>
+        <p>Copy {{ copyDifferencesData?.fieldsToUpdate?.length }} field difference(s) from {{ primaryEnvironment.toUpperCase() }} to {{ copyDifferencesData?.targetEnvironment?.toUpperCase() }}?</p>
+        <div v-if="copyDifferencesData?.fieldsToUpdate" class="record-preview">
+          <h4>Fields to update:</h4>
+          <div v-for="field in copyDifferencesData.fieldsToUpdate" :key="field" class="field-preview">
+            <strong>{{ field }}:</strong> 
+            {{ copyDifferencesData.targetEnvironment === compareEnvironment ? 
+                copyDifferencesData.diffInfo.primaryRecord[field] : 
+                copyDifferencesData.diffInfo.compareRecord[field] }}
+          </div>
+        </div>
+        <div class="form-actions">
+          <button @click="confirmCopyDifferences" class="btn-success">Yes, Copy Differences</button>
+          <button @click="closeCopyDifferencesModal" class="btn-primary">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div v-if="showSuccessModal" class="modal-overlay">
+      <div class="modal-content">
+        <h3>{{ successMessage.includes('Error') || successMessage.includes('failed') ? 'Error' : 'Success' }}</h3>
+        <p>{{ successMessage }}</p>
+        <div class="form-actions">
+          <button @click="closeSuccessModal" class="btn-primary">OK</button>
         </div>
       </div>
     </div>
@@ -165,11 +212,17 @@ const compareData = ref([]);
 const allPrimaryProducts = ref([]);
 const compareProducts = ref([]);
 const selectedProductFilter = ref('');
+const allPrimaryServices = ref([]);
+const compareServices = ref([]);
+const selectedServiceFilter = ref('');
 
 // Watch compareData changes
 watch(compareData, (newVal) => {
   console.log('EnvironmentComparison: compareData changed, length =', newVal.length);
-  console.log('EnvironmentComparison: About to pass compareDataLength =', newVal.length);
+  if (newVal.length > 0 && primaryData.value.length > 0) {
+    console.log('Both datasets available, analyzing differences');
+    analyzeDifferences();
+  }
 }, { deep: true });
 const differences = ref(new Map());
 
@@ -226,8 +279,9 @@ const unmatchedCompare = ref([]);
 
 const filteredFields = computed(() => {
   const auditFields = ['CREATED_BY_USER_ID', 'CREATED_DATE', 'CHANGED_BY_USER_ID', 'CHANGED_DATE'];
+  const primaryKeyFields = ['ORIGIN_PRODUCT_ID', 'SERVICE_ID', 'SERVICE_PROVIDER_ID', 'REDIRECT_URL_ID', 'SERVICE_PARAM_ID'];
   return (props.entityConfig?.fields || []).filter(field => 
-    !auditFields.includes(field)
+    !auditFields.includes(field) && !primaryKeyFields.includes(field)
   );
 });
 
@@ -236,79 +290,221 @@ const analyzeDifferences = () => {
   console.log('Primary data length:', primaryData.value.length);
   console.log('Compare data length:', compareData.value.length);
   
-  const ignoreFields = ['_ID', 'CREATED_BY_USER_ID', 'CREATED_DATE', 'CHANGED_BY_USER_ID', 'CHANGED_DATE', 'Service Provider'];
+  // Global fields to exclude from all comparisons
+  // const globalExcludeFields = ['_ID', 'CREATED_BY_USER_ID', 'CREATED_DATE', 'CHANGED_BY_USER_ID', 'CHANGED_DATE', 'Service Provider', 'SERVICE_ID', 'SERVICE_PROVIDER_ID', 'ORIGIN_PRODUCT_ID', 'PRODUCT_ID', 'REDIRECT_URL_ID', 'SERVICE_PARAM_ID'];
+  const globalExcludeFields = ['CREATED_BY_USER_ID', 'CREATED_DATE', 'CHANGED_BY_USER_ID', 'CHANGED_DATE', 'SERVICE_ID', 'SERVICE_PROVIDER_ID', 'ORIGIN_PRODUCT_ID', 'PRODUCT_ID', 'REDIRECT_URL_ID', 'SERVICE_PARAM_ID'];
+  
+  // Entity-specific field configurations
+  const entityConfigs = {
+    SERVICE: {
+      matchingFields: ['SERVICE_PROVIDER_NAME', 'URI'], // Fields that must match for pairing
+      comparisonFields: ['SERVICE_PROVIDER_NAME', 'URI', 'SECRET_NAME', 'REQUEST_TYPE'] // All fields to compare for differences
+    },
+    ORIGIN_PRODUCT: {
+      matchingFields: ['PRODUCT_ID', 'URL_TYPE_CODE'], // Fields that must match for pairing
+      comparisonFields: null // Use all available fields
+    },
+    REDIRECT_URL: {
+      matchingFields: ['PRODUCT_ID'],
+      comparisonFields: null // Use all available fields
+    },
+    SERVICE_PROVIDER: {
+      matchingFields: ['SERVICE_PROVIDER_NAME'],
+      comparisonFields: null // Use all available fields
+    },
+    SERVICE_PARAM: {
+      matchingFields: ['SERVICE_NAME', 'PARAM_NAME'],
+      comparisonFields: null // Use all available fields
+    },
+    SERVICE_PARAM_MAPPING: {
+      matchingFields: ['Target Service', 'Source Service', 'Target Param Name', 'Target Expr', 'Source Param Name', 'Source Expr'],
+      comparisonFields: null // Use all available fields
+    },
+    STEP_SERVICE_MAPPING: {
+      matchingFields: ['STEP_TYPE', 'SERVICE'],
+      comparisonFields: null // Use all available fields
+    },
+    STEP_TYPE: {
+      matchingFields: ['STEP_TYPE_NAME', 'STEP_TYPE_DESC', 'RESOURCE_NAME'],
+      comparisonFields: null // Use all available fields
+    }
+  };
+  
   const diffs = new Map();
   const fieldDiffs = new Map();
   
-  // Calculate match percentage between two records
+  // Calculate match percentage between two records with entity-specific logic
   const calculateMatch = (record1, record2) => {
-    const relevantFields = Object.keys(record1)
-      .filter(field => !ignoreFields.some(ignore => field.includes(ignore)));
+    const config = entityConfigs[props.selectedEntity] || {};
     
+    // Determine fields to use for comparison
+    let comparisonFields;
+    if (config.comparisonFields) {
+      comparisonFields = config.comparisonFields.filter(field => record1.hasOwnProperty(field));
+    } else {
+      comparisonFields = Object.keys(record1)
+        .filter(field => !globalExcludeFields.some(exclude => field.includes(exclude)));
+    }
+
+    console.log(`Comparing records: ${record1[props.entityConfig?.idField || 'id']} vs ${record2[props.entityConfig?.idField || 'id']}`);
+    console.log(`PRODUCT_ID: '${record1.PRODUCT_ID}' vs '${record2.PRODUCT_ID}'`);
+    console.log('Comparison fields:', comparisonFields);
+    console.log('Matching fields:', config.matchingFields || 'PRODUCT_ID based');
+    console.log('Excluded fields:', globalExcludeFields);
+    
+    // Check if records should be matched based on matching fields
+    if (config.matchingFields) {
+      // Check if all matching fields are identical
+      const matchingFieldsMatch = config.matchingFields.every(field => record1[field] === record2[field]);
+      
+      if (!matchingFieldsMatch) {
+        return { matchPercentage: 0, differentFields: comparisonFields, totalFields: comparisonFields.length };
+      }
+      
+      console.log(`${config.matchingFields.join(' + ')} exact match found - checking field differences`);
+    } else {
+      // Default PRODUCT_ID matching for entities without specific matching fields
+      if (record1.PRODUCT_ID !== record2.PRODUCT_ID) {
+        return { matchPercentage: 0, differentFields: comparisonFields, totalFields: comparisonFields.length };
+      }
+      console.log('PRODUCT_ID exact match found - checking field differences');
+    }
+    
+    // Compare all fields to find differences
     let matches = 0;
     const differentFields = [];
     
-    relevantFields.forEach(field => {
-      if (record1[field] === record2[field]) {
+    comparisonFields.forEach(field => {
+      const val1 = record1[field];
+      const val2 = record2[field];
+      console.log(`  ${field}: '${val1}' vs '${val2}' - ${val1 === val2 ? 'MATCH' : 'DIFFERENT'}`);
+      if (val1 === val2) {
         matches++;
       } else {
         differentFields.push(field);
       }
     });
     
-    const matchPercentage = (matches / relevantFields.length) * 100;
-    return { matchPercentage, differentFields, totalFields: relevantFields.length };
+    return { matchPercentage: 100, differentFields, totalFields: comparisonFields.length };
+
   };
   
-  // Find best matches for each primary record
+  // Calculate all possible matches above threshold
+  const allPossibleMatches = [];
+  
   primaryData.value.forEach(primaryRecord => {
     const primaryId = primaryRecord[props.entityConfig?.idField || 'id'];
-    console.log(`Processing primary record ${primaryId}`);
-    let bestMatch = null;
-    let bestMatchPercentage = 0;
+    console.log(`\n=== Processing primary record ${primaryId} ===`);
     
     compareData.value.forEach(compareRecord => {
+      const compareId = compareRecord[props.entityConfig?.idField || 'id'];
       const match = calculateMatch(primaryRecord, compareRecord);
-      if (match.matchPercentage > bestMatchPercentage) {
-        bestMatchPercentage = match.matchPercentage;
-        bestMatch = { record: compareRecord, ...match };
-      }
-    });
-    
-    if (bestMatch && bestMatchPercentage >= 60) {
-      const compareId = bestMatch.record[props.entityConfig?.idField || 'id'];
-      console.log(`Record ${primaryId} matches Record ${compareId} at ${bestMatchPercentage.toFixed(1)}%`);
       
-      // Always add to fieldDiffs for matched records, even if no differences
-      fieldDiffs.set(primaryId, {
-        compareId,
-        differentFields: bestMatch.differentFields,
-        primaryRecord,
-        compareRecord: bestMatch.record
-      });
-      
-      if (bestMatch.differentFields.length > 0) {
-        diffs.set(primaryId, bestMatch.differentFields);
-        console.log(`  Different fields:`);
-        bestMatch.differentFields.forEach(field => {
-          console.log(`    ${field}: ${props.primaryEnvironment}='${primaryRecord[field]}' vs ${props.compareEnvironment}='${bestMatch.record[field]}'`);
+      if (match.matchPercentage >= 80) {
+        allPossibleMatches.push({
+          primaryId,
+          compareId,
+          primaryRecord,
+          compareRecord,
+          matchPercentage: match.matchPercentage,
+          differentFields: match.differentFields
         });
       }
-    } else {
-      diffs.set(primaryId, ['NO_MATCH_FOUND']);
-      console.log(`Record ${primaryId}: No match found in ${props.compareEnvironment} (best match: ${bestMatchPercentage.toFixed(1)}%)`);
-      const relevantFields = Object.keys(primaryRecord).filter(field => 
-        !ignoreFields.some(ignore => field.includes(ignore))
-      );
-      relevantFields.forEach(field => {
-        console.log(`  ${field}: '${primaryRecord[field]}'`);
+    });
+  });
+  
+  console.log(`Found ${allPossibleMatches.length} potential matches above 80% threshold`);
+  
+  // Sort by match percentage - 100% matches first, then by highest percentage
+  allPossibleMatches.sort((a, b) => {
+    if (a.matchPercentage === 100 && b.matchPercentage !== 100) return -1;
+    if (b.matchPercentage === 100 && a.matchPercentage !== 100) return 1;
+    return b.matchPercentage - a.matchPercentage;
+  });
+  
+  console.log('Top 5 potential matches:', allPossibleMatches.slice(0, 5).map(m => 
+    `${m.primaryId}->${m.compareId} (${m.matchPercentage}%)`
+  ));
+  
+  // Separate perfect matches (100%) from partial matches
+  const perfectMatches = allPossibleMatches.filter(m => m.matchPercentage === 100);
+  const partialMatches = allPossibleMatches.filter(m => m.matchPercentage < 100);
+  
+  console.log(`Perfect matches (100%): ${perfectMatches.length}`);
+  console.log(`Partial matches: ${partialMatches.length}`);
+  
+  // For perfect matches, prioritize those with no field differences (truly identical)
+  perfectMatches.sort((a, b) => {
+    if (a.differentFields.length === 0 && b.differentFields.length > 0) return -1;
+    if (b.differentFields.length === 0 && a.differentFields.length > 0) return 1;
+    return a.differentFields.length - b.differentFields.length;
+  });
+  
+  const usedPrimaryIds = new Set();
+  const usedCompareIds = new Set();
+  const selectedMatches = [];
+  
+  // First, process perfect matches with no differences (truly identical records)
+  for (const match of perfectMatches.filter(m => m.differentFields.length === 0)) {
+    if (!usedPrimaryIds.has(match.primaryId) && !usedCompareIds.has(match.compareId)) {
+      selectedMatches.push(match);
+      usedPrimaryIds.add(match.primaryId);
+      usedCompareIds.add(match.compareId);
+      console.log(`✅ PERFECT MATCH: Record ${match.primaryId} matches Record ${match.compareId} (identical)`);
+    }
+  }
+  
+  // Then process remaining perfect matches (100% but with differences)
+  for (const match of perfectMatches.filter(m => m.differentFields.length > 0)) {
+    if (!usedPrimaryIds.has(match.primaryId) && !usedCompareIds.has(match.compareId)) {
+      selectedMatches.push(match);
+      usedPrimaryIds.add(match.primaryId);
+      usedCompareIds.add(match.compareId);
+      console.log(`✅ SELECTED: Record ${match.primaryId} matches Record ${match.compareId} at 100%`);
+    }
+  }
+  
+  // Finally, process partial matches
+  for (const match of partialMatches) {
+    if (!usedPrimaryIds.has(match.primaryId) && !usedCompareIds.has(match.compareId)) {
+      selectedMatches.push(match);
+      usedPrimaryIds.add(match.primaryId);
+      usedCompareIds.add(match.compareId);
+      console.log(`✅ SELECTED: Record ${match.primaryId} matches Record ${match.compareId} at ${match.matchPercentage}%`);
+    }
+  }
+  
+  // Set field differences for all selected matches
+  selectedMatches.forEach(match => {
+    fieldDiffs.set(match.primaryId, {
+      compareId: match.compareId,
+      differentFields: match.differentFields,
+      primaryRecord: match.primaryRecord,
+      compareRecord: match.compareRecord
+    });
+    
+    if (match.differentFields.length > 0) {
+      diffs.set(match.primaryId, match.differentFields);
+      console.log(`  Different fields:`);
+      match.differentFields.forEach(field => {
+        console.log(`    ${field}: ${props.primaryEnvironment}='${match.primaryRecord[field]}' vs ${props.compareEnvironment}='${match.compareRecord[field]}'`);
       });
+    } else {
+      console.log(`  No differences found`);
+    }
+  });
+  
+  // Log unmatched records
+  primaryData.value.forEach(primaryRecord => {
+    const primaryId = primaryRecord[props.entityConfig?.idField || 'id'];
+    if (!usedPrimaryIds.has(primaryId)) {
+      diffs.set(primaryId, ['NO_MATCH_FOUND']);
+      console.log(`❌ Record ${primaryId}: No match found in ${props.compareEnvironment}`);
     }
   });
   
   // Create matched pairs and unmatched lists
   const pairs = [];
-  const usedCompareIds = new Set();
   const unmatched1 = [];
   const unmatched2 = [];
   
@@ -322,7 +518,6 @@ const analyzeDifferences = () => {
         compare: diffInfo.compareRecord,
         differentFields: diffInfo.differentFields
       });
-      usedCompareIds.add(diffInfo.compareId);
       console.log(`Added to matched pairs: primary ${primaryId}`);
     } else {
       unmatched1.push(primaryRecord);
@@ -331,9 +526,11 @@ const analyzeDifferences = () => {
   });
   
   // Find unmatched compare records
+  const matchedCompareIds = new Set(Array.from(fieldDiffs.values()).map(diff => diff.compareId));
+  
   compareData.value.forEach(compareRecord => {
     const compareId = compareRecord[props.entityConfig?.idField || 'id'];
-    if (!usedCompareIds.has(compareId)) {
+    if (!matchedCompareIds.has(compareId)) {
       unmatched2.push(compareRecord);
       console.log(`Added to unmatched compare: ${compareId}`);
     }
@@ -345,12 +542,23 @@ const analyzeDifferences = () => {
   differences.value = diffs;
   fieldDifferences.value = fieldDiffs;
   
-  console.log('=== ANALYZE DIFFERENCES RESULTS ===');
+  console.log('Updated reactive data:');
+  console.log('- matchedPairs.value length:', matchedPairs.value.length);
+  console.log('- unmatchedPrimary.value length:', unmatchedPrimary.value.length);
+  console.log('- unmatchedCompare.value length:', unmatchedCompare.value.length);
+  
+  console.log('\n=== ANALYZE DIFFERENCES RESULTS ===');
   console.log('Matched pairs:', pairs.length);
   console.log('Unmatched primary:', unmatched1.length);
   console.log('Unmatched compare:', unmatched2.length);
   console.log('Total differences:', differences.value.size);
-  console.log('=== ANALYZE DIFFERENCES END ===');
+  console.log('Matched pairs details:', pairs.map(p => ({
+    primaryId: p.primary[props.entityConfig?.idField || 'id'],
+    compareId: p.compare[props.entityConfig?.idField || 'id'],
+    primaryVendor: p.primary.VENDOR_NAME,
+    compareVendor: p.compare.VENDOR_NAME
+  })));
+  console.log('=== ANALYZE DIFFERENCES END ===\n');
 };
 
 const loadCommonProducts = async () => {
@@ -385,8 +593,51 @@ const loadCommonProducts = async () => {
   }
 };
 
+const loadCommonServices = async () => {
+  if (props.selectedEntity !== 'SERVICE_PARAM') return;
+  
+  try {
+    // Load services from primary environment
+    const primaryResult = await callPrimaryServicesApi();
+    
+    // Load services from compare environment
+    const { loadComparisonData } = await import('../utils/comparisonClient.js');
+    const originalEnv = window.compareEnvironment;
+    window.compareEnvironment = props.compareEnvironment;
+    const compareResult = await loadComparisonData('SERVICE');
+    window.compareEnvironment = originalEnv;
+    
+    if (primaryResult?.data) {
+      allPrimaryServices.value = primaryResult.data.listSERVICES?.items || [];
+    }
+    
+    if (compareResult?.data) {
+      compareServices.value = compareResult.data.listSERVICES?.items || [];
+    }
+    
+    console.log('Primary services loaded:', allPrimaryServices.value.length);
+    console.log('Compare services loaded:', compareServices.value.length);
+  } catch (error) {
+    console.error('Error loading services:', error);
+    allPrimaryServices.value = [];
+    compareServices.value = [];
+  }
+};
+
 const productExistsInCompare = (productId) => {
   return compareProducts.value.some(product => product.PRODUCT_ID === productId);
+};
+
+const serviceExistsInCompare = (serviceId) => {
+  // Find the primary service by SERVICE_ID
+  const primaryService = allPrimaryServices.value.find(service => service.SERVICE_ID === serviceId);
+  if (!primaryService) return false;
+  
+  // Check if a service with matching SERVICE_PROVIDER_NAME and URI exists in compare environment
+  return compareServices.value.some(service => 
+    service.SERVICE_PROVIDER_NAME === primaryService.SERVICE_PROVIDER_NAME &&
+    service.URI === primaryService.URI
+  );
 };
 
 const callPrimaryProductsApi = async () => {
@@ -400,6 +651,17 @@ const callPrimaryProductsApi = async () => {
   }
 };
 
+const callPrimaryServicesApi = async () => {
+  try {
+    const { callExternalApi } = await import('../client.js');
+    const environment = localStorage.getItem('selectedEnvironment') || 'dev';
+    return await callExternalApi(environment, 'listSERVICES');
+  } catch (error) {
+    console.error('Error loading primary services:', error);
+    return null;
+  }
+};
+
 const applyProductFilter = () => {
   // Set the product filter for both EntityManagers
   if (primaryEntityManager.value) {
@@ -409,6 +671,41 @@ const applyProductFilter = () => {
   if (compareEntityManager.value) {
     compareEntityManager.value.selectedProductFilter = selectedProductFilter.value;
     compareEntityManager.value.filterByProduct();
+  }
+};
+
+const applyServiceFilter = async () => {
+  // Set global service filter
+  window.selectedServiceFilter = selectedServiceFilter.value;
+  
+  // For comparison screen, reload data with service filter
+  if (selectedServiceFilter.value && props.entityConfig?.loadFunction) {
+    try {
+      const result = await props.entityConfig.loadFunction();
+      if (result?.data) {
+        const dataKey = Object.keys(result.data)[0];
+        primaryData.value = result.data[dataKey]?.items || [];
+      }
+    } catch (error) {
+      console.error('Error reloading primary data with service filter:', error);
+    }
+  }
+  
+  // Reload compare data
+  if (selectedServiceFilter.value && props.compareEnvironment) {
+    try {
+      const { loadComparisonData } = await import('../utils/comparisonClient.js');
+      window.compareEnvironment = props.compareEnvironment;
+      window.selectedServiceFilter = selectedServiceFilter.value;
+      const result = await loadComparisonData(props.selectedEntity);
+      
+      if (result?.data) {
+        const dataKey = Object.keys(result.data)[0];
+        compareData.value = result.data[dataKey]?.items || [];
+      }
+    } catch (error) {
+      console.error('Error reloading compare data with service filter:', error);
+    }
   }
 };
 
@@ -445,20 +742,53 @@ watch(() => props.entityConfig?.loadFunction, async () => {
   }
 }, { immediate: true });
 
-// Watch for entity or environment changes to load products
+// Watch for compare environment changes to load compare data
+watch(() => props.compareEnvironment, async () => {
+  if (props.compareEnvironment) {
+    console.log('=== COMPARE ENVIRONMENT CHANGED ===');
+    console.log('Loading compare data for', props.selectedEntity, 'from', props.compareEnvironment);
+    
+    try {
+      const { loadComparisonData } = await import('../utils/comparisonClient.js');
+      window.compareEnvironment = props.compareEnvironment;
+      localStorage.setItem('compareEnvironment', props.compareEnvironment);
+      
+      const result = await loadComparisonData(props.selectedEntity);
+      
+      if (result?.data) {
+        const dataKey = Object.keys(result.data)[0];
+        const items = result.data[dataKey]?.items || [];
+        console.log('Compare data loaded:', items.length, 'items');
+        compareData.value = items;
+        
+        if (primaryData.value.length > 0) {
+          console.log('Both primary and compare data available, analyzing differences');
+          analyzeDifferences();
+        }
+      }
+    } catch (error) {
+      console.error('Error loading compare data:', error);
+      compareData.value = [];
+    }
+  } else {
+    compareData.value = [];
+  }
+}, { immediate: true });
+
+// Watch for entity or environment changes to load products and services
 watch([() => props.selectedEntity, () => props.compareEnvironment], async () => {
   if (props.selectedEntity === 'REDIRECT_URL' && props.compareEnvironment) {
     await loadCommonProducts();
+  }
+  if (props.selectedEntity === 'SERVICE_PARAM' && props.compareEnvironment) {
+    await loadCommonServices();
   }
 }, { immediate: true });
 
 const syncFilters = ref({});
 const syncSort = ref({ field: '', direction: 'asc' });
-const primaryContainer = ref(null);
-const compareContainer = ref(null);
 const primaryEntityManager = ref(null);
 const compareEntityManager = ref(null);
-const isScrolling = ref(false);
 
 const syncToCompare = (syncData) => {
   if (syncData.type === 'filter') {
@@ -468,26 +798,231 @@ const syncToCompare = (syncData) => {
   }
 };
 
-const syncScroll = (source, event) => {
-  if (isScrolling.value) return;
+const unifiedRows = computed(() => {
+  const rows = [];
   
-  console.log('Scroll event from:', source, 'scrollTop:', event.target.scrollTop);
+  // First, add all matched pairs
+  matchedPairs.value.forEach(pair => {
+    rows.push({
+      primary: pair.primary,
+      compare: pair.compare
+    });
+  });
   
-  isScrolling.value = true;
-  const sourceContainer = event.target;
-  const targetContainer = source === 'primary' ? compareContainer.value : primaryContainer.value;
+  // Then add unmatched primary records
+  unmatchedPrimary.value.forEach(primaryRecord => {
+    rows.push({
+      primary: primaryRecord,
+      compare: { __isBlank: true }
+    });
+  });
   
-  console.log('Target container exists:', !!targetContainer);
+  // Finally add unmatched compare records
+  unmatchedCompare.value.forEach(compareRecord => {
+    rows.push({
+      primary: { __isBlank: true },
+      compare: compareRecord
+    });
+  });
   
-  if (targetContainer && sourceContainer) {
-    targetContainer.scrollTop = sourceContainer.scrollTop;
-    targetContainer.scrollLeft = sourceContainer.scrollLeft;
-    console.log('Synced scroll to:', sourceContainer.scrollTop);
+  // Apply product filter for REDIRECT_URL
+  if (props.selectedEntity === 'REDIRECT_URL' && selectedProductFilter.value) {
+    return rows.filter(row => {
+      const primaryMatch = !row.primary?.__isBlank && row.primary?.PRODUCT_ID === selectedProductFilter.value;
+      const compareMatch = !row.compare?.__isBlank && row.compare?.PRODUCT_ID === selectedProductFilter.value;
+      return primaryMatch || compareMatch;
+    });
   }
   
-  setTimeout(() => {
-    isScrolling.value = false;
-  }, 50);
+  // Apply service filter for SERVICE_PARAM
+  if (props.selectedEntity === 'SERVICE_PARAM' && selectedServiceFilter.value) {
+    return rows.filter(row => {
+      const primaryMatch = !row.primary?.__isBlank && row.primary?.SERVICE_ID === selectedServiceFilter.value;
+      const compareMatch = !row.compare?.__isBlank && row.compare?.SERVICE_ID === selectedServiceFilter.value;
+      return primaryMatch || compareMatch;
+    });
+  }
+  
+  return rows;
+});
+
+const formatFieldValue = (value, field) => {
+  if (field.includes('DATE') && value) {
+    return new Date(value).toLocaleDateString();
+  }
+  return value || '';
+};
+
+const getUnifiedRowClass = (row) => {
+  if (row.primary?.__isBlank && row.compare?.__isBlank) return 'both-blank';
+  if (row.primary?.__isBlank) return 'primary-missing';
+  if (row.compare?.__isBlank) return 'compare-missing';
+  return 'both-present';
+};
+
+const getCellClass = (row, field, side) => {
+  const record = row[side];
+  if (!record || record.__isBlank) return 'blank-cell';
+  
+  const otherSide = side === 'primary' ? 'compare' : 'primary';
+  const otherRecord = row[otherSide];
+  
+  if (!otherRecord || otherRecord.__isBlank) return '';
+  
+  if (record[field] !== otherRecord[field]) {
+    return 'field-different';
+  }
+  
+  return '';
+};
+
+const editRecord = (record, environment) => {
+  // Trigger the actual edit modal by emitting to parent or using existing edit logic
+  handleEditRecord({ entity: record, environment, entityType: props.selectedEntity });
+};
+
+const handleEditRecord = (data) => {
+  console.log('Edit record:', data);
+  editingEntity.value = { ...data.entity, environment: data.environment };
+  
+  // Create clean form data, excluding computed fields and ensuring proper JSON structure
+  editFormData.value = {};
+  Object.keys(data.entity).forEach(key => {
+    if (!['Service Provider'].includes(key)) {
+      const value = data.entity[key];
+      // Ensure we have clean, serializable values
+      editFormData.value[key] = value === null || value === undefined ? '' : String(value);
+    }
+  });
+  
+  // Set CHANGED_BY_USER_ID with proper default
+  editFormData.value.CHANGED_BY_USER_ID = userProfileId.value || 1;
+  
+  showEditModal.value = true;
+};
+
+const closeEditModal = () => {
+  showEditModal.value = false;
+  editingEntity.value = null;
+  editFormData.value = {};
+};
+
+const saveEditRecord = async () => {
+  try {
+    // Create clean update data with proper JSON serialization
+    const cleanData = {};
+    Object.keys(editFormData.value).forEach(key => {
+      const value = editFormData.value[key];
+      if (value !== null && value !== undefined && value !== '') {
+        // Skip primary key fields that shouldn't be updated
+        if (key === 'ORIGIN_PRODUCT_ID' || key === '_ID') {
+          return;
+        }
+        // Convert to proper types based on field name
+        if (key.includes('_ID') && !isNaN(value)) {
+          cleanData[key] = parseInt(value);
+        } else {
+          cleanData[key] = String(value).trim();
+        }
+      }
+    });
+    
+    // Add the primary key for identification - use the correct ID for the environment being edited
+    if (props.selectedEntity === 'REDIRECT_URL' && editingEntity.value.REDIRECT_URL_ID) {
+      cleanData.REDIRECT_URL_ID = parseInt(editingEntity.value.REDIRECT_URL_ID);
+    } else if (editingEntity.value.ORIGIN_PRODUCT_ID) {
+      cleanData.ORIGIN_PRODUCT_ID = parseInt(editingEntity.value.ORIGIN_PRODUCT_ID);
+    }
+    
+    // Remove fields not part of update schemas
+    if (props.selectedEntity === 'REDIRECT_URL') {
+      delete cleanData.PRODUCT_ID;
+      delete cleanData.CREATED_BY_USER_ID;
+      delete cleanData.CREATED_DATE;
+      // Ensure ORIGIN_PRODUCT_ID is included for REDIRECT_URL
+      if (editingEntity.value.ORIGIN_PRODUCT_ID) {
+        cleanData.ORIGIN_PRODUCT_ID = parseInt(editingEntity.value.ORIGIN_PRODUCT_ID);
+      }
+    }
+    
+    // Remove CREATED fields for SERVICE_PROVIDER and SERVICE updates
+    if (props.selectedEntity === 'SERVICE_PROVIDER' || props.selectedEntity === 'SERVICE') {
+      delete cleanData.CREATED_BY_USER_ID;
+      delete cleanData.CREATED_DATE;
+    }
+    
+    // Add audit fields for update
+    cleanData.CHANGED_DATE = new Date().toISOString().split('T')[0];
+    if (cleanData.CHANGED_BY_USER_ID) {
+      cleanData.CHANGED_BY_USER_ID = parseInt(cleanData.CHANGED_BY_USER_ID);
+    }
+    
+    console.log('Clean data being sent:', JSON.stringify(cleanData, null, 2));
+    
+    let result;
+    
+    // Determine which environment we're editing based on the edit button clicked
+    const isCompareEnvironment = editingEntity.value.environment === 'compare';
+    
+    if (isCompareEnvironment) {
+      // Use comparison client for compare environment
+      const { updateComparisonRecord } = await import('../utils/comparisonClient.js');
+      result = await updateComparisonRecord(props.selectedEntity, props.compareEnvironment, cleanData);
+    } else {
+      // Use regular update function for primary environment
+      result = await props.entityConfig.updateFunction(cleanData);
+    }
+    
+    console.log('Edit result:', result);
+    
+    if (result && !result.errors) {
+      closeEditModal();
+      
+      // Immediately refresh data
+      await handleRecordUpdated();
+      
+      // Show success modal after refresh
+      successMessage.value = 'Record updated successfully!';
+      showSuccessModal.value = true;
+    } else {
+      console.error('Update failed:', result?.errors || 'Unknown error');
+      successMessage.value = `Update failed: ${result?.errors?.[0]?.message || 'Unknown error'}`;
+      showSuccessModal.value = true;
+    }
+  } catch (error) {
+    console.error('Error updating record:', error);
+    successMessage.value = `Error updating record: ${error.message}`;
+    showSuccessModal.value = true;
+  }
+};
+
+const addToOther = (record, targetEnvironment) => {
+  handleAddToOther({ entity: record, targetEnvironment });
+};
+
+const hasDifferences = (record) => {
+  const recordId = record[props.entityConfig?.idField || 'id'];
+  
+  // First check if this is a primary record with differences
+  const diffInfo = fieldDifferences.value.get(recordId);
+  if (diffInfo && diffInfo.differentFields.length > 0) {
+    return true;
+  }
+  
+  // If not found, check if this is a compare record by finding its matched pair
+  for (const pair of matchedPairs.value) {
+    if (pair.compare && pair.compare[props.entityConfig?.idField || 'id'] === recordId) {
+      const primaryId = pair.primary[props.entityConfig?.idField || 'id'];
+      const primaryDiffInfo = fieldDifferences.value.get(primaryId);
+      return primaryDiffInfo && primaryDiffInfo.differentFields.length > 0;
+    }
+  }
+  
+  return false;
+};
+
+const copyToOther = (record, targetEnvironment) => {
+  handleCopyDifferences({ entity: record, targetEnvironment });
 };
 
 const canEditEnvironment = (env) => {
@@ -509,6 +1044,13 @@ const showAddToOtherModal = ref(false);
 const addToOtherData = ref(null);
 const createdByUserId = ref(1);
 const userProfileId = ref(null);
+const showEditModal = ref(false);
+const editingEntity = ref(null);
+const editFormData = ref({});
+const showCopyDifferencesModal = ref(false);
+const copyDifferencesData = ref(null);
+const showSuccessModal = ref(false);
+const successMessage = ref('');
 
 const handleAddToOther = (data) => {
   console.log('Add to other environment:', data);
@@ -525,27 +1067,75 @@ const handleCopyDifferences = async (data) => {
     const entityId = entity[props.entityConfig?.idField || 'id'];
     
     // Get the field differences for this entity
-    const diffInfo = fieldDifferences.value.get(entityId);
+    let diffInfo = fieldDifferences.value.get(entityId);
+    
+    // If not found directly, check if this is a compare record by finding its matched pair
+    if (!diffInfo) {
+      for (const pair of matchedPairs.value) {
+        if (pair.compare && pair.compare[props.entityConfig?.idField || 'id'] === entityId) {
+          const primaryId = pair.primary[props.entityConfig?.idField || 'id'];
+          diffInfo = fieldDifferences.value.get(primaryId);
+          break;
+        }
+      }
+    }
+    
     if (!diffInfo || diffInfo.differentFields.length === 0) {
       console.log('No differences to copy');
+      successMessage.value = 'No differences found to copy for this record';
+      showSuccessModal.value = true;
       return;
     }
     
-    // Build update data with ALL required fields from the compare record
-    const updateData = { ...diffInfo.compareRecord };
+    // Show confirmation modal with proper source values
+    copyDifferencesData.value = {
+      entity,
+      targetEnvironment,
+      diffInfo,
+      fieldsToUpdate: diffInfo.differentFields
+    };
+    showCopyDifferencesModal.value = true;
+    return;
+  } catch (error) {
+    console.error('Error copying differences:', error);
+    successMessage.value = `Error copying differences: ${error.message}`;
+    showSuccessModal.value = true;
+  }
+};
+
+const confirmCopyDifferences = async () => {
+  try {
+    const { entity, targetEnvironment, diffInfo } = copyDifferencesData.value;
     
-    // Override with the different field values from the source entity
+    // Determine which record to use as the base for the update
+    let targetRecord, sourceRecord;
+    
+    if (targetEnvironment === props.compareEnvironment) {
+      // Copying from primary to compare
+      targetRecord = diffInfo.compareRecord;
+      sourceRecord = diffInfo.primaryRecord;
+    } else {
+      // Copying from compare to primary
+      targetRecord = diffInfo.primaryRecord;
+      sourceRecord = diffInfo.compareRecord;
+    }
+    
+    // Build update data with ALL required fields from the target record
+    const updateData = { ...targetRecord };
+    
+    // Override with the different field values from the source record
     diffInfo.differentFields.forEach(field => {
-      updateData[field] = entity[field];
+      updateData[field] = sourceRecord[field];
     });
     
-    // Don't remove PRODUCT_ID for ORIGIN_PRODUCT as it's required
-    if (props.selectedEntity !== 'ORIGIN_PRODUCT' && updateData.PRODUCT_ID) {
-      delete updateData.PRODUCT_ID;
-    }
     // Remove CREATED fields from updates
     delete updateData.CREATED_BY_USER_ID;
     delete updateData.CREATED_DATE;
+    
+    // Remove PRODUCT_ID for REDIRECT_URL updates (not accepted by schema)
+    if (props.selectedEntity === 'REDIRECT_URL') {
+      delete updateData.PRODUCT_ID;
+    }
     
     // Add audit fields
     updateData.CHANGED_DATE = new Date().toISOString().split('T')[0];
@@ -555,18 +1145,23 @@ const handleCopyDifferences = async (data) => {
     
     // Use comparison client to update the record in target environment
     const { updateComparisonRecord } = await import('../utils/comparisonClient.js');
-    await updateComparisonRecord(targetEnvironment, props.selectedEntity, updateData);
+    await updateComparisonRecord(props.selectedEntity, targetEnvironment, updateData);
     
     console.log(`Successfully copied differences to ${targetEnvironment}`);
     
-    // Force reload of comparison data
-    setTimeout(async () => {
-      await handleRecordUpdated();
-    }, 1000);
+    closeCopyDifferencesModal();
+    
+    // Immediately refresh data
+    await handleRecordUpdated();
+    
+    // Show success modal after refresh
+    successMessage.value = `Successfully copied ${diffInfo.differentFields.length} field difference(s) to ${targetEnvironment.toUpperCase()}`;
+    showSuccessModal.value = true;
     
   } catch (error) {
     console.error('Error copying differences:', error);
-    alert(`Error copying differences: ${error.message}`);
+    successMessage.value = `Error copying differences: ${error.message}`;
+    showSuccessModal.value = true;
   }
 };
 
@@ -574,6 +1169,16 @@ const closeAddToOtherModal = () => {
   showAddToOtherModal.value = false;
   addToOtherData.value = null;
   createdByUserId.value = 1;
+};
+
+const closeCopyDifferencesModal = () => {
+  showCopyDifferencesModal.value = false;
+  copyDifferencesData.value = null;
+};
+
+const closeSuccessModal = () => {
+  showSuccessModal.value = false;
+  successMessage.value = '';
 };
 
 const getCurrentDateString = () => {
@@ -705,25 +1310,16 @@ const confirmAddToOther = async () => {
     
     closeAddToOtherModal();
     
-    // Show success message
-    const recordName = formData.SERVICE_PROVIDER_NAME || formData.SERVICE_NAME || 'record';
-    alert(`Successfully added "${recordName}" to ${targetEnvironment.toUpperCase()}!`);
-    
     console.log(`Successfully added record to ${targetEnvironment}`);
     
-    // Force reload of comparison data with longer delay to account for database propagation
-    setTimeout(async () => {
-      console.log('Reloading data after create operation...');
-      await handleRecordUpdated();
-      // Force EntityManagers to reload based on target environment
-      if (targetEnvironment === props.compareEnvironment && compareEntityManager.value) {
-        console.log('Reloading compare EntityManager...');
-        await compareEntityManager.value.loadEntities();
-      } else if (targetEnvironment === props.primaryEnvironment && primaryEntityManager.value) {
-        console.log('Reloading primary EntityManager...');
-        await primaryEntityManager.value.loadEntities();
-      }
-    }, 2000);
+    // Immediately refresh data
+    console.log('Reloading data after create operation...');
+    await handleRecordUpdated();
+    
+    // Show success message after refresh
+    const recordName = formData.SERVICE_PROVIDER_NAME || formData.SERVICE_NAME || 'record';
+    successMessage.value = `Successfully added "${recordName}" to ${targetEnvironment.toUpperCase()}!`;
+    showSuccessModal.value = true;
   } catch (error) {
     console.error('Error adding record to other environment:', error);
     
@@ -735,7 +1331,8 @@ const confirmAddToOther = async () => {
     }
     
     console.log('Full error object:', JSON.stringify(error, null, 2));
-    alert(`Error: ${errorMsg}`);
+    successMessage.value = `Error: ${errorMsg}`;
+    showSuccessModal.value = true;
   }
 };
 
@@ -753,12 +1350,6 @@ const loadUserProfile = async () => {
 
 const handleRecordUpdated = async () => {
   console.log('Record updated, reloading data and re-analyzing differences');
-  
-  // Store current scroll positions
-  const primaryScrollTop = primaryContainer.value?.scrollTop || 0;
-  const primaryScrollLeft = primaryContainer.value?.scrollLeft || 0;
-  const compareScrollTop = compareContainer.value?.scrollTop || 0;
-  const compareScrollLeft = compareContainer.value?.scrollLeft || 0;
   
   // Reload primary data
   if (props.entityConfig?.loadFunction) {
@@ -791,24 +1382,15 @@ const handleRecordUpdated = async () => {
   if (primaryData.value.length >= 0 && compareData.value.length >= 0) {
     analyzeDifferences();
   }
-  
-  // Restore scroll positions after a short delay to allow DOM updates
-  setTimeout(() => {
-    if (primaryContainer.value) {
-      primaryContainer.value.scrollTop = primaryScrollTop;
-      primaryContainer.value.scrollLeft = primaryScrollLeft;
-    }
-    if (compareContainer.value) {
-      compareContainer.value.scrollTop = compareScrollTop;
-      compareContainer.value.scrollLeft = compareScrollLeft;
-    }
-  }, 100);
 }
 
 onMounted(async () => {
   await loadUserProfile();
   if (props.selectedEntity === 'REDIRECT_URL' && props.compareEnvironment) {
     await loadCommonProducts();
+  }
+  if (props.selectedEntity === 'SERVICE_PARAM' && props.compareEnvironment) {
+    await loadCommonServices();
   }
   console.log('Environment comparison mounted', {
     primary: props.primaryEnvironment,
@@ -864,30 +1446,93 @@ const debugCompareLength = computed(() => {
   overflow: hidden;
 }
 
-.environment-columns {
-  display: flex;
-  gap: 20px;
+.unified-table-container {
   height: 100%;
-}
-
-.environment-column {
-  flex: 1;
+  overflow: auto;
   border: 1px solid var(--border-color, #dee2e6);
   border-radius: 4px;
-  overflow: hidden;
 }
 
-.environment-column h3 {
-  margin: 0;
+.unified-comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.environment-header th {
+  background-color: var(--table-header-bg, #f8f9fa);
   padding: 10px;
-  background: var(--table-header-bg, #f8f9fa);
-  border-bottom: 1px solid var(--border-color, #dee2e6);
   text-align: center;
+  font-weight: bold;
+  border: 1px solid var(--border-color, #dee2e6);
 }
 
-.entity-container {
-  height: calc(100% - 50px);
-  overflow: auto;
+.primary-env-header {
+  background-color: #e3f2fd !important;
+  color: #1976d2;
+  border-right: 3px solid #1976d2 !important;
+}
+
+.compare-env-header {
+  background-color: #fff3e0 !important;
+  color: #f57c00;
+  border-left: 3px solid #f57c00 !important;
+}
+
+.actions-header {
+  width: 150px;
+  background-color: var(--table-header-bg, #f8f9fa) !important;
+}
+
+.field-header th {
+  background-color: var(--table-header-bg, #f8f9fa);
+  padding: 8px;
+  border: 1px solid var(--border-color, #dee2e6);
+  font-weight: bold;
+}
+
+.primary-field {
+  border-right: 3px solid #1976d2 !important;
+}
+
+.compare-field {
+  border-left: 3px solid #f57c00 !important;
+}
+
+.unified-comparison-table td {
+  padding: 8px;
+  border: 1px solid var(--border-color, #dee2e6);
+  vertical-align: top;
+}
+
+.actions-cell {
+  width: 150px;
+  white-space: normal;
+}
+
+.primary-cell {
+  border-right: 3px solid #1976d2 !important;
+}
+
+.compare-cell {
+  border-left: 3px solid #f57c00 !important;
+}
+
+.both-blank {
+  background-color: var(--bg-color, #f8f9fa);
+}
+
+.primary-missing {
+  background-color: rgba(255, 152, 0, 0.1);
+}
+
+.compare-missing {
+  background-color: rgba(25, 118, 210, 0.1);
+}
+
+.field-different {
+  background-color: rgba(255, 193, 7, 0.3) !important;
+  font-weight: bold;
 }
 
 .no-comparison {
@@ -981,7 +1626,31 @@ const debugCompareLength = computed(() => {
   color: var(--text-color, #333);
 }
 
-.product-filter-section {
+.edit-modal {
+  min-width: 500px;
+  max-width: 700px;
+}
+
+.edit-form {
+  margin: 20px 0;
+}
+
+.form-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--border-color, #dee2e6);
+  border-radius: 4px;
+  background: var(--input-bg, #fff);
+  color: var(--text-color, #333);
+}
+
+.form-input:disabled {
+  background-color: var(--bg-color, #f8f9fa);
+  color: var(--text-muted, #6c757d);
+}
+
+.product-filter-section,
+.service-filter-section {
   margin-bottom: 20px;
   padding: 15px;
   border: 1px solid var(--border-color, #dee2e6);
@@ -1009,17 +1678,35 @@ const debugCompareLength = computed(() => {
   color: var(--text-color, #333);
 }
 
-.no-common-products {
+.no-common-products,
+.no-common-services {
   text-align: center;
   padding: 20px;
   color: var(--text-color, #666);
 }
 
-.no-common-products p {
+.no-common-products p,
+.no-common-services p {
   margin: 10px 0;
 }
 
-.no-common-products strong {
+.no-common-products strong,
+.no-common-services strong {
   color: var(--primary-color, #007bff);
+}
+
+.no-service-selected {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-color, #666);
+  border: 1px dashed var(--border-color, #dee2e6);
+  background: var(--bg-color, #f8f9fa);
+  border-radius: 4px;
+  margin: 20px 0;
+}
+
+.no-service-selected p {
+  margin: 0;
+  font-size: 16px;
 }
 </style>
