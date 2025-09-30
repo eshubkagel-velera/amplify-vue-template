@@ -96,14 +96,21 @@ export const loadComparisonData = async (entityName) => {
       const provider = providers.find(p => p.SERVICE_PROVIDER_ID === service.SERVICE_PROVIDER_ID);
       return {
         ...service,
-        'Service Provider': provider ? `${provider.SERVICE_PROVIDER_ID}: ${provider.SERVICE_PROVIDER_NAME}` : service.SERVICE_PROVIDER_ID
+        'Service Provider': provider ? provider.SERVICE_PROVIDER_NAME : service.SERVICE_PROVIDER_ID
       };
     });
     
     console.log('Enhanced services:', enhancedServices.length);
     return { data: { listSERVICES: { items: enhancedServices } } };
   } else if (entityName === 'SERVICE_PARAM') {
-    const items = await fetchAllPages(client, queries.listServiceParams, {}, 'listSERVICE_PARAMS');
+    let items = await fetchAllPages(client, queries.listServiceParams, {}, 'listSERVICE_PARAMS');
+    
+    // Filter by service if a service filter is set
+    if (window.selectedServiceFilter) {
+      items = items.filter(param => param.SERVICE_ID === parseInt(window.selectedServiceFilter));
+      console.log(`Filtered SERVICE_PARAM items by SERVICE_ID ${window.selectedServiceFilter}:`, items.length);
+    }
+    
     return { data: { listSERVICE_PARAMS: { items } } };
   } else if (entityName === 'STEP_TYPE') {
     const items = await fetchAllPages(client, queries.listStepTypes, {}, 'listSTEP_TYPES');
@@ -200,8 +207,8 @@ export const createComparisonRecord = async (environment, entityName, formData) 
   }
 };
 
-export const updateComparisonRecord = async (environment, entityName, updateData) => {
-  console.log(`Updating ${entityName} record in ${environment}`);
+export const updateComparisonRecord = async (entityName, environment, updateData) => {
+  console.log(`Updating ${environment} record in ${entityName}`);
   
   try {
     const mutations = await import('../graphql/mutations.js');
@@ -210,7 +217,8 @@ export const updateComparisonRecord = async (environment, entityName, updateData
       'ORIGIN_PRODUCT': mutations.updateOriginProduct,
       'REDIRECT_URL': mutations.updateRedirectUrl(environment),
       'SERVICE': mutations.updateService,
-      'SERVICE_PROVIDER': mutations.updateServiceProvider
+      'SERVICE_PROVIDER': mutations.updateServiceProvider,
+      'SERVICE_PARAM': mutations.updateServiceParam
     };
     
     const mutation = mutationMap[entityName];
