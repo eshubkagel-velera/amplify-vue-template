@@ -2,8 +2,8 @@
   <div class="environment-comparison">
     <div class="comparison-header">
       <h2>Environment Comparison: {{ primaryEnvironment.toUpperCase() }} vs {{ compareEnvironment.toUpperCase() }}</h2>
-      <div v-if="differences.size > 0" class="differences-summary">
-        <span class="diff-count">{{ differences.size }} records with differences</span>
+      <div v-if="filteredDifferences > 0" class="differences-summary">
+        <span class="diff-count">{{ filteredDifferences }} records with differences</span>
       </div>
     </div>
 
@@ -14,7 +14,7 @@
         <select id="serviceFilter" v-model="selectedServiceFilter" @change="applyServiceFilter">
           <option value="">-- All Services --</option>
           <option v-for="service in allPrimaryServices" :key="service.SERVICE_ID" :value="service.SERVICE_ID" :disabled="!serviceExistsInCompare(service.SERVICE_ID)">
-            {{ service.SERVICE_ID }}: {{ service.URI }}{{ !serviceExistsInCompare(service.SERVICE_ID) ? ' (not in ' + compareEnvironment.toUpperCase() + ')' : '' }}
+            {{ service['Service Provider'] }}: {{ service.URI }}{{ !serviceExistsInCompare(service.SERVICE_ID) ? ' (not in ' + compareEnvironment.toUpperCase() + ')' : '' }}
           </option>
         </select>
       </div>
@@ -46,21 +46,44 @@
       </div>
       
       <div v-else class="unified-table-container">
+        <!-- Bulk Actions for SERVICE_PARAM -->
+        <div v-if="selectedEntity === 'SERVICE_PARAM' && selectedServiceFilter" class="bulk-actions-container">
+          <div class="bulk-actions bulk-actions-primary">
+            <button @click="bulkAddToCompare" :disabled="selectedPrimaryRows.length === 0" class="btn-success">Add Selected to {{ compareEnvironment.toUpperCase() }}</button>
+            <span class="selection-count">{{ selectedPrimaryRows.length }} primary selected</span>
+          </div>
+          <div class="bulk-actions bulk-actions-compare">
+            <button @click="bulkAddToPrimary" :disabled="selectedCompareRows.length === 0" class="btn-success">Add Selected to {{ primaryEnvironment.toUpperCase() }}</button>
+            <span class="selection-count">{{ selectedCompareRows.length }} compare selected</span>
+          </div>
+        </div>
+        
         <table class="unified-comparison-table">
           <thead>
             <tr class="environment-header">
+              <th v-if="selectedEntity === 'SERVICE_PARAM' && selectedServiceFilter" class="checkbox-header">Select</th>
               <th :colspan="filteredFields.length + 1" class="primary-env-header">{{ primaryEnvironment.toUpperCase() }}</th>
+              <th v-if="selectedEntity === 'SERVICE_PARAM' && selectedServiceFilter" class="checkbox-header">Select</th>
               <th :colspan="filteredFields.length + 1" class="compare-env-header">{{ compareEnvironment.toUpperCase() }}</th>
             </tr>
             <tr class="field-header">
+              <th v-if="selectedEntity === 'SERVICE_PARAM' && selectedServiceFilter" class="checkbox-header">
+                <input type="checkbox" @change="toggleSelectAllPrimary" :checked="allPrimarySelected" :indeterminate="somePrimarySelected">
+              </th>
               <th class="actions-header">Actions</th>
               <th v-for="field in filteredFields" :key="`primary-${field}`" class="primary-field">{{ field }}</th>
+              <th v-if="selectedEntity === 'SERVICE_PARAM' && selectedServiceFilter" class="checkbox-header">
+                <input type="checkbox" @change="toggleSelectAllCompare" :checked="allCompareSelected" :indeterminate="someCompareSelected">
+              </th>
               <th class="actions-header">Actions</th>
               <th v-for="field in filteredFields" :key="`compare-${field}`" class="compare-field">{{ field }}</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(row, index) in unifiedRows" :key="index" :class="getUnifiedRowClass(row)">
+              <td v-if="selectedEntity === 'SERVICE_PARAM' && selectedServiceFilter" class="checkbox-cell">
+                <input v-if="row.primary && !row.primary.__isBlank && (!row.compare || row.compare.__isBlank)" type="checkbox" :value="getPrimaryRowId(row)" v-model="selectedPrimaryRows">
+              </td>
               <td class="actions-cell">
                 <button v-if="row.primary && !row.primary.__isBlank" @click="editRecord(row.primary, 'primary')" class="btn-primary">Edit</button>
                 <button v-if="row.primary && !row.primary.__isBlank && (!row.compare || row.compare.__isBlank)" @click="addToOther(row.primary, compareEnvironment)" class="btn-success">Add to {{ compareEnvironment.toUpperCase() }}</button>
@@ -69,6 +92,9 @@
               <td v-for="field in filteredFields" :key="`primary-${field}`" :class="getCellClass(row, field, 'primary')" class="primary-cell">
                 <span v-if="row.primary && !row.primary.__isBlank">{{ formatFieldValue(row.primary[field], field) }}</span>
                 <span v-else class="blank-cell">—</span>
+              </td>
+              <td v-if="selectedEntity === 'SERVICE_PARAM' && selectedServiceFilter" class="checkbox-cell">
+                <input v-if="row.compare && !row.compare.__isBlank && (!row.primary || row.primary.__isBlank)" type="checkbox" :value="getCompareRowId(row)" v-model="selectedCompareRows">
               </td>
               <td class="actions-cell">
                 <button v-if="row.compare && !row.compare.__isBlank" @click="editRecord(row.compare, 'compare')" class="btn-primary">Edit</button>
@@ -168,6 +194,21 @@
       </div>
     </div>
 
+    <!-- Progress Modal -->
+    <div v-if="showProgressModal" class="modal-overlay progress-overlay">
+      <div class="modal-content">
+        <h3>{{ progressData.operation }}</h3>
+        <p>Processing {{ progressData.current }} of {{ progressData.total }} records...</p>
+        <div class="progress-bar">
+          <div class="progress-fill" :style="{ width: (progressData.current / progressData.total * 100) + '%' }"></div>
+        </div>
+        <p class="progress-text">{{ Math.round(progressData.current / progressData.total * 100) }}% Complete</p>
+      </div>
+    </div>
+
+    <!-- Grey overlay for progress -->
+    <div v-if="showProgressModal" class="grey-overlay"></div>
+
     <!-- Success Modal -->
     <div v-if="showSuccessModal" class="modal-overlay">
       <div class="modal-content">
@@ -215,6 +256,9 @@ const selectedProductFilter = ref('');
 const allPrimaryServices = ref([]);
 const compareServices = ref([]);
 const selectedServiceFilter = ref('');
+const selectedRows = ref([]);
+const selectedPrimaryRows = ref([]);
+const selectedCompareRows = ref([]);
 
 // Watch compareData changes
 watch(compareData, (newVal) => {
@@ -313,8 +357,10 @@ const analyzeDifferences = () => {
       comparisonFields: null // Use all available fields
     },
     SERVICE_PARAM: {
-      matchingFields: ['SERVICE_NAME', 'PARAM_NAME'],
-      comparisonFields: null // Use all available fields
+      matchingFields: ['PARAM_NAME'],
+      comparisonFields: null, // Use all available fields
+      stringMatchFields: ['PARAM_NAME'],
+      stringMatchThreshold: 0.75
     },
     SERVICE_PARAM_MAPPING: {
       matchingFields: ['Target Service', 'Source Service', 'Target Param Name', 'Target Expr', 'Source Param Name', 'Source Expr'],
@@ -333,6 +379,36 @@ const analyzeDifferences = () => {
   const diffs = new Map();
   const fieldDiffs = new Map();
   
+  // String similarity function using substring matching
+  const calculateStringSimilarity = (str1, str2) => {
+    if (!str1 || !str2) return 0;
+    const s1 = str1.toLowerCase();
+    const s2 = str2.toLowerCase();
+    if (s1 === s2) return 1;
+    
+    // Find the shorter and longer strings
+    const shorter = s1.length <= s2.length ? s1 : s2;
+    const longer = s1.length > s2.length ? s1 : s2;
+    
+    // Check if shorter string is contained in longer string
+    if (longer.includes(shorter)) {
+      return shorter.length / longer.length;
+    }
+    
+    // Find longest common substring
+    let maxLength = 0;
+    for (let i = 0; i < shorter.length; i++) {
+      for (let j = i + 1; j <= shorter.length; j++) {
+        const substring = shorter.substring(i, j);
+        if (longer.includes(substring) && substring.length > maxLength) {
+          maxLength = substring.length;
+        }
+      }
+    }
+    
+    return maxLength / Math.max(s1.length, s2.length);
+  };
+
   // Calculate match percentage between two records with entity-specific logic
   const calculateMatch = (record1, record2) => {
     const config = entityConfigs[props.selectedEntity] || {};
@@ -345,23 +421,44 @@ const analyzeDifferences = () => {
       comparisonFields = Object.keys(record1)
         .filter(field => !globalExcludeFields.some(exclude => field.includes(exclude)));
     }
-
-    console.log(`Comparing records: ${record1[props.entityConfig?.idField || 'id']} vs ${record2[props.entityConfig?.idField || 'id']}`);
-    console.log(`PRODUCT_ID: '${record1.PRODUCT_ID}' vs '${record2.PRODUCT_ID}'`);
-    console.log('Comparison fields:', comparisonFields);
-    console.log('Matching fields:', config.matchingFields || 'PRODUCT_ID based');
-    console.log('Excluded fields:', globalExcludeFields);
     
     // Check if records should be matched based on matching fields
     if (config.matchingFields) {
-      // Check if all matching fields are identical
-      const matchingFieldsMatch = config.matchingFields.every(field => record1[field] === record2[field]);
-      
-      if (!matchingFieldsMatch) {
-        return { matchPercentage: 0, differentFields: comparisonFields, totalFields: comparisonFields.length };
+      if (config.stringMatchFields && config.stringMatchThreshold) {
+        // Use string similarity matching for specified fields
+        let highestSimilarity = 0;
+        let matchedByString = false;
+        
+        config.matchingFields.forEach(field => {
+          if (config.stringMatchFields.includes(field)) {
+            const similarity = calculateStringSimilarity(record1[field], record2[field]);
+            highestSimilarity = Math.max(highestSimilarity, similarity);
+            if (similarity >= config.stringMatchThreshold) {
+              matchedByString = true;
+            }
+          } else {
+            // Exact match for non-string fields
+            if (record1[field] !== record2[field]) {
+              return { matchPercentage: 0, differentFields: comparisonFields, totalFields: comparisonFields.length };
+            }
+          }
+        });
+        
+        if (!matchedByString && highestSimilarity < config.stringMatchThreshold) {
+          return { matchPercentage: Math.round(highestSimilarity * 100), differentFields: comparisonFields, totalFields: comparisonFields.length };
+        }
+        
+        console.log(`${config.matchingFields.join(' + ')} match found (${Math.round(highestSimilarity * 100)}%) - checking field differences`);
+      } else {
+        // Check if all matching fields are identical
+        const matchingFieldsMatch = config.matchingFields.every(field => record1[field] === record2[field]);
+        
+        if (!matchingFieldsMatch) {
+          return { matchPercentage: 0, differentFields: comparisonFields, totalFields: comparisonFields.length };
+        }
+        
+        console.log(`${config.matchingFields.join(' + ')} exact match found - checking field differences`);
       }
-      
-      console.log(`${config.matchingFields.join(' + ')} exact match found - checking field differences`);
     } else {
       // Default PRODUCT_ID matching for entities without specific matching fields
       if (record1.PRODUCT_ID !== record2.PRODUCT_ID) {
@@ -394,13 +491,13 @@ const analyzeDifferences = () => {
   
   primaryData.value.forEach(primaryRecord => {
     const primaryId = primaryRecord[props.entityConfig?.idField || 'id'];
-    console.log(`\n=== Processing primary record ${primaryId} ===`);
+    // console.log(`\n=== Processing primary record ${primaryId} ===`);
     
     compareData.value.forEach(compareRecord => {
       const compareId = compareRecord[props.entityConfig?.idField || 'id'];
       const match = calculateMatch(primaryRecord, compareRecord);
       
-      if (match.matchPercentage >= 80) {
+      if (match.matchPercentage >= 75) {
         allPossibleMatches.push({
           primaryId,
           compareId,
@@ -499,9 +596,12 @@ const analyzeDifferences = () => {
     const primaryId = primaryRecord[props.entityConfig?.idField || 'id'];
     if (!usedPrimaryIds.has(primaryId)) {
       diffs.set(primaryId, ['NO_MATCH_FOUND']);
-      console.log(`❌ Record ${primaryId}: No match found in ${props.compareEnvironment}`);
+      // console.log(`❌ Record ${primaryId}: No match found in ${props.compareEnvironment}`);
     }
   });
+  
+  // console.log('Used primary IDs:', Array.from(usedPrimaryIds));
+  // console.log('Used compare IDs:', Array.from(usedCompareIds));
   
   // Create matched pairs and unmatched lists
   const pairs = [];
@@ -518,10 +618,10 @@ const analyzeDifferences = () => {
         compare: diffInfo.compareRecord,
         differentFields: diffInfo.differentFields
       });
-      console.log(`Added to matched pairs: primary ${primaryId}`);
+      // console.log(`Added to matched pairs: primary ${primaryId}`);
     } else {
       unmatched1.push(primaryRecord);
-      console.log(`Added to unmatched primary: ${primaryId}`);
+      // console.log(`Added to unmatched primary: ${primaryId}`);
     }
   });
   
@@ -633,9 +733,9 @@ const serviceExistsInCompare = (serviceId) => {
   const primaryService = allPrimaryServices.value.find(service => service.SERVICE_ID === serviceId);
   if (!primaryService) return false;
   
-  // Check if a service with matching SERVICE_PROVIDER_NAME and URI exists in compare environment
+  // Check if a service with matching Service Provider and URI exists in compare environment
   return compareServices.value.some(service => 
-    service.SERVICE_PROVIDER_NAME === primaryService.SERVICE_PROVIDER_NAME &&
+    service['Service Provider'] === primaryService['Service Provider'] &&
     service.URI === primaryService.URI
   );
 };
@@ -655,7 +755,36 @@ const callPrimaryServicesApi = async () => {
   try {
     const { callExternalApi } = await import('../client.js');
     const environment = localStorage.getItem('selectedEnvironment') || 'dev';
-    return await callExternalApi(environment, 'listSERVICES');
+    
+    // Load both services and providers
+    const [servicesResult, providersResult] = await Promise.all([
+      callExternalApi(environment, 'listSERVICES'),
+      callExternalApi(environment, 'listSERVICE_PROVIDERS')
+    ]);
+    
+    if (servicesResult?.data && providersResult?.data) {
+      const services = servicesResult.data.listSERVICES?.items || [];
+      const providers = providersResult.data.listSERVICE_PROVIDERS?.items || [];
+      
+      // Enhance services with provider names
+      const enhancedServices = services.map(service => {
+        const provider = providers.find(p => p.SERVICE_PROVIDER_ID === service.SERVICE_PROVIDER_ID);
+        return {
+          ...service,
+          'Service Provider': provider ? provider.SERVICE_PROVIDER_NAME : service.SERVICE_PROVIDER_ID
+        };
+      });
+      
+      return {
+        data: {
+          listSERVICES: {
+            items: enhancedServices
+          }
+        }
+      };
+    }
+    
+    return servicesResult;
   } catch (error) {
     console.error('Error loading primary services:', error);
     return null;
@@ -675,6 +804,11 @@ const applyProductFilter = () => {
 };
 
 const applyServiceFilter = async () => {
+  // Clear selections when changing service
+  selectedRows.value = [];
+  selectedPrimaryRows.value = [];
+  selectedCompareRows.value = [];
+  
   // Set global service filter
   window.selectedServiceFilter = selectedServiceFilter.value;
   
@@ -729,12 +863,8 @@ watch(() => props.entityConfig?.loadFunction, async () => {
         const items = result.data[dataKey]?.items || [];
         console.log('Primary data loaded:', items.length, 'items');
         primaryData.value = items;
-        if (compareData.value.length > 0) {
-          console.log('Both primary and compare data available, analyzing differences');
-          analyzeDifferences();
-        } else {
-          console.log('Compare data not yet available, skipping analysis');
-        }
+        console.log('Both primary and compare data available, analyzing differences');
+        analyzeDifferences();
       }
     } catch (error) {
       console.error('Error loading primary data for comparison:', error);
@@ -761,10 +891,8 @@ watch(() => props.compareEnvironment, async () => {
         console.log('Compare data loaded:', items.length, 'items');
         compareData.value = items;
         
-        if (primaryData.value.length > 0) {
-          console.log('Both primary and compare data available, analyzing differences');
-          analyzeDifferences();
-        }
+        console.log('Both primary and compare data available, analyzing differences');
+        analyzeDifferences();
       }
     } catch (error) {
       console.error('Error loading compare data:', error);
@@ -838,7 +966,23 @@ const unifiedRows = computed(() => {
   if (props.selectedEntity === 'SERVICE_PARAM' && selectedServiceFilter.value) {
     return rows.filter(row => {
       const primaryMatch = !row.primary?.__isBlank && row.primary?.SERVICE_ID === selectedServiceFilter.value;
-      const compareMatch = !row.compare?.__isBlank && row.compare?.SERVICE_ID === selectedServiceFilter.value;
+      
+      // For compare records, check if they belong to the equivalent service in compare environment
+      let compareMatch = false;
+      if (!row.compare?.__isBlank && row.compare?.SERVICE_ID) {
+        // Find the primary service
+        const primaryService = allPrimaryServices.value.find(s => s.SERVICE_ID === selectedServiceFilter.value);
+        if (primaryService) {
+          // Find the equivalent service in compare environment
+          const compareService = compareServices.value.find(s => 
+            s['Service Provider'] === primaryService['Service Provider'] && s.URI === primaryService.URI
+          );
+          if (compareService) {
+            compareMatch = row.compare.SERVICE_ID === compareService.SERVICE_ID;
+          }
+        }
+      }
+      
       return primaryMatch || compareMatch;
     });
   }
@@ -967,7 +1111,7 @@ const saveEditRecord = async () => {
     if (isCompareEnvironment) {
       // Use comparison client for compare environment
       const { updateComparisonRecord } = await import('../utils/comparisonClient.js');
-      result = await updateComparisonRecord(props.selectedEntity, props.compareEnvironment, cleanData);
+      result = await updateComparisonRecord(props.compareEnvironment, props.selectedEntity, cleanData);
     } else {
       // Use regular update function for primary environment
       result = await props.entityConfig.updateFunction(cleanData);
@@ -1051,6 +1195,8 @@ const showCopyDifferencesModal = ref(false);
 const copyDifferencesData = ref(null);
 const showSuccessModal = ref(false);
 const successMessage = ref('');
+const showProgressModal = ref(false);
+const progressData = ref({ current: 0, total: 0, operation: '' });
 
 const handleAddToOther = (data) => {
   console.log('Add to other environment:', data);
@@ -1267,12 +1413,9 @@ const confirmAddToOther = async () => {
     console.log('Adding record to target environment:', targetEnvironment);
     console.log('Form data being sent:', formData);
     
-    // Use direct API call to target environment
+    // Use createComparisonRecord which handles SERVICE_ID mapping
     console.log('Creating record in target environment:', targetEnvironment);
     
-    const { callExternalApi } = await import('../client.js');
-    
-    // Use the same approach as the comparison data loading
     const { createComparisonRecord } = await import('../utils/comparisonClient.js');
     const result = await createComparisonRecord(targetEnvironment, props.selectedEntity, formData);
     
@@ -1298,8 +1441,10 @@ const confirmAddToOther = async () => {
       throw new Error('Create operation failed - no record data returned');
     }
     
+    // For SERVICE_PARAM, the ID field is SERVICE_PARAM_ID
+    const idField = props.selectedEntity === 'SERVICE_PARAM' ? 'SERVICE_PARAM_ID' : (props.entityConfig?.idField || 'SERVICE_ID');
+    
     // Check for negative ID which indicates failure (except -1 which is our Aurora VTL placeholder)
-    const idField = props.entityConfig?.idField || 'SERVICE_ID';
     if (createdRecord[idField] && createdRecord[idField] < 0 && createdRecord[idField] !== -1) {
       let errorMsg = `Create operation failed - received invalid ID: ${createdRecord[idField]}`;
       if (props.selectedEntity === 'SERVICE') {
@@ -1404,6 +1549,202 @@ const debugCompareLength = computed(() => {
   console.log('EnvironmentComparison: computed compareData.length =', compareData.value.length);
   return compareData.value.length;
 });
+
+const allSelected = computed(() => {
+  const availableRows = unifiedRows.value.filter(row => row.primary && !row.primary.__isBlank);
+  return availableRows.length > 0 && selectedRows.value.length === availableRows.length;
+});
+
+const someSelected = computed(() => {
+  return selectedRows.value.length > 0 && !allSelected.value;
+});
+
+const allPrimarySelected = computed(() => {
+  const availableRows = unifiedRows.value.filter(row => row.primary && !row.primary.__isBlank && (!row.compare || row.compare.__isBlank));
+  return availableRows.length > 0 && selectedPrimaryRows.value.length === availableRows.length;
+});
+
+const somePrimarySelected = computed(() => {
+  return selectedPrimaryRows.value.length > 0 && !allPrimarySelected.value;
+});
+
+const allCompareSelected = computed(() => {
+  const availableRows = unifiedRows.value.filter(row => row.compare && !row.compare.__isBlank && (!row.primary || row.primary.__isBlank));
+  return availableRows.length > 0 && selectedCompareRows.value.length === availableRows.length;
+});
+
+const someCompareSelected = computed(() => {
+  return selectedCompareRows.value.length > 0 && !allCompareSelected.value;
+});
+
+const getRowId = (row) => {
+  return row.primary[props.entityConfig?.idField || 'id'];
+};
+
+const getPrimaryRowId = (row) => {
+  return row.primary[props.entityConfig?.idField || 'id'];
+};
+
+const getCompareRowId = (row) => {
+  return row.compare[props.entityConfig?.idField || 'id'];
+};
+
+const toggleSelectAll = () => {
+  const availableRows = unifiedRows.value.filter(row => row.primary && !row.primary.__isBlank);
+  if (allSelected.value) {
+    selectedRows.value = [];
+  } else {
+    selectedRows.value = availableRows.map(row => getRowId(row));
+  }
+};
+
+const toggleSelectAllPrimary = () => {
+  const availableRows = unifiedRows.value.filter(row => row.primary && !row.primary.__isBlank && (!row.compare || row.compare.__isBlank));
+  if (allPrimarySelected.value) {
+    selectedPrimaryRows.value = [];
+  } else {
+    selectedPrimaryRows.value = availableRows.map(row => getPrimaryRowId(row));
+  }
+};
+
+const toggleSelectAllCompare = () => {
+  const availableRows = unifiedRows.value.filter(row => row.compare && !row.compare.__isBlank && (!row.primary || row.primary.__isBlank));
+  if (allCompareSelected.value) {
+    selectedCompareRows.value = [];
+  } else {
+    selectedCompareRows.value = availableRows.map(row => getCompareRowId(row));
+  }
+};
+
+const bulkAddToCompare = async () => {
+  if (selectedPrimaryRows.value.length === 0) return;
+  
+  const recordCount = selectedPrimaryRows.value.length;
+  let successCount = 0;
+  
+  progressData.value = { current: 0, total: recordCount, operation: `Adding records to ${props.compareEnvironment.toUpperCase()}` };
+  showProgressModal.value = true;
+  
+  try {
+    for (let i = 0; i < selectedPrimaryRows.value.length; i++) {
+      const rowId = selectedPrimaryRows.value[i];
+      progressData.value.current = i + 1;
+      
+      const record = unifiedRows.value.find(row => 
+        row.primary && !row.primary.__isBlank && getPrimaryRowId(row) === rowId
+      )?.primary;
+      
+      if (record) {
+        const { createComparisonRecord } = await import('../utils/comparisonClient.js');
+        const formData = {};
+        props.entityConfig.formFields.forEach(field => {
+          if (record[field.name] !== undefined && record[field.name] !== null) {
+            formData[field.name] = record[field.name];
+          }
+        });
+        
+        formData.CREATED_DATE = new Date().toISOString().split('T')[0];
+        formData.CREATED_BY_USER_ID = userProfileId.value || 1;
+        
+        await createComparisonRecord(props.compareEnvironment, props.selectedEntity, formData);
+        successCount++;
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
+    selectedPrimaryRows.value = [];
+    showProgressModal.value = false;
+    await handleRecordUpdated();
+    successMessage.value = `Successfully added ${successCount} of ${recordCount} records to ${props.compareEnvironment.toUpperCase()}`;
+    showSuccessModal.value = true;
+  } catch (error) {
+    console.error('Bulk add to compare failed:', error);
+    showProgressModal.value = false;
+    successMessage.value = `Error adding records: ${error.message}`;
+    showSuccessModal.value = true;
+  }
+};
+
+const bulkAddToPrimary = async () => {
+  if (selectedCompareRows.value.length === 0) return;
+  
+  const recordCount = selectedCompareRows.value.length;
+  let successCount = 0;
+  
+  progressData.value = { current: 0, total: recordCount, operation: `Adding records to ${props.primaryEnvironment.toUpperCase()}` };
+  showProgressModal.value = true;
+  
+  try {
+    for (let i = 0; i < selectedCompareRows.value.length; i++) {
+      const rowId = selectedCompareRows.value[i];
+      progressData.value.current = i + 1;
+      
+      const record = unifiedRows.value.find(row => 
+        row.compare && !row.compare.__isBlank && getCompareRowId(row) === rowId
+      )?.compare;
+      
+      if (record) {
+        const formData = {};
+        props.entityConfig.formFields.forEach(field => {
+          if (record[field.name] !== undefined && record[field.name] !== null) {
+            formData[field.name] = record[field.name];
+          }
+        });
+        
+        // For SERVICE_PARAM, map SERVICE_ID from compare to primary environment
+        if (props.selectedEntity === 'SERVICE_PARAM' && formData.SERVICE_ID) {
+          const compareService = compareServices.value.find(s => s.SERVICE_ID === formData.SERVICE_ID);
+          if (compareService) {
+            const primaryService = allPrimaryServices.value.find(s => 
+              s['Service Provider'] === compareService['Service Provider'] && s.URI === compareService.URI
+            );
+            if (primaryService) {
+              formData.SERVICE_ID = primaryService.SERVICE_ID;
+            }
+          }
+        }
+        
+        formData.CREATED_DATE = new Date().toISOString().split('T')[0];
+        formData.CREATED_BY_USER_ID = userProfileId.value || 1;
+        
+        await props.entityConfig.createFunction(formData);
+        successCount++;
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
+    selectedCompareRows.value = [];
+    showProgressModal.value = false;
+    await handleRecordUpdated();
+    successMessage.value = `Successfully added ${successCount} of ${recordCount} records to ${props.primaryEnvironment.toUpperCase()}`;
+    showSuccessModal.value = true;
+  } catch (error) {
+    console.error('Bulk add to primary failed:', error);
+    showProgressModal.value = false;
+    successMessage.value = `Error adding records: ${error.message}`;
+    showSuccessModal.value = true;
+  }
+};
+
+const filteredDifferences = computed(() => {
+  if (props.selectedEntity === 'SERVICE_PARAM' && selectedServiceFilter.value) {
+    return unifiedRows.value.filter(row => {
+      const primaryId = row.primary && !row.primary.__isBlank ? row.primary[props.entityConfig?.idField || 'id'] : null;
+      return primaryId && differences.value.has(primaryId);
+    }).length;
+  }
+  
+  if (props.selectedEntity === 'REDIRECT_URL' && selectedProductFilter.value) {
+    return unifiedRows.value.filter(row => {
+      const primaryId = row.primary && !row.primary.__isBlank ? row.primary[props.entityConfig?.idField || 'id'] : null;
+      return primaryId && differences.value.has(primaryId);
+    }).length;
+  }
+  
+  return differences.value.size;
+});
 </script>
 
 <style scoped>
@@ -1480,7 +1821,7 @@ const debugCompareLength = computed(() => {
 }
 
 .actions-header {
-  width: 150px;
+  width: 120px;
   background-color: var(--table-header-bg, #f8f9fa) !important;
 }
 
@@ -1506,7 +1847,7 @@ const debugCompareLength = computed(() => {
 }
 
 .actions-cell {
-  width: 150px;
+  width: 120px;
   white-space: normal;
 }
 
@@ -1708,5 +2049,84 @@ const debugCompareLength = computed(() => {
 .no-service-selected p {
   margin: 0;
   font-size: 16px;
+}
+
+.bulk-actions-container {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 10px;
+}
+
+.bulk-actions {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid var(--border-color, #dee2e6);
+  border-radius: 4px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.bulk-actions-primary {
+  background: #e3f2fd;
+  border-color: #1976d2;
+}
+
+.bulk-actions-compare {
+  background: #fff3e0;
+  border-color: #f57c00;
+}
+
+.selection-count {
+  margin-left: auto;
+  font-weight: bold;
+  color: var(--text-color, #666);
+}
+
+.checkbox-header {
+  width: 50px;
+  background-color: var(--table-header-bg, #f8f9fa) !important;
+}
+
+.checkbox-cell {
+  width: 50px;
+  text-align: center;
+  padding: 8px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 20px;
+  background-color: #f0f0f0;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 15px 0;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #007bff;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  text-align: center;
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+.grey-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(128, 128, 128, 0.5);
+  z-index: 999;
+  pointer-events: none;
+}
+
+.progress-overlay {
+  z-index: 1001;
 }
 </style>

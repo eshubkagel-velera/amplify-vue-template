@@ -63,7 +63,7 @@
                 <label>User:</label>
                 <span class="user-info">{{ user?.email }} ({{ filteredUserGroups.join(', ') }})</span>
               </div>
-              <EnvironmentSelector />
+              <EnvironmentSelector :disabled="currentView === 'compare'" />
               <div class="screen-selector">
                 <label for="screen-select">Screen:</label>
                 <select id="screen-select" :value="currentView === 'compare' ? previousView : currentView" @change="changeView" :disabled="showMappingManager || showRedirectUrlManager || showStepServicesManager || showServiceParamsManager || showServiceStepMappingManager || currentView === 'compare'">
@@ -149,7 +149,6 @@ const checkAuthState = async () => {
 const startInactivityTimer = () => {
   clearTimeout(inactivityTimer);
   inactivityTimer = setTimeout(async () => {
-    console.log('Auto-logout due to inactivity');
     await signOut();
   }, 30 * 60 * 1000); // 30 minutes
 };
@@ -174,7 +173,7 @@ const signOut = async () => {
     user.value = null;
     userGroups.value = [];
   } catch (err) {
-    console.error('Sign out error:', err);
+    // Handle sign out error silently
   }
 };
 
@@ -200,7 +199,6 @@ const loadUserInfo = async () => {
       
       if (accessToken.payload['cognito:groups']) {
         userGroups.value = accessToken.payload['cognito:groups'];
-        console.log('Setting user groups:', userGroups.value);
         
         // Update the global auth state
         const { useAuth } = await import('./composables/useAuth');
@@ -209,7 +207,7 @@ const loadUserInfo = async () => {
       }
     }
   } catch (err) {
-    console.warn('Could not load user info:', err);
+    // Handle user info loading error silently
   }
 };
 import EntityManager from './components/EntityManager.vue';
@@ -293,7 +291,6 @@ const canCompare = computed(() => {
 let client: any = null;
 const getClientInstance = () => {
   if (!client) {
-    console.log('📱 App.vue requesting client for first time...');
     client = getClient();
   }
   return client;
@@ -318,13 +315,10 @@ const createOriginProduct = async (input: any) => {
 
 const updateOriginProduct = async (input: any) => {
   if (!canEdit.value) throw new Error('Permission denied: Read-only access');
-  console.log('updateOriginProduct called with input:', input);
   try {
     const result = await getClientInstance().graphql({ query: mutations.updateOriginProduct, variables: { input } });
-    console.log('updateOriginProduct result:', result);
     return result;
   } catch (error) {
-    console.error('updateOriginProduct error:', error);
     throw error;
   }
 };
@@ -696,7 +690,6 @@ const changeView = (event) => {
   if (currentView.value !== 'compare') {
     currentView.value = event.target.value;
   }
-  console.log(`Changed to view: ${currentView.value}`);
   window.scrollTo(0, 0);
 };
 
@@ -717,15 +710,11 @@ const handleCompareChange = () => {
   localStorage.setItem('compareEnvironment', compareEnvironment.value);
   window.compareEnvironment = compareEnvironment.value;
   
-  console.log('Compare change:', { compareEnv: compareEnvironment.value, currentView: currentView.value, previousView: previousView.value });
-  
   if (compareEnvironment.value && currentView.value !== 'home' && currentView.value !== 'import' && currentView.value !== 'compare') {
     previousView.value = currentView.value;
     localStorage.setItem('previousView', previousView.value);
     currentView.value = 'compare';
   }
-  
-  console.log('After compare change:', { currentView: currentView.value, previousView: previousView.value });
 };
 
 const closeMappingManager = () => {
@@ -876,10 +865,7 @@ onMounted(async () => {
   });
 });
 
-// Debug currentView
-watch(currentView, (newVal) => {
-  console.log('currentView changed to:', newVal);
-});
+
 </script>
 
 <style>

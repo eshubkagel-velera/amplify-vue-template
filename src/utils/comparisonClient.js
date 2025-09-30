@@ -103,15 +103,20 @@ export const loadComparisonData = async (entityName) => {
     console.log('Enhanced services:', enhancedServices.length);
     return { data: { listSERVICES: { items: enhancedServices } } };
   } else if (entityName === 'SERVICE_PARAM') {
-    let items = await fetchAllPages(client, queries.listServiceParams, {}, 'listSERVICE_PARAMS');
-    
-    // Filter by service if a service filter is set
-    if (window.selectedServiceFilter) {
-      items = items.filter(param => param.SERVICE_ID === parseInt(window.selectedServiceFilter));
-      console.log(`Filtered SERVICE_PARAM items by SERVICE_ID ${window.selectedServiceFilter}:`, items.length);
+    console.log('🔍 Starting SERVICE_PARAM fetch from', environment);
+    try {
+      let items = await fetchAllPages(client, queries.listServiceParams, {}, 'listSERVICE_PARAMS');
+      console.log('✅ Raw SERVICE_PARAM items loaded:', items.length);
+      console.log('📋 Sample SERVICE_PARAM items:', items.slice(0, 3));
+      
+      // Don't filter comparison data - we want to see all records for comparison
+      console.log(`Loaded ${items.length} SERVICE_PARAM items from ${environment} (no filtering applied)`);
+      
+      return { data: { listSERVICE_PARAMS: { items } } };
+    } catch (error) {
+      console.error('❌ Error loading SERVICE_PARAM:', error);
+      return { data: { listSERVICE_PARAMS: { items: [] } } };
     }
-    
-    return { data: { listSERVICE_PARAMS: { items } } };
   } else if (entityName === 'STEP_TYPE') {
     const items = await fetchAllPages(client, queries.listStepTypes, {}, 'listSTEP_TYPES');
     return { data: { listSTEP_TYPES: { items } } };
@@ -162,6 +167,30 @@ export const createComparisonRecord = async (environment, entityName, formData) 
   console.log(`Creating ${entityName} record in ${environment}`);
   
   try {
+    // For SERVICE_PARAM, map SERVICE_ID to the target environment's equivalent
+    if (entityName === 'SERVICE_PARAM' && formData.SERVICE_ID) {
+      const sourceEnvironment = localStorage.getItem('selectedEnvironment') || 'dev';
+      const [targetServices, sourceServices] = await Promise.all([
+        fetchAllPages(createComparisonClient(environment), (await import('../graphql/queries.js')).listServices, {}, 'listSERVICES'),
+        fetchAllPages(createComparisonClient(sourceEnvironment), (await import('../graphql/queries.js')).listServices, {}, 'listSERVICES')
+      ]);
+      
+      // Find the source service
+      const sourceService = sourceServices.find(s => s.SERVICE_ID === formData.SERVICE_ID);
+      if (!sourceService) {
+        throw new Error(`Source SERVICE_ID ${formData.SERVICE_ID} not found`);
+      }
+      
+      // Find matching service in target environment by URI
+      const targetService = targetServices.find(s => s.URI === sourceService.URI);
+      if (!targetService) {
+        throw new Error(`No matching service found in ${environment} for URI: ${sourceService.URI}`);
+      }
+      
+      console.log(`Mapping SERVICE_ID ${formData.SERVICE_ID} -> ${targetService.SERVICE_ID} for ${environment}`);
+      formData.SERVICE_ID = targetService.SERVICE_ID;
+    }
+    
     const mutations = await import('../graphql/mutations.js');
     
     const processedFormData = {
@@ -173,7 +202,8 @@ export const createComparisonRecord = async (environment, entityName, formData) 
       'ORIGIN_PRODUCT': mutations.createOriginProduct,
       'REDIRECT_URL': mutations.createRedirectUrl(environment),
       'SERVICE': mutations.createService,
-      'SERVICE_PROVIDER': mutations.createServiceProvider
+      'SERVICE_PROVIDER': mutations.createServiceProvider,
+      'SERVICE_PARAM': mutations.createServiceParam
     };
     
     const mutation = mutationMap[entityName];
@@ -207,11 +237,18 @@ export const createComparisonRecord = async (environment, entityName, formData) 
   }
 };
 
-export const updateComparisonRecord = async (entityName, environment, updateData) => {
-  console.log(`Updating ${environment} record in ${entityName}`);
+export const updateComparisonRecord = async (environment, entityName, updateData) => {
+  console.log(`[${Date.now()}] Updating ${entityName} record in ${environment}`);
   
   try {
-    const mutations = await import('../graphql/mutations.js');
+    const mutations = await import('../graphql/mutations.js?t=' + Date.now());
+    
+    // Remove CREATED fields from update data
+    const cleanUpdateData = { ...updateData };
+    delete cleanUpdateData.CREATED_BY_USER_ID;
+    delete cleanUpdateData.CREATED_DATE;
+    
+    console.log('Clean update data:', cleanUpdateData);
     
     const mutationMap = {
       'ORIGIN_PRODUCT': mutations.updateOriginProduct,
@@ -221,12 +258,17 @@ export const updateComparisonRecord = async (entityName, environment, updateData
       'SERVICE_PARAM': mutations.updateServiceParam
     };
     
+    console.log('Available mutations:', Object.keys(mutationMap));
+    console.log('Looking for entity:', entityName);
+    
     const mutation = mutationMap[entityName];
+    console.log('Found mutation:', !!mutation);
+    
     if (!mutation) {
       throw new Error(`Update mutation not implemented for ${entityName}`);
     }
     
-    const result = await executeGraphQL(mutation, { input: updateData }, environment);
+    const result = await executeGraphQL(mutation, { input: cleanUpdateData }, environment);
     return result;
   } catch (error) {
     console.error(`Error updating ${entityName} in ${environment}:`, error);
