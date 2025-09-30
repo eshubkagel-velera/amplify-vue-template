@@ -173,7 +173,7 @@ export const createServiceParam = `
 
 export const updateServiceParam = `
   mutation UpdateServiceParam($input: UpdateSERVICE_PARAMInput!) {
-    updateSERVICE_PARAM(input: \$input) {
+    updateSERVICE_PARAM(input: $input) {
       SERVICE_PARAM_ID
       SERVICE_ID
       PARAM_NAME

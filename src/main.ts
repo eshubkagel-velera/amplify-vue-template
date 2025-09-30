@@ -2,7 +2,7 @@ import { Amplify } from 'aws-amplify';
 import { createApp } from 'vue';
 import App from './App.vue';
 
-console.log('🚀 Starting GraphQL API Manager');
+
 
 // Environment-specific AppSync endpoints from environment variables
 const environments = {
@@ -76,9 +76,6 @@ const amplifyConfig = {
 };
 
 Amplify.configure(amplifyConfig);
-console.log(`🌍 Amplify configured with minimal config`);
-
-
 
 // Global function to switch environments and reconfigure Amplify
 window.switchEnvironment = (envKey) => {
@@ -105,14 +102,10 @@ window.switchEnvironment = (envKey) => {
   };
   
   Amplify.configure(newConfig);
-  console.log(`✅ Switched to ${envKey} environment: ${newEnv.graphqlUrl}`);
   
   // Dispatch custom event to notify components
   window.dispatchEvent(new CustomEvent('environmentChanged', { detail: { environment: envKey } }));
 };
 
-console.log('✅ Amplify configured');
-
 // Create and mount Vue app
 createApp(App).mount('#app');
-console.log('✅ App mounted');

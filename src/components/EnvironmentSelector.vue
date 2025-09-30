@@ -1,7 +1,7 @@
 <template>
   <div class="environment-selector">
     <label for="env-select">Environment:</label>
-    <select id="env-select" v-model="selectedEnvironment" @change="switchEnvironment">
+    <select id="env-select" v-model="selectedEnvironment" @change="switchEnvironment" :disabled="disabled">
       <option v-for="(config, key) in environments" :key="key" :value="key">
         {{ key.toUpperCase() }} - {{ getDataSourceName(key) }}{{ getReadonlyStatus(key) }}
       </option>
@@ -11,8 +11,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, defineProps } from 'vue';
 import { useAuth } from '../composables/useAuth';
+
+const props = defineProps({
+  disabled: {
+    type: Boolean,
+    default: false
+  }
+});
 
 const selectedEnvironment = ref('dev');
 const allEnvironments = ref({});
@@ -95,6 +102,12 @@ select {
   background: var(--input-bg);
   color: var(--text-color);
   min-width: 200px;
+}
+
+select:disabled {
+  background-color: #f5f5f5;
+  color: #6c757d;
+  cursor: not-allowed;
 }
 
 .env-indicator {

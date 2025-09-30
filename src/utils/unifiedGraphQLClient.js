@@ -45,23 +45,10 @@ export const executeGraphQL = async (operation, variables = {}, targetEnvironmen
     
     const result = await response.json();
     
-    // Log GraphQL errors but don't throw - let caller handle them
-    if (result.errors && result.errors.length > 0) {
-      console.error('GraphQL errors:', result.errors);
-      // Log detailed error information
-      result.errors.forEach((error, index) => {
-        console.error(`GraphQL Error ${index + 1}:`, {
-          message: error.message,
-          locations: error.locations,
-          path: error.path,
-          extensions: error.extensions
-        });
-      });
-    }
+    // GraphQL errors are handled by caller
     
     return result;
   } catch (error) {
-    console.error('GraphQL operation failed:', error);
     throw error;
   }
 };

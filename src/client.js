@@ -41,16 +41,15 @@ export const callExternalApi = async (environment, query, variables = {}) => {
     }
     
     if (queryConfig) {
-      console.log('🔍 Executing paginated GraphQL query for:', queryConfig.dataKey);
-      
       // Use unified client with pagination
       const client = { graphql: async (params) => executeGraphQL(params.query, params.variables, environment) };
       let items = await fetchAllPages(client, queryConfig.query, variables, queryConfig.dataKey);
       
       // Filter SERVICE_PARAM by service if a service filter is set
-      if (queryConfig.dataKey === 'listSERVICE_PARAMS' && window.selectedServiceFilter) {
-        items = items.filter(param => param.SERVICE_ID === parseInt(window.selectedServiceFilter));
-        console.log(`Filtered SERVICE_PARAM items by SERVICE_ID ${window.selectedServiceFilter}:`, items.length);
+      if (queryConfig.dataKey === 'listSERVICE_PARAMS') {
+        if (window.selectedServiceFilter) {
+          items = items.filter(param => param.SERVICE_ID === parseInt(window.selectedServiceFilter));
+        }
       }
       
       const transformedData = {
@@ -61,27 +60,13 @@ export const callExternalApi = async (environment, query, variables = {}) => {
         }
       };
       
-      console.log('✅ Paginated query completed, total items:', items.length);
       return transformedData;
     } else {
       // Handle mutation operations or other non-list queries
-      console.log('🔍 Executing non-paginated GraphQL operation:', query);
-      
       const result = await executeGraphQL(query, variables, environment);
-      
-      if (result.errors && result.errors.length > 0) {
-        console.error('❌ GraphQL has errors!');
-        console.error('❌ Errors:', JSON.stringify(result.errors, null, 2));
-        result.errors.forEach(error => {
-          console.error('❌ Error details:', error.message, error.locations, error.path);
-        });
-      }
-      
       return result;
     }
   } catch (error) {
-    console.error('External API call failed:', error);
-    console.error('Full error object:', JSON.stringify(error, null, 2));
     throw error;
   }
 };

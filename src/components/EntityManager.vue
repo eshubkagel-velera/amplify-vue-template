@@ -282,14 +282,28 @@
     <div v-if="showDeleteModal" class="modal-overlay">
       <div class="modal-content">
         <h3>Confirm Delete</h3>
-        <p v-if="!isDeleting">Are you sure you want to delete {{ selectedEntities.length }} record(s)?</p>
-        <p v-if="isDeleting">Now deleting {{ deleteProgress.current }} of {{ deleteProgress.total }} records</p>
+        <p>Are you sure you want to delete {{ selectedEntities.length }} record(s)?</p>
         <div class="form-actions">
-          <button @click="deleteBulkEntities" class="btn-danger" :disabled="isDeleting">{{ isDeleting ? 'Deleting...' : 'Yes, Delete' }}</button>
-          <button @click="showDeleteModal = false" :disabled="isDeleting" class="btn-primary">Cancel</button>
+          <button @click="deleteBulkEntities" class="btn-danger">Yes, Delete</button>
+          <button @click="showDeleteModal = false" class="btn-primary">Cancel</button>
         </div>
       </div>
     </div>
+    
+    <!-- Progress Modal -->
+    <div v-if="showProgressModal" class="modal-overlay progress-overlay">
+      <div class="modal-content">
+        <h3>{{ progressData.operation }}</h3>
+        <p>Processing {{ progressData.current }} of {{ progressData.total }} records...</p>
+        <div class="progress-bar">
+          <div class="progress-fill" :style="{ width: (progressData.current / progressData.total * 100) + '%' }"></div>
+        </div>
+        <p class="progress-text">{{ Math.round(progressData.current / progressData.total * 100) }}% Complete</p>
+      </div>
+    </div>
+
+    <!-- Grey overlay for progress -->
+    <div v-if="showProgressModal" class="grey-overlay"></div>
     
     <!-- Success Modal -->
     <div v-if="showSuccessModal" class="modal-overlay">
@@ -520,8 +534,8 @@ const allSelected = computed(() =>
 );
 const isResizing = ref(false);
 const resizeData = ref({ field: '', startX: 0, startWidth: 0 });
-const isDeleting = ref(false);
-const deleteProgress = ref({ current: 0, total: 0 });
+const showProgressModal = ref(false);
+const progressData = ref({ current: 0, total: 0, operation: '' });
 const sortField = ref('');
 const sortDirection = ref('asc');
 const selectedServiceFilter = ref('');
@@ -535,18 +549,13 @@ const vendorNames = ref([]);
 const loading = ref(false);
 const userProfileId = ref(null);
 
-// Watch compareDataLength prop changes
-watch(() => props.compareDataLength, (newVal, oldVal) => {
-  console.log('EntityManager: compareDataLength prop changed from', oldVal, 'to', newVal);
-}, { immediate: true });
+
 
 // Subscription management
 const activeSubscriptions = ref([]);
 const subscriptionClient = generateClient();
 
 const handleSubscriptionUpdate = (action, record) => {
-  console.log(`Subscription ${action}:`, record);
-  
   if (action === 'create') {
     entities.value.unshift(record);
     allEntities.value.unshift(record);
@@ -580,16 +589,14 @@ const handleSubscriptionUpdate = (action, record) => {
 
 const startSubscriptions = () => {
   // Subscriptions disabled for serverless backend
-  console.log(`Subscriptions disabled for serverless backend (${props.entityName})`);
 };
 
 const stopSubscriptions = () => {
-  console.log(`Stopping subscriptions for ${props.entityName}`);
   activeSubscriptions.value.forEach(subscription => {
     try {
       subscription.unsubscribe();
     } catch (error) {
-      console.error('Error unsubscribing:', error);
+      // Handle unsubscribe error silently
     }
   });
   activeSubscriptions.value = [];
@@ -600,14 +607,6 @@ const stopSubscriptions = () => {
 
 
 const loadEntities = async () => {
-  // For SERVICE_PARAM, don't load anything until service is selected (unless parentId is provided)
-  if (props.entityName === 'SERVICE_PARAM' && !selectedServiceFilter.value && !props.parentId) {
-    allEntities.value = [];
-    entities.value = [];
-    filteredEntities.value = [];
-    return;
-  }
-  
   // For REDIRECT_URL, don't load anything until product is selected (unless parentId is provided)
   if (props.entityName === 'REDIRECT_URL' && !selectedProductFilter.value && !props.parentId && !props.comparisonMode) {
     allEntities.value = [];
@@ -642,8 +641,23 @@ const loadEntities = async () => {
     }
     
     allEntities.value = allItems;
-    entities.value = allItems;
-    filteredEntities.value = allItems;
+    
+    // For SERVICE_PARAM, only show filtered data if a service is selected
+    if (props.entityName === 'SERVICE_PARAM' && !props.parentId && !props.comparisonMode) {
+      if (selectedServiceFilter.value) {
+        const filteredItems = allItems.filter(item => 
+          item.SERVICE_ID === parseInt(selectedServiceFilter.value)
+        );
+        entities.value = filteredItems;
+        filteredEntities.value = filteredItems;
+      } else {
+        entities.value = [];
+        filteredEntities.value = [];
+      }
+    } else {
+      entities.value = allItems;
+      filteredEntities.value = allItems;
+    }
   } catch (error) {
     handleError(error, `loading ${props.entityName}`);
     allEntities.value = [];
@@ -653,8 +667,6 @@ const loadEntities = async () => {
 };
 
 const editEntity = (entity) => {
-  console.log('editEntity called with entity:', entity);
-  console.log('userProfileId.value:', userProfileId.value);
   
   if (props.readonly) {
     // For readonly users, just show the modal in view mode
@@ -668,11 +680,9 @@ const editEntity = (entity) => {
     // Even in readonly mode, set user profile ID and current date for display
     if (userProfileId.value && formattedEntity.CHANGED_BY_USER_ID !== undefined) {
       formattedEntity.CHANGED_BY_USER_ID = userProfileId.value;
-      console.log('Readonly mode: Setting CHANGED_BY_USER_ID to:', userProfileId.value);
     }
     if (formattedEntity.CHANGED_DATE !== undefined) {
       formattedEntity.CHANGED_DATE = getCurrentDateString();
-      console.log('Readonly mode: Setting CHANGED_DATE to:', formattedEntity.CHANGED_DATE);
     }
     
     formData.value = formattedEntity;
@@ -690,7 +700,6 @@ const editEntity = (entity) => {
   
   // Set current date and user ID for modifications
   const entityConfig = getEntityConfig(props.entityName);
-  console.log('Entity config for', props.entityName, ':', entityConfig);
   if (entityConfig.hasChangedFields) {
     formattedEntity.CHANGED_DATE = getCurrentDateString();
     formattedEntity.CHANGED_BY_USER_ID = userProfileId.value || 1;
@@ -699,14 +708,9 @@ const editEntity = (entity) => {
   // Always set CHANGED_BY_USER_ID to current user's profile ID for edits if field exists
   if (userProfileId.value && formattedEntity.CHANGED_BY_USER_ID !== undefined) {
     formattedEntity.CHANGED_BY_USER_ID = userProfileId.value;
-    console.log('Setting CHANGED_BY_USER_ID to:', userProfileId.value);
-  } else {
-    console.log('userProfileId:', userProfileId.value, 'CHANGED_BY_USER_ID exists:', formattedEntity.CHANGED_BY_USER_ID !== undefined);
   }
   
-  console.log('Final formattedEntity before setting formData:', formattedEntity);
   formData.value = formattedEntity;
-  console.log('formData.value after setting:', formData.value);
   showEditModal.value = true;
 };
 
@@ -751,12 +755,12 @@ const confirmBulkDelete = () => {
 
 const deleteBulkEntities = async () => {
   try {
-    isDeleting.value = true;
-    deleteProgress.value.total = selectedEntities.value.length;
-    deleteProgress.value.current = 0;
+    showDeleteModal.value = false;
+    progressData.value = { current: 0, total: selectedEntities.value.length, operation: `Deleting ${props.entityName} records` };
+    showProgressModal.value = true;
     
     for (let i = 0; i < selectedEntities.value.length; i++) {
-      deleteProgress.value.current = i + 1;
+      progressData.value.current = i + 1;
       const entityId = selectedEntities.value[i];
       const input = { [props.idField]: entityId };
       await props.deleteFunction(input);
@@ -764,21 +768,25 @@ const deleteBulkEntities = async () => {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
     
-    showDeleteModal.value = false;
     selectedEntities.value = [];
     allSelected.value = false;
-    isDeleting.value = false;
+    showProgressModal.value = false;
     
     // Reload data and emit for comparison mode
     await loadEntities();
+    // Reapply service filter if one is selected
+    if (props.entityName === 'SERVICE_PARAM' && selectedServiceFilter.value) {
+      filterByService();
+    }
     if (props.comparisonMode) {
       emit('recordUpdated', { deleted: true });
     }
+    
+    successMessage.value = `Successfully deleted ${progressData.value.total} record(s)`;
+    showSuccessModal.value = true;
   } catch (error) {
+    showProgressModal.value = false;
     handleError(error, `deleting ${props.entityName}`);
-  } finally {
-    isDeleting.value = false;
-    showDeleteModal.value = false;
   }
 };
 
@@ -899,8 +907,7 @@ const submitForm = async () => {
       delete cleanedFormData.CHANGED_DATE;
     }
     
-    console.log('Submitting form data AFTER filtering:', cleanedFormData);
-    console.log('isUpdate:', isUpdate, 'showEditModal:', showEditModal.value);
+
     
     if (isUpdate) {
       // For SERVICE_PARAM with mappings, create new instead of update
@@ -919,6 +926,10 @@ const submitForm = async () => {
         
         // Reload data for comparison mode
         await loadEntities();
+        // Reapply service filter if one is selected
+        if (props.entityName === 'SERVICE_PARAM' && selectedServiceFilter.value) {
+          filterByService();
+        }
         emit('recordUpdated', cleanedFormData);
       } else {
         // Set audit fields for updates
@@ -935,6 +946,10 @@ const submitForm = async () => {
         
         // Reload data and emit for comparison mode
         await loadEntities();
+        // Reapply service filter if one is selected
+        if (props.entityName === 'SERVICE_PARAM' && selectedServiceFilter.value) {
+          filterByService();
+        }
         emit('recordUpdated', cleanedFormData);
       }
     } else {
@@ -951,12 +966,14 @@ const submitForm = async () => {
       
       // Reload data and emit for comparison mode
       await loadEntities();
+      // Reapply service filter if one is selected
+      if (props.entityName === 'SERVICE_PARAM' && selectedServiceFilter.value) {
+        filterByService();
+      }
       emit('recordUpdated', cleanedFormData);
     }
     cancelForm();
   } catch (error) {
-    console.error(`Error saving ${props.entityName}:`, error);
-    console.error('Full error object:', JSON.stringify(error, null, 2));
     
     // Check if record was actually created despite the error
     const hasData = error.data && Object.keys(error.data).length > 0;
@@ -975,7 +992,6 @@ const submitForm = async () => {
     
     // Extract GraphQL error details
     if (error.errors && error.errors.length > 0) {
-      console.error('GraphQL errors:', error.errors);
       errorMsg = error.errors.map(e => {
         // Include more error details for debugging
         const message = e.message || 'Unknown GraphQL error';
@@ -1112,7 +1128,6 @@ const filterByStepType = async () => {
       entities.value = enhancedMappings;
       filteredEntities.value = enhancedMappings;
     } catch (error) {
-      console.error('Error loading step service mappings:', error);
       entities.value = [];
       filteredEntities.value = [];
     }
@@ -1129,46 +1144,19 @@ const filterByService = async () => {
   if (props.entityName !== 'SERVICE_PARAM') return;
   
   if (selectedServiceFilter.value) {
-    try {
-      let allItems = [];
-      let nextToken = null;
-      
-      do {
-        const variables = {
-          filter: { SERVICE_ID: { eq: parseInt(selectedServiceFilter.value) } },
-          limit: 1000
-        };
-        if (nextToken) {
-          variables.nextToken = nextToken;
-        }
-        
-        const response = await getClient().graphql({
-          query: listServiceParams,
-          variables
-        });
-        
-        if (response.data?.listSERVICE_PARAMS) {
-          const items = response.data.listSERVICE_PARAMS.items || [];
-          allItems.push(...items);
-          nextToken = response.data.listSERVICE_PARAMS.nextToken;
-        } else {
-          nextToken = null;
-        }
-      } while (nextToken);
-      
-      // Enhance with service display format
-      const enhancedItems = await enhanceServiceParams(allItems);
-      await checkParameterMappings();
-      
-      allEntities.value = enhancedItems;
-      entities.value = enhancedItems;
-      filteredEntities.value = enhancedItems;
-    } catch (error) {
-      console.error('Error loading service parameters:', error);
-      entities.value = [];
-      filteredEntities.value = [];
+    // If allEntities is empty, load all data first
+    if (allEntities.value.length === 0) {
+      await loadEntities();
     }
+    
+    // Filter from all loaded entities
+    const filteredItems = allEntities.value.filter(item => 
+      item.SERVICE_ID === parseInt(selectedServiceFilter.value)
+    );
+    entities.value = filteredItems;
+    filteredEntities.value = filteredItems;
   } else {
+    // Clear all data when no service filter is selected
     allEntities.value = [];
     entities.value = [];
     filteredEntities.value = [];
@@ -1196,7 +1184,6 @@ const filterByProduct = async () => {
         filteredEntities.value = filteredItems;
       }
     } catch (error) {
-      console.error('Error loading redirect URLs:', error);
       entities.value = [];
       filteredEntities.value = [];
     }
@@ -1270,7 +1257,7 @@ const loadServiceOptionsLocal = async () => {
       serviceIdField.options = options;
     }
   } catch (error) {
-    console.error('Error loading service options:', error);
+    // Handle error silently
   }
 };
 
@@ -1298,7 +1285,7 @@ const loadServiceProviderOptions = async () => {
       }));
     }
   } catch (error) {
-    console.error('Error loading service provider options:', error);
+    // Handle error silently
   }
 };
 
@@ -1312,7 +1299,6 @@ const loadStepTypeFilterOptions = async () => {
       label: `${step.STEP_TYPE_ID}: ${step.STEP_TYPE_NAME}`
     }));
   } catch (error) {
-    console.error('Error loading step type options:', error);
     stepTypeOptions.value = [];
   }
 };
@@ -1350,7 +1336,7 @@ const loadStepServiceMappingOptions = async () => {
       });
     }
   } catch (error) {
-    console.error('Error loading step service mapping options:', error);
+    // Handle error silently
   }
 };
 
@@ -1433,7 +1419,7 @@ const checkParameterMappings = async () => {
     
     paramMappings.value = mappingCounts;
   } catch (error) {
-    console.error('Error checking parameter mappings:', error);
+    // Handle error silently
   }
 };
 
@@ -1445,13 +1431,11 @@ const loadUserProfile = async () => {
   try {
     const attributes = await fetchUserAttributes();
     const profileValue = attributes.profile;
-    console.log('EntityManager loaded user profile:', profileValue);
     if (profileValue && !isNaN(parseInt(profileValue))) {
       userProfileId.value = parseInt(profileValue);
-      console.log('EntityManager userProfileId set to:', userProfileId.value);
     }
   } catch (error) {
-    console.warn('Could not load user profile:', error);
+    // Handle error silently
   }
 };
 
@@ -1471,7 +1455,7 @@ const loadVendorNames = async () => {
       vendorNames.value = uniqueVendors;
     }
   } catch (error) {
-    console.error('Error loading vendor names:', error);
+    // Handle error silently
   }
 };
 
@@ -1487,14 +1471,21 @@ const loadProductOptions = async () => {
       label: `${product.PRODUCT_ID}: ${product.VENDOR_NAME} - ${product.PRODUCT_DESC}`
     }));
   } catch (error) {
-    console.error('Error loading product options:', error);
     productOptions.value = [];
   }
 };
 
 // Listen for environment changes via custom event
 const handleEnvironmentChange = async () => {
-  // Reload dropdown options first
+  // Clear data first for SERVICE_PARAM when environment changes
+  if (props.entityName === 'SERVICE_PARAM') {
+    selectedServiceFilter.value = '';
+    allEntities.value = [];
+    entities.value = [];
+    filteredEntities.value = [];
+  }
+  
+  // Reload dropdown options
   if (props.entityName === 'SERVICE_PARAM') {
     await loadServiceOptionsLocal();
   }
@@ -1559,7 +1550,6 @@ watch(() => props.syncSort, (newSort) => {
 }, { deep: true });
 
 onMounted(async () => {
-  console.log('EntityManager mounted with compareDataLength:', props.compareDataLength, 'comparisonMode:', props.comparisonMode);
   await loadUserProfile();
   
   if (props.entityName === 'SERVICE_PARAM') {
@@ -1614,18 +1604,11 @@ const filteredFields = computed(() => {
 });
 
 const displayEntities = computed(() => {
-  console.log('=== DISPLAY ENTITIES COMPUTED ===');
-  console.log('comparisonMode:', props.comparisonMode);
-  console.log('entities.value.length:', entities.value.length);
-  console.log('filteredEntities.value.length:', filteredEntities.value.length);
-  
   if (!props.comparisonMode) {
-    console.log('No comparison mode, returning filteredEntities:', filteredEntities.value.length);
     return filteredEntities.value;
   }
   
   if (props.comparisonMode === 'primary') {
-    console.log('Primary mode - processing...');
     const filtered = filteredEntities.value;
     const ordered = [];
     
@@ -1638,17 +1621,13 @@ const displayEntities = computed(() => {
       ordered.push({ __isBlank: true });
     }
     
-    console.log('Primary final ordered length:', ordered.length);
     return ordered;
   } else {
-    console.log('Compare mode - processing...');
     // Compare table reorders filtered entities to match primary
     const filtered = filteredEntities.value;
-    console.log('Compare filtered entities:', filtered.length);
     const ordered = [];
     
     // Get the filtered primary data from the primary environment
-    console.log('props.primaryData.length:', props.primaryData.length);
     const primaryFiltered = props.primaryData.filter(entity => {
       // Apply product filter if it exists
       if (props.entityName === 'REDIRECT_URL' && selectedProductFilter.value) {
@@ -1664,9 +1643,6 @@ const displayEntities = computed(() => {
       });
     });
     
-    console.log('Primary filtered after filters:', primaryFiltered.length);
-    console.log('Primary filtered IDs:', primaryFiltered.map(e => e[props.idField]));
-    
     // Apply same sorting to filtered primary data
     if (sortField.value) {
       primaryFiltered.sort((a, b) => {
@@ -1677,13 +1653,10 @@ const displayEntities = computed(() => {
       });
     }
     
-    console.log('fieldDifferences size:', props.fieldDifferences.size);
-    
     // Reorder compare entities to match filtered primary order
     primaryFiltered.forEach(primaryRecord => {
       const primaryId = primaryRecord[props.idField];
       const matchInfo = props.fieldDifferences.get(primaryId);
-      console.log(`Processing primary record ${primaryId}, matchInfo:`, matchInfo ? 'found' : 'not found');
       
       if (matchInfo && matchInfo.compareId) {
         // Find the actual record in filtered entities that matches
@@ -1691,14 +1664,11 @@ const displayEntities = computed(() => {
           record[props.idField] === matchInfo.compareId
         );
         if (matchedRecord) {
-          console.log(`Found matched record for primary ${primaryId}:`, matchedRecord[props.idField]);
           ordered.push(matchedRecord);
         } else {
-          console.log(`No matched record found for primary ${primaryId}, adding blank`);
           ordered.push({ __isBlank: true });
         }
       } else {
-        console.log(`No match info for primary ${primaryId}, adding blank`);
         ordered.push({ __isBlank: true });
       }
     });
@@ -1715,11 +1685,8 @@ const displayEntities = computed(() => {
       !usedCompareIds.has(record[props.idField])
     );
     
-    console.log('Unmatched compare records to add:', unmatchedCompareRecords.length);
     ordered.push(...unmatchedCompareRecords);
     
-    console.log('Final ordered length:', ordered.length);
-    console.log('=== DISPLAY ENTITIES END ===');
     return ordered;
   }
 });
@@ -2191,6 +2158,42 @@ button {
   margin: 8px 0;
   padding: 5px;
   font-family: monospace;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 20px;
+  background-color: #f0f0f0;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 15px 0;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #007bff;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  text-align: center;
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+.grey-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(128, 128, 128, 0.5);
+  z-index: 999;
+  pointer-events: none;
+}
+
+.progress-overlay {
+  z-index: 1001;
 }
 
 .filter-section {
