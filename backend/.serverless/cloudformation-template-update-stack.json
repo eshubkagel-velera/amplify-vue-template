@@ -5,7 +5,7 @@
     "EmailDomainValidationFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
-        "FunctionName": "email-domain-validation-uat",
+        "FunctionName": "email-domain-validation-live",
         "Runtime": "nodejs18.x",
         "Handler": "index.handler",
         "Code": {
@@ -22,7 +22,7 @@
     "PostConfirmationFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
-        "FunctionName": "post-confirmation-uat",
+        "FunctionName": "post-confirmation-live",
         "Runtime": "nodejs18.x",
         "Handler": "index.handler",
         "Code": {
@@ -188,7 +188,7 @@
                     "rds-data:*"
                   ],
                   "Resource": [
-                    "arn:aws:rds:us-east-2:*:cluster:hazel-mapping-uat"
+                    "arn:aws:rds:us-east-2:*:cluster:hazel-mapping-live"
                   ]
                 },
                 {
@@ -199,7 +199,7 @@
                     "kms:DescribeKey"
                   ],
                   "Resource": [
-                    "arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-5caa7e9f-9f43-4073-ba7f-af959e3cf6bb-yn4rKu",
+                    "arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-5975818b-f15c-4381-b0ba-1f281f97610d-GlpEdy",
                     "arn:aws:kms:us-east-2:*:key/*"
                   ]
                 },
@@ -223,7 +223,7 @@
     "GraphQlApi": {
       "Type": "AWS::AppSync::GraphQLApi",
       "Properties": {
-        "Name": "vue-appsync-api-uat",
+        "Name": "vue-appsync-api-live",
         "AuthenticationType": "AMAZON_COGNITO_USER_POOLS",
         "AdditionalAuthenticationProviders": [
           {
@@ -248,7 +248,7 @@
           ]
         },
         "Description": "Auto-generated api key",
-        "Expires": 1790434800
+        "Expires": 1790791200
       }
     },
     "GraphQlSchema": {
@@ -295,12 +295,12 @@
                     "Ref": "AWS::AccountId"
                   },
                   "cluster",
-                  "hazel-mapping-uat"
+                  "hazel-mapping-live"
                 ]
               ]
             },
-            "DatabaseName": "hazel_mapping_uat",
-            "AwsSecretStoreArn": "arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-5caa7e9f-9f43-4073-ba7f-af959e3cf6bb-yn4rKu"
+            "DatabaseName": "hazel_mapping_live",
+            "AwsSecretStoreArn": "arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-5975818b-f15c-4381-b0ba-1f281f97610d-GlpEdy"
           },
           "RelationalDatabaseSourceType": "RDS_HTTP_ENDPOINT"
         }
@@ -318,7 +318,7 @@
         },
         "TypeName": "Query",
         "FieldName": "listCONFIG_PARAMS",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM CONFIG_PARAM\"\n  ]\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"SELECT * FROM CONFIG_PARAM\"\r\n  ]\r\n}",
         "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\r\n#if($ctx.error)\r\n    $utils.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n$utils.toJson($utils.rds.toJsonObject($ctx.result)[0])",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -341,7 +341,7 @@
         },
         "TypeName": "Query",
         "FieldName": "listLOAN_APPS",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM LOAN_APP\"\n  ]\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"SELECT * FROM LOAN_APP\"\r\n  ]\r\n}",
         "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\r\n#if($ctx.error)\r\n    $utils.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n$utils.toJson($utils.rds.toJsonObject($ctx.result)[0])",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -364,7 +364,7 @@
         },
         "TypeName": "Query",
         "FieldName": "listNEW_MEMBER_TOKENS",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM NEW_MEMBER_TOKEN\"\n  ]\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"SELECT * FROM NEW_MEMBER_TOKEN\"\r\n  ]\r\n}",
         "ResponseMappingTemplate": "$util.toJson($context.result.sqlStatementResults[0])",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -387,8 +387,8 @@
         },
         "TypeName": "Query",
         "FieldName": "listORIGIN_PRODUCTS",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT ORIGIN_PRODUCT_ID, VENDOR_NAME, PRODUCT_ID, PRODUCT_DESC, PSCU_CLIENT_ID, PARTNER_CODE, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE FROM ORIGIN_PRODUCT ORDER BY ORIGIN_PRODUCT_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\n  ]\n}",
-        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n#set($result = $utils.rds.toJsonObject($ctx.result)[0])\n#set($items = $result)\n#set($hasNextToken = false)\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\n  #set($hasNextToken = true)\n  #set($nextTokenValue = $ctx.args.nextToken)\n  #if(!$nextTokenValue)\n    #set($nextTokenValue = 0)\n  #end\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\n#end\n{\n  \"items\": $util.toJson($items),\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"SELECT ORIGIN_PRODUCT_ID, VENDOR_NAME, PRODUCT_ID, PRODUCT_DESC, PSCU_CLIENT_ID, PARTNER_CODE, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE FROM ORIGIN_PRODUCT ORDER BY ORIGIN_PRODUCT_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\r\n  ]\r\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\r\n#if($ctx.error)\r\n    $utils.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n#set($result = $utils.rds.toJsonObject($ctx.result)[0])\r\n#set($items = $result)\r\n#set($hasNextToken = false)\r\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\r\n  #set($hasNextToken = true)\r\n  #set($nextTokenValue = $ctx.args.nextToken)\r\n  #if(!$nextTokenValue)\r\n    #set($nextTokenValue = 0)\r\n  #end\r\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\r\n#end\r\n{\r\n  \"items\": $util.toJson($items),\r\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\r\n}",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -410,7 +410,7 @@
         },
         "TypeName": "Query",
         "FieldName": "listSERVICE_PROVIDERS",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT SERVICE_PROVIDER_ID, SERVICE_PROVIDER_NAME, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE FROM SERVICE_PROVIDER ORDER BY SERVICE_PROVIDER_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\n  ]\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"SELECT SERVICE_PROVIDER_ID, SERVICE_PROVIDER_NAME, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE FROM SERVICE_PROVIDER ORDER BY SERVICE_PROVIDER_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\r\n  ]\r\n}",
         "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\r\n#if($ctx.error)\r\n    $utils.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n#set($result = $utils.rds.toJsonObject($ctx.result)[0])\r\n#set($items = $result)\r\n#set($hasNextToken = false)\r\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\r\n  #set($hasNextToken = true)\r\n  #set($nextTokenValue = $ctx.args.nextToken)\r\n  #if(!$nextTokenValue)\r\n    #set($nextTokenValue = 0)\r\n  #end\r\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\r\n#end\r\n{\r\n  \"items\": $util.toJson($items),\r\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\r\n}",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -433,7 +433,7 @@
         },
         "TypeName": "Query",
         "FieldName": "listSERVICES",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM SERVICE ORDER BY SERVICE_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\n  ]\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"SELECT * FROM SERVICE ORDER BY SERVICE_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\r\n  ]\r\n}",
         "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\r\n#if($ctx.error)\r\n    $utils.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n#set($result = $utils.rds.toJsonObject($ctx.result)[0])\r\n#set($items = $result)\r\n#set($hasNextToken = false)\r\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\r\n  #set($hasNextToken = true)\r\n  #set($nextTokenValue = $ctx.args.nextToken)\r\n  #if(!$nextTokenValue)\r\n    #set($nextTokenValue = 0)\r\n  #end\r\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\r\n#end\r\n{\r\n  \"items\": $util.toJson($items),\r\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\r\n}",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -456,8 +456,8 @@
         },
         "TypeName": "Query",
         "FieldName": "listREDIRECT_URLS",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT REDIRECT_URL_ID, ORIGIN_PRODUCT_ID, URL_TYPE_CODE, URL, RESPONSE_TEXT, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE FROM REDIRECT_URL ORDER BY REDIRECT_URL_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\n  ]\n}",
-        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n#set($result = $utils.rds.toJsonObject($ctx.result)[0])\n#set($items = $result)\n#set($hasNextToken = false)\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\n  #set($hasNextToken = true)\n  #set($nextTokenValue = $ctx.args.nextToken)\n  #if(!$nextTokenValue)\n    #set($nextTokenValue = 0)\n  #end\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\n#end\n{\n  \"items\": $util.toJson($items),\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"SELECT REDIRECT_URL_ID, ORIGIN_PRODUCT_ID, URL_TYPE_CODE, URL, RESPONSE_TEXT, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE FROM REDIRECT_URL ORDER BY REDIRECT_URL_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\r\n  ]\r\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\r\n#if($ctx.error)\r\n    $utils.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n#set($result = $utils.rds.toJsonObject($ctx.result)[0])\r\n#set($items = $result)\r\n#set($hasNextToken = false)\r\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\r\n  #set($hasNextToken = true)\r\n  #set($nextTokenValue = $ctx.args.nextToken)\r\n  #if(!$nextTokenValue)\r\n    #set($nextTokenValue = 0)\r\n  #end\r\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\r\n#end\r\n{\r\n  \"items\": $util.toJson($items),\r\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\r\n}",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -479,7 +479,7 @@
         },
         "TypeName": "Query",
         "FieldName": "listSERVICE_PARAMS",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM SERVICE_PARAM ORDER BY SERVICE_PARAM_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\n  ]\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"SELECT * FROM SERVICE_PARAM ORDER BY SERVICE_PARAM_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\r\n  ]\r\n}",
         "ResponseMappingTemplate": "#set($result = $utils.rds.toJsonObject($ctx.result)[0])\r\n#set($items = $result)\r\n#set($hasNextToken = false)\r\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\r\n  #set($hasNextToken = true)\r\n  #set($nextTokenValue = $ctx.args.nextToken)\r\n  #if(!$nextTokenValue)\r\n    #set($nextTokenValue = 0)\r\n  #end\r\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\r\n#end\r\n{\r\n  \"items\": $util.toJson($items),\r\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\r\n}",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -502,7 +502,7 @@
         },
         "TypeName": "Query",
         "FieldName": "listSERVICE_PARAM_MAPPINGS",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM SERVICE_PARAM_MAPPING ORDER BY SERVICE_PARAM_MAPPING_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\n  ]\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"SELECT * FROM SERVICE_PARAM_MAPPING ORDER BY SERVICE_PARAM_MAPPING_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\r\n  ]\r\n}",
         "ResponseMappingTemplate": "#set($result = $utils.rds.toJsonObject($ctx.result)[0])\r\n#set($items = $result)\r\n#set($hasNextToken = false)\r\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\r\n  #set($hasNextToken = true)\r\n  #set($nextTokenValue = $ctx.args.nextToken)\r\n  #if(!$nextTokenValue)\r\n    #set($nextTokenValue = 0)\r\n  #end\r\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\r\n#end\r\n{\r\n  \"items\": $util.toJson($items),\r\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\r\n}",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -525,7 +525,7 @@
         },
         "TypeName": "Query",
         "FieldName": "listSTEP_TYPES",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM STEP_TYPE ORDER BY STEP_TYPE_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\n  ]\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"SELECT * FROM STEP_TYPE ORDER BY STEP_TYPE_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\r\n  ]\r\n}",
         "ResponseMappingTemplate": "#set($result = $utils.rds.toJsonObject($ctx.result)[0])\r\n#set($items = $result)\r\n#set($hasNextToken = false)\r\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\r\n  #set($hasNextToken = true)\r\n  #set($nextTokenValue = $ctx.args.nextToken)\r\n  #if(!$nextTokenValue)\r\n    #set($nextTokenValue = 0)\r\n  #end\r\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\r\n#end\r\n{\r\n  \"items\": $util.toJson($items),\r\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\r\n}",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -548,7 +548,7 @@
         },
         "TypeName": "Query",
         "FieldName": "listSTEP_SERVICE_MAPPINGS",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM STEP_SERVICE_MAPPING ORDER BY STEP_SERVICE_MAPPING_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\n  ]\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"SELECT * FROM STEP_SERVICE_MAPPING ORDER BY STEP_SERVICE_MAPPING_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\r\n  ]\r\n}",
         "ResponseMappingTemplate": "#set($result = $utils.rds.toJsonObject($ctx.result)[0])\r\n#set($items = $result)\r\n#set($hasNextToken = false)\r\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\r\n  #set($hasNextToken = true)\r\n  #set($nextTokenValue = $ctx.args.nextToken)\r\n  #if(!$nextTokenValue)\r\n    #set($nextTokenValue = 0)\r\n  #end\r\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\r\n#end\r\n{\r\n  \"items\": $util.toJson($items),\r\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\r\n}",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -571,7 +571,7 @@
         },
         "TypeName": "Query",
         "FieldName": "listSERVICE_EXPR_MAPPINGS",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM SERVICE_EXPR_MAPPING ORDER BY SERVICE_EXPR_MAPPING_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\n  ]\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"SELECT * FROM SERVICE_EXPR_MAPPING ORDER BY SERVICE_EXPR_MAPPING_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\r\n  ]\r\n}",
         "ResponseMappingTemplate": "#set($result = $utils.rds.toJsonObject($ctx.result)[0])\r\n#set($items = $result)\r\n#set($hasNextToken = false)\r\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\r\n  #set($hasNextToken = true)\r\n  #set($nextTokenValue = $ctx.args.nextToken)\r\n  #if(!$nextTokenValue)\r\n    #set($nextTokenValue = 0)\r\n  #end\r\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\r\n#end\r\n{\r\n  \"items\": $util.toJson($items),\r\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\r\n}",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -594,8 +594,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "createORIGIN_PRODUCT",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"INSERT INTO ORIGIN_PRODUCT (VENDOR_NAME, PRODUCT_ID, PRODUCT_DESC, PSCU_CLIENT_ID, PARTNER_CODE, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:VENDOR_NAME, :PRODUCT_ID, :PRODUCT_DESC, :PSCU_CLIENT_ID, :PARTNER_CODE, :CREATED_BY_USER_ID, :CREATED_DATE)\"\n  ],\n  \"variableMap\": {\n    \":VENDOR_NAME\": \"$ctx.args.input.VENDOR_NAME\",\n    \":PRODUCT_ID\": \"$ctx.args.input.PRODUCT_ID\",\n    \":PRODUCT_DESC\": \"$ctx.args.input.PRODUCT_DESC\",\n    \":PSCU_CLIENT_ID\": $ctx.args.input.PSCU_CLIENT_ID,\n    \":PARTNER_CODE\": #if($ctx.args.input.PARTNER_CODE)\"$ctx.args.input.PARTNER_CODE\"#else null #end,\n    \":CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\n    \":CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\"\n  }\n}",
-        "ResponseMappingTemplate": "#if($ctx.error)\n  $util.error($ctx.error.message, $ctx.error.type)\n#end\n\n{\n  \"ORIGIN_PRODUCT_ID\": 999,\n  \"VENDOR_NAME\": \"$ctx.args.input.VENDOR_NAME\",\n  \"PRODUCT_ID\": \"$ctx.args.input.PRODUCT_ID\",\n  \"PRODUCT_DESC\": \"$ctx.args.input.PRODUCT_DESC\",\n  \"PSCU_CLIENT_ID\": $ctx.args.input.PSCU_CLIENT_ID,\n  \"PARTNER_CODE\": \"$ctx.args.input.PARTNER_CODE\",\n  \"CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\n  \"CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\",\n  \"CHANGED_BY_USER_ID\": null,\n  \"CHANGED_DATE\": null\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"INSERT INTO ORIGIN_PRODUCT (VENDOR_NAME, PRODUCT_ID, PRODUCT_DESC, PSCU_CLIENT_ID, PARTNER_CODE, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:VENDOR_NAME, :PRODUCT_ID, :PRODUCT_DESC, :PSCU_CLIENT_ID, :PARTNER_CODE, :CREATED_BY_USER_ID, :CREATED_DATE)\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":VENDOR_NAME\": \"$ctx.args.input.VENDOR_NAME\",\r\n    \":PRODUCT_ID\": \"$ctx.args.input.PRODUCT_ID\",\r\n    \":PRODUCT_DESC\": \"$ctx.args.input.PRODUCT_DESC\",\r\n    \":PSCU_CLIENT_ID\": $ctx.args.input.PSCU_CLIENT_ID,\r\n    \":PARTNER_CODE\": #if($ctx.args.input.PARTNER_CODE)\"$ctx.args.input.PARTNER_CODE\"#else null #end,\r\n    \":CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\r\n    \":CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\"\r\n  }\r\n}",
+        "ResponseMappingTemplate": "#if($ctx.error)\r\n  $util.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n{\r\n  \"ORIGIN_PRODUCT_ID\": 999,\r\n  \"VENDOR_NAME\": \"$ctx.args.input.VENDOR_NAME\",\r\n  \"PRODUCT_ID\": \"$ctx.args.input.PRODUCT_ID\",\r\n  \"PRODUCT_DESC\": \"$ctx.args.input.PRODUCT_DESC\",\r\n  \"PSCU_CLIENT_ID\": $ctx.args.input.PSCU_CLIENT_ID,\r\n  \"PARTNER_CODE\": \"$ctx.args.input.PARTNER_CODE\",\r\n  \"CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\r\n  \"CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\",\r\n  \"CHANGED_BY_USER_ID\": null,\r\n  \"CHANGED_DATE\": null\r\n}",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -617,8 +617,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "updateORIGIN_PRODUCT",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"UPDATE ORIGIN_PRODUCT SET VENDOR_NAME = :VENDOR_NAME, PRODUCT_ID = :PRODUCT_ID, PRODUCT_DESC = :PRODUCT_DESC, PSCU_CLIENT_ID = :PSCU_CLIENT_ID, PARTNER_CODE = :PARTNER_CODE, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE ORIGIN_PRODUCT_ID = :ORIGIN_PRODUCT_ID\"\n  ],\n  \"variableMap\": {\n    \":ORIGIN_PRODUCT_ID\": $ctx.args.input.ORIGIN_PRODUCT_ID,\n    \":VENDOR_NAME\": \"$ctx.args.input.VENDOR_NAME\",\n    \":PRODUCT_ID\": \"$ctx.args.input.PRODUCT_ID\",\n    \":PRODUCT_DESC\": \"$ctx.args.input.PRODUCT_DESC\",\n    \":PSCU_CLIENT_ID\": $ctx.args.input.PSCU_CLIENT_ID,\n    \":PARTNER_CODE\": #if($ctx.args.input.PARTNER_CODE)\"$ctx.args.input.PARTNER_CODE\"#else null #end,\n    \":CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\n    \":CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\n  }\n}",
-        "ResponseMappingTemplate": "#if($ctx.error)\n  $util.error($ctx.error.message, $ctx.error.type)\n#end\n\n{\n  \"ORIGIN_PRODUCT_ID\": $ctx.args.input.ORIGIN_PRODUCT_ID,\n  \"VENDOR_NAME\": \"$ctx.args.input.VENDOR_NAME\",\n  \"PRODUCT_ID\": \"$ctx.args.input.PRODUCT_ID\",\n  \"PRODUCT_DESC\": \"$ctx.args.input.PRODUCT_DESC\",\n  \"PSCU_CLIENT_ID\": $ctx.args.input.PSCU_CLIENT_ID,\n  \"PARTNER_CODE\": \"$ctx.args.input.PARTNER_CODE\",\n  \"CREATED_BY_USER_ID\": 1,\n  \"CREATED_DATE\": \"2024-01-01\",\n  \"CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\n  \"CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"UPDATE ORIGIN_PRODUCT SET VENDOR_NAME = :VENDOR_NAME, PRODUCT_ID = :PRODUCT_ID, PRODUCT_DESC = :PRODUCT_DESC, PSCU_CLIENT_ID = :PSCU_CLIENT_ID, PARTNER_CODE = :PARTNER_CODE, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE ORIGIN_PRODUCT_ID = :ORIGIN_PRODUCT_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":ORIGIN_PRODUCT_ID\": $ctx.args.input.ORIGIN_PRODUCT_ID,\r\n    \":VENDOR_NAME\": \"$ctx.args.input.VENDOR_NAME\",\r\n    \":PRODUCT_ID\": \"$ctx.args.input.PRODUCT_ID\",\r\n    \":PRODUCT_DESC\": \"$ctx.args.input.PRODUCT_DESC\",\r\n    \":PSCU_CLIENT_ID\": $ctx.args.input.PSCU_CLIENT_ID,\r\n    \":PARTNER_CODE\": #if($ctx.args.input.PARTNER_CODE)\"$ctx.args.input.PARTNER_CODE\"#else null #end,\r\n    \":CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\r\n    \":CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\r\n  }\r\n}",
+        "ResponseMappingTemplate": "#if($ctx.error)\r\n  $util.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n{\r\n  \"ORIGIN_PRODUCT_ID\": $ctx.args.input.ORIGIN_PRODUCT_ID,\r\n  \"VENDOR_NAME\": \"$ctx.args.input.VENDOR_NAME\",\r\n  \"PRODUCT_ID\": \"$ctx.args.input.PRODUCT_ID\",\r\n  \"PRODUCT_DESC\": \"$ctx.args.input.PRODUCT_DESC\",\r\n  \"PSCU_CLIENT_ID\": $ctx.args.input.PSCU_CLIENT_ID,\r\n  \"PARTNER_CODE\": \"$ctx.args.input.PARTNER_CODE\",\r\n  \"CREATED_BY_USER_ID\": 1,\r\n  \"CREATED_DATE\": \"2024-01-01\",\r\n  \"CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\r\n  \"CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\r\n}",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -640,8 +640,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "deleteORIGIN_PRODUCT",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM ORIGIN_PRODUCT WHERE ORIGIN_PRODUCT_ID = :ORIGIN_PRODUCT_ID\"\n  ],\n  \"variableMap\": {\n    \":ORIGIN_PRODUCT_ID\": $util.toJson($ctx.args.input.ORIGIN_PRODUCT_ID)\n  }\n}",
-        "ResponseMappingTemplate": "#if($ctx.error)\n  $util.error($ctx.error.message, $ctx.error.type)\n#end\n\n{\n  \"ORIGIN_PRODUCT_ID\": $ctx.args.input.ORIGIN_PRODUCT_ID,\n  \"VENDOR_NAME\": \"DELETED\",\n  \"PRODUCT_ID\": \"DELETED\",\n  \"PRODUCT_DESC\": \"DELETED\",\n  \"PSCU_CLIENT_ID\": 0,\n  \"PARTNER_CODE\": null,\n  \"CREATED_BY_USER_ID\": 1,\n  \"CREATED_DATE\": \"2024-01-01\",\n  \"CHANGED_BY_USER_ID\": null,\n  \"CHANGED_DATE\": null\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"DELETE FROM ORIGIN_PRODUCT WHERE ORIGIN_PRODUCT_ID = :ORIGIN_PRODUCT_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":ORIGIN_PRODUCT_ID\": $util.toJson($ctx.args.input.ORIGIN_PRODUCT_ID)\r\n  }\r\n}",
+        "ResponseMappingTemplate": "#if($ctx.error)\r\n  $util.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n{\r\n  \"ORIGIN_PRODUCT_ID\": $ctx.args.input.ORIGIN_PRODUCT_ID,\r\n  \"VENDOR_NAME\": \"DELETED\",\r\n  \"PRODUCT_ID\": \"DELETED\",\r\n  \"PRODUCT_DESC\": \"DELETED\",\r\n  \"PSCU_CLIENT_ID\": 0,\r\n  \"PARTNER_CODE\": null,\r\n  \"CREATED_BY_USER_ID\": 1,\r\n  \"CREATED_DATE\": \"2024-01-01\",\r\n  \"CHANGED_BY_USER_ID\": null,\r\n  \"CHANGED_DATE\": null\r\n}",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -663,8 +663,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "createREDIRECT_URL",
-        "RequestMappingTemplate": "## Authorization check\n#if(!$ctx.identity || !$ctx.identity.sub)\n  $util.unauthorized()\n#end\n\n## Input validation\n#if(!$ctx.args.input.URL || $ctx.args.input.URL.length() == 0)\n  $util.error(\"URL is required\", \"ValidationError\")\n#end\n#if(!$ctx.args.input.URL_TYPE_CODE.matches(\"^[EN]$\"))\n  $util.error(\"URL_TYPE_CODE must be E or N\", \"ValidationError\")\n#end\n\n{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"INSERT INTO REDIRECT_URL (ORIGIN_PRODUCT_ID, URL_TYPE_CODE, URL, RESPONSE_TEXT, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:ORIGIN_PRODUCT_ID, :URL_TYPE_CODE, :URL, :RESPONSE_TEXT, :CREATED_BY_USER_ID, :CREATED_DATE)\"\n  ],\n  \"variableMap\": {\n    \":ORIGIN_PRODUCT_ID\": $util.toJson($ctx.args.input.ORIGIN_PRODUCT_ID),\n    \":URL_TYPE_CODE\": $util.toJson($ctx.args.input.URL_TYPE_CODE),\n    \":URL\": $util.toJson($ctx.args.input.URL),\n    \":RESPONSE_TEXT\": $util.toJson($ctx.args.input.RESPONSE_TEXT),\n    \":CREATED_BY_USER_ID\": $util.toJson($ctx.args.input.CREATED_BY_USER_ID),\n    \":CREATED_DATE\": $util.toJson($ctx.args.input.CREATED_DATE)\n  }\n}",
-        "ResponseMappingTemplate": "#if($ctx.error)\n  $util.error($ctx.error.message, $ctx.error.type)\n#end\n\n{\n  \"REDIRECT_URL_ID\": 999,\n  \"ORIGIN_PRODUCT_ID\": $ctx.args.input.ORIGIN_PRODUCT_ID,\n  \"URL_TYPE_CODE\": \"$ctx.args.input.URL_TYPE_CODE\",\n  \"URL\": \"$ctx.args.input.URL\",\n  \"RESPONSE_TEXT\": \"$ctx.args.input.RESPONSE_TEXT\",\n  \"CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\n  \"CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\",\n  \"CHANGED_BY_USER_ID\": null,\n  \"CHANGED_DATE\": null\n}",
+        "RequestMappingTemplate": "## Authorization check\r\n#if(!$ctx.identity || !$ctx.identity.sub)\r\n  $util.unauthorized()\r\n#end\r\n\r\n## Input validation\r\n#if(!$ctx.args.input.URL || $ctx.args.input.URL.length() == 0)\r\n  $util.error(\"URL is required\", \"ValidationError\")\r\n#end\r\n#if(!$ctx.args.input.URL_TYPE_CODE.matches(\"^[EN]$\"))\r\n  $util.error(\"URL_TYPE_CODE must be E or N\", \"ValidationError\")\r\n#end\r\n\r\n{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"INSERT INTO REDIRECT_URL (ORIGIN_PRODUCT_ID, URL_TYPE_CODE, URL, RESPONSE_TEXT, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:ORIGIN_PRODUCT_ID, :URL_TYPE_CODE, :URL, :RESPONSE_TEXT, :CREATED_BY_USER_ID, :CREATED_DATE)\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":ORIGIN_PRODUCT_ID\": $util.toJson($ctx.args.input.ORIGIN_PRODUCT_ID),\r\n    \":URL_TYPE_CODE\": $util.toJson($ctx.args.input.URL_TYPE_CODE),\r\n    \":URL\": $util.toJson($ctx.args.input.URL),\r\n    \":RESPONSE_TEXT\": $util.toJson($ctx.args.input.RESPONSE_TEXT),\r\n    \":CREATED_BY_USER_ID\": $util.toJson($ctx.args.input.CREATED_BY_USER_ID),\r\n    \":CREATED_DATE\": $util.toJson($ctx.args.input.CREATED_DATE)\r\n  }\r\n}",
+        "ResponseMappingTemplate": "#if($ctx.error)\r\n  $util.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n{\r\n  \"REDIRECT_URL_ID\": 999,\r\n  \"ORIGIN_PRODUCT_ID\": $ctx.args.input.ORIGIN_PRODUCT_ID,\r\n  \"URL_TYPE_CODE\": \"$ctx.args.input.URL_TYPE_CODE\",\r\n  \"URL\": \"$ctx.args.input.URL\",\r\n  \"RESPONSE_TEXT\": \"$ctx.args.input.RESPONSE_TEXT\",\r\n  \"CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\r\n  \"CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\",\r\n  \"CHANGED_BY_USER_ID\": null,\r\n  \"CHANGED_DATE\": null\r\n}",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -686,8 +686,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "updateREDIRECT_URL",
-        "RequestMappingTemplate": "## Authorization check\n#if(!$ctx.identity || !$ctx.identity.sub)\n  $util.unauthorized()\n#end\n\n## Input validation\n#if(!$ctx.args.input.URL || $ctx.args.input.URL.length() == 0)\n  $util.error(\"URL is required\", \"ValidationError\")\n#end\n#if(!$ctx.args.input.URL_TYPE_CODE.matches(\"^[EN]$\"))\n  $util.error(\"URL_TYPE_CODE must be E or N\", \"ValidationError\")\n#end\n\n{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"UPDATE REDIRECT_URL SET ORIGIN_PRODUCT_ID = :ORIGIN_PRODUCT_ID, URL_TYPE_CODE = :URL_TYPE_CODE, URL = :URL, RESPONSE_TEXT = :RESPONSE_TEXT, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE REDIRECT_URL_ID = :REDIRECT_URL_ID\"\n  ],\n  \"variableMap\": {\n    \":REDIRECT_URL_ID\": $util.toJson($ctx.args.input.REDIRECT_URL_ID),\n    \":ORIGIN_PRODUCT_ID\": $util.toJson($ctx.args.input.ORIGIN_PRODUCT_ID),\n    \":URL_TYPE_CODE\": $util.toJson($ctx.args.input.URL_TYPE_CODE),\n    \":URL\": $util.toJson($ctx.args.input.URL),\n    \":RESPONSE_TEXT\": $util.toJson($ctx.args.input.RESPONSE_TEXT),\n    \":CHANGED_BY_USER_ID\": $util.toJson($ctx.args.input.CHANGED_BY_USER_ID),\n    \":CHANGED_DATE\": $util.toJson($ctx.args.input.CHANGED_DATE)\n  }\n}",
-        "ResponseMappingTemplate": "#if($ctx.error)\n  $util.error($ctx.error.message, $ctx.error.type)\n#end\n\n{\n  \"REDIRECT_URL_ID\": $ctx.args.input.REDIRECT_URL_ID,\n  \"ORIGIN_PRODUCT_ID\": $ctx.args.input.ORIGIN_PRODUCT_ID,\n  \"URL_TYPE_CODE\": \"$ctx.args.input.URL_TYPE_CODE\",\n  \"URL\": \"$ctx.args.input.URL\",\n  \"RESPONSE_TEXT\": \"$ctx.args.input.RESPONSE_TEXT\",\n  \"CREATED_BY_USER_ID\": 1,\n  \"CREATED_DATE\": \"2024-01-01\",\n  \"CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\n  \"CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\n}",
+        "RequestMappingTemplate": "## Authorization check\r\n#if(!$ctx.identity || !$ctx.identity.sub)\r\n  $util.unauthorized()\r\n#end\r\n\r\n## Input validation\r\n#if(!$ctx.args.input.URL || $ctx.args.input.URL.length() == 0)\r\n  $util.error(\"URL is required\", \"ValidationError\")\r\n#end\r\n#if(!$ctx.args.input.URL_TYPE_CODE.matches(\"^[EN]$\"))\r\n  $util.error(\"URL_TYPE_CODE must be E or N\", \"ValidationError\")\r\n#end\r\n\r\n{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"UPDATE REDIRECT_URL SET ORIGIN_PRODUCT_ID = :ORIGIN_PRODUCT_ID, URL_TYPE_CODE = :URL_TYPE_CODE, URL = :URL, RESPONSE_TEXT = :RESPONSE_TEXT, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE REDIRECT_URL_ID = :REDIRECT_URL_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":REDIRECT_URL_ID\": $util.toJson($ctx.args.input.REDIRECT_URL_ID),\r\n    \":ORIGIN_PRODUCT_ID\": $util.toJson($ctx.args.input.ORIGIN_PRODUCT_ID),\r\n    \":URL_TYPE_CODE\": $util.toJson($ctx.args.input.URL_TYPE_CODE),\r\n    \":URL\": $util.toJson($ctx.args.input.URL),\r\n    \":RESPONSE_TEXT\": $util.toJson($ctx.args.input.RESPONSE_TEXT),\r\n    \":CHANGED_BY_USER_ID\": $util.toJson($ctx.args.input.CHANGED_BY_USER_ID),\r\n    \":CHANGED_DATE\": $util.toJson($ctx.args.input.CHANGED_DATE)\r\n  }\r\n}",
+        "ResponseMappingTemplate": "#if($ctx.error)\r\n  $util.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n{\r\n  \"REDIRECT_URL_ID\": $ctx.args.input.REDIRECT_URL_ID,\r\n  \"ORIGIN_PRODUCT_ID\": $ctx.args.input.ORIGIN_PRODUCT_ID,\r\n  \"URL_TYPE_CODE\": \"$ctx.args.input.URL_TYPE_CODE\",\r\n  \"URL\": \"$ctx.args.input.URL\",\r\n  \"RESPONSE_TEXT\": \"$ctx.args.input.RESPONSE_TEXT\",\r\n  \"CREATED_BY_USER_ID\": 1,\r\n  \"CREATED_DATE\": \"2024-01-01\",\r\n  \"CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\r\n  \"CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\r\n}",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -709,8 +709,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "deleteREDIRECT_URL",
-        "RequestMappingTemplate": "## Authorization check\n#if(!$ctx.identity || !$ctx.identity.sub)\n  $util.unauthorized()\n#end\n\n## Additional security: Only allow deletion of own records (optional)\n## Uncomment to enable:\n## SELECT CREATED_BY_USER_ID FROM REDIRECT_URL WHERE REDIRECT_URL_ID = :REDIRECT_URL_ID AND CREATED_BY_USER_ID = :USER_ID\n\n{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM REDIRECT_URL WHERE REDIRECT_URL_ID = :REDIRECT_URL_ID\"\n  ],\n  \"variableMap\": {\n    \":REDIRECT_URL_ID\": $util.toJson($ctx.args.input.REDIRECT_URL_ID)\n  }\n}",
-        "ResponseMappingTemplate": "#if($ctx.error)\n  $util.error($ctx.error.message, $ctx.error.type)\n#end\n\n{\n  \"REDIRECT_URL_ID\": $ctx.args.input.REDIRECT_URL_ID,\n  \"ORIGIN_PRODUCT_ID\": 1,\n  \"URL_TYPE_CODE\": \"DELETED\",\n  \"URL\": \"DELETED\",\n  \"RESPONSE_TEXT\": null,\n  \"CREATED_BY_USER_ID\": 1,\n  \"CREATED_DATE\": \"2024-01-01\",\n  \"CHANGED_BY_USER_ID\": null,\n  \"CHANGED_DATE\": null\n}",
+        "RequestMappingTemplate": "## Authorization check\r\n#if(!$ctx.identity || !$ctx.identity.sub)\r\n  $util.unauthorized()\r\n#end\r\n\r\n## Additional security: Only allow deletion of own records (optional)\r\n## Uncomment to enable:\r\n## SELECT CREATED_BY_USER_ID FROM REDIRECT_URL WHERE REDIRECT_URL_ID = :REDIRECT_URL_ID AND CREATED_BY_USER_ID = :USER_ID\r\n\r\n{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"DELETE FROM REDIRECT_URL WHERE REDIRECT_URL_ID = :REDIRECT_URL_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":REDIRECT_URL_ID\": $util.toJson($ctx.args.input.REDIRECT_URL_ID)\r\n  }\r\n}",
+        "ResponseMappingTemplate": "#if($ctx.error)\r\n  $util.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n{\r\n  \"REDIRECT_URL_ID\": $ctx.args.input.REDIRECT_URL_ID,\r\n  \"ORIGIN_PRODUCT_ID\": 1,\r\n  \"URL_TYPE_CODE\": \"DELETED\",\r\n  \"URL\": \"DELETED\",\r\n  \"RESPONSE_TEXT\": null,\r\n  \"CREATED_BY_USER_ID\": 1,\r\n  \"CREATED_DATE\": \"2024-01-01\",\r\n  \"CHANGED_BY_USER_ID\": null,\r\n  \"CHANGED_DATE\": null\r\n}",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -732,7 +732,7 @@
         },
         "TypeName": "Mutation",
         "FieldName": "createSERVICE_PROVIDER",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"INSERT INTO SERVICE_PROVIDER (SERVICE_PROVIDER_NAME, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:SERVICE_PROVIDER_NAME, :CREATED_BY_USER_ID, :CREATED_DATE)\",\n    \"SELECT * FROM SERVICE_PROVIDER WHERE SERVICE_PROVIDER_ID = LAST_INSERT_ID()\"\n  ],\n  \"variableMap\": {\n    \":SERVICE_PROVIDER_NAME\": \"$ctx.args.input.SERVICE_PROVIDER_NAME\",\n    \":CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\n    \":CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\"\n  }\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"INSERT INTO SERVICE_PROVIDER (SERVICE_PROVIDER_NAME, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:SERVICE_PROVIDER_NAME, :CREATED_BY_USER_ID, :CREATED_DATE)\",\r\n    \"SELECT * FROM SERVICE_PROVIDER WHERE SERVICE_PROVIDER_ID = LAST_INSERT_ID()\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":SERVICE_PROVIDER_NAME\": \"$ctx.args.input.SERVICE_PROVIDER_NAME\",\r\n    \":CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\r\n    \":CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\"\r\n  }\r\n}",
         "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -755,7 +755,7 @@
         },
         "TypeName": "Mutation",
         "FieldName": "updateSERVICE_PROVIDER",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"UPDATE SERVICE_PROVIDER SET SERVICE_PROVIDER_NAME = :SERVICE_PROVIDER_NAME, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE SERVICE_PROVIDER_ID = :SERVICE_PROVIDER_ID\",\n    \"SELECT * FROM SERVICE_PROVIDER WHERE SERVICE_PROVIDER_ID = :SERVICE_PROVIDER_ID\"\n  ],\n  \"variableMap\": {\n    \":SERVICE_PROVIDER_ID\": $ctx.args.input.SERVICE_PROVIDER_ID,\n    \":SERVICE_PROVIDER_NAME\": \"$ctx.args.input.SERVICE_PROVIDER_NAME\",\n    \":CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\n    \":CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\n  }\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"UPDATE SERVICE_PROVIDER SET SERVICE_PROVIDER_NAME = :SERVICE_PROVIDER_NAME, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE SERVICE_PROVIDER_ID = :SERVICE_PROVIDER_ID\",\r\n    \"SELECT * FROM SERVICE_PROVIDER WHERE SERVICE_PROVIDER_ID = :SERVICE_PROVIDER_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":SERVICE_PROVIDER_ID\": $ctx.args.input.SERVICE_PROVIDER_ID,\r\n    \":SERVICE_PROVIDER_NAME\": \"$ctx.args.input.SERVICE_PROVIDER_NAME\",\r\n    \":CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\r\n    \":CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\r\n  }\r\n}",
         "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -778,7 +778,7 @@
         },
         "TypeName": "Mutation",
         "FieldName": "deleteSERVICE_PROVIDER",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM SERVICE_PROVIDER WHERE SERVICE_PROVIDER_ID = :SERVICE_PROVIDER_ID\"\n  ],\n  \"variableMap\": {\n    \":SERVICE_PROVIDER_ID\": $ctx.args.input.SERVICE_PROVIDER_ID\n  }\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"DELETE FROM SERVICE_PROVIDER WHERE SERVICE_PROVIDER_ID = :SERVICE_PROVIDER_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":SERVICE_PROVIDER_ID\": $ctx.args.input.SERVICE_PROVIDER_ID\r\n  }\r\n}",
         "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -801,7 +801,7 @@
         },
         "TypeName": "Mutation",
         "FieldName": "createSERVICE",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"INSERT INTO SERVICE (SERVICE_PROVIDER_ID, URI, SECRET_NAME, REQUEST_TYPE, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:SERVICE_PROVIDER_ID, :URI, :SECRET_NAME, :REQUEST_TYPE, :CREATED_BY_USER_ID, :CREATED_DATE)\",\n    \"SELECT * FROM SERVICE WHERE SERVICE_ID = LAST_INSERT_ID()\"\n  ],\n  \"variableMap\": {\n    \":SERVICE_PROVIDER_ID\": $ctx.args.input.SERVICE_PROVIDER_ID,\n    \":URI\": \"$ctx.args.input.URI\",\n    \":SECRET_NAME\": #if($ctx.args.input.SECRET_NAME)\"$ctx.args.input.SECRET_NAME\"#else null #end,\n    \":REQUEST_TYPE\": #if($ctx.args.input.REQUEST_TYPE)\"$ctx.args.input.REQUEST_TYPE\"#else null #end,\n    \":CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\n    \":CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\"\n  }\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"INSERT INTO SERVICE (SERVICE_PROVIDER_ID, URI, SECRET_NAME, REQUEST_TYPE, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:SERVICE_PROVIDER_ID, :URI, :SECRET_NAME, :REQUEST_TYPE, :CREATED_BY_USER_ID, :CREATED_DATE)\",\r\n    \"SELECT * FROM SERVICE WHERE SERVICE_ID = LAST_INSERT_ID()\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":SERVICE_PROVIDER_ID\": $ctx.args.input.SERVICE_PROVIDER_ID,\r\n    \":URI\": \"$ctx.args.input.URI\",\r\n    \":SECRET_NAME\": #if($ctx.args.input.SECRET_NAME)\"$ctx.args.input.SECRET_NAME\"#else null #end,\r\n    \":REQUEST_TYPE\": #if($ctx.args.input.REQUEST_TYPE)\"$ctx.args.input.REQUEST_TYPE\"#else null #end,\r\n    \":CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\r\n    \":CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\"\r\n  }\r\n}",
         "ResponseMappingTemplate": "{\r\n  \"SERVICE_ID\": -1,\r\n  \"SERVICE_PROVIDER_ID\": $ctx.args.input.SERVICE_PROVIDER_ID,\r\n  \"URI\": \"$ctx.args.input.URI\",\r\n  \"SECRET_NAME\": \"$ctx.args.input.SECRET_NAME\",\r\n  \"REQUEST_TYPE\": \"$ctx.args.input.REQUEST_TYPE\",\r\n  \"CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\r\n  \"CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\"\r\n}",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -824,7 +824,7 @@
         },
         "TypeName": "Mutation",
         "FieldName": "updateSERVICE",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"UPDATE SERVICE SET SERVICE_PROVIDER_ID = :SERVICE_PROVIDER_ID, URI = :URI, SECRET_NAME = :SECRET_NAME, REQUEST_TYPE = :REQUEST_TYPE, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE SERVICE_ID = :SERVICE_ID\",\n    \"SELECT * FROM SERVICE WHERE SERVICE_ID = :SERVICE_ID\"\n  ],\n  \"variableMap\": {\n    \":SERVICE_ID\": $ctx.args.input.SERVICE_ID,\n    \":SERVICE_PROVIDER_ID\": $ctx.args.input.SERVICE_PROVIDER_ID,\n    \":URI\": \"$ctx.args.input.URI\",\n    \":SECRET_NAME\": #if($ctx.args.input.SECRET_NAME)\"$ctx.args.input.SECRET_NAME\"#else null #end,\n    \":REQUEST_TYPE\": #if($ctx.args.input.REQUEST_TYPE)\"$ctx.args.input.REQUEST_TYPE\"#else null #end,\n    \":CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\n    \":CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\n  }\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"UPDATE SERVICE SET SERVICE_PROVIDER_ID = :SERVICE_PROVIDER_ID, URI = :URI, SECRET_NAME = :SECRET_NAME, REQUEST_TYPE = :REQUEST_TYPE, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE SERVICE_ID = :SERVICE_ID\",\r\n    \"SELECT * FROM SERVICE WHERE SERVICE_ID = :SERVICE_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":SERVICE_ID\": $ctx.args.input.SERVICE_ID,\r\n    \":SERVICE_PROVIDER_ID\": $ctx.args.input.SERVICE_PROVIDER_ID,\r\n    \":URI\": \"$ctx.args.input.URI\",\r\n    \":SECRET_NAME\": #if($ctx.args.input.SECRET_NAME)\"$ctx.args.input.SECRET_NAME\"#else null #end,\r\n    \":REQUEST_TYPE\": #if($ctx.args.input.REQUEST_TYPE)\"$ctx.args.input.REQUEST_TYPE\"#else null #end,\r\n    \":CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\r\n    \":CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\r\n  }\r\n}",
         "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -847,7 +847,7 @@
         },
         "TypeName": "Mutation",
         "FieldName": "deleteSERVICE",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM SERVICE WHERE SERVICE_ID = :SERVICE_ID\"\n  ],\n  \"variableMap\": {\n    \":SERVICE_ID\": $util.toJson($ctx.args.input.SERVICE_ID)\n  }\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"DELETE FROM SERVICE WHERE SERVICE_ID = :SERVICE_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":SERVICE_ID\": $util.toJson($ctx.args.input.SERVICE_ID)\r\n  }\r\n}",
         "ResponseMappingTemplate": "{\r\n  \"SERVICE_ID\": $ctx.args.input.SERVICE_ID,\r\n  \"SERVICE_PROVIDER_ID\": 1,\r\n  \"URI\": \"deleted\",\r\n  \"CREATED_BY_USER_ID\": 1,\r\n  \"CREATED_DATE\": \"$util.time.nowISO8601()\"\r\n}",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -870,8 +870,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "createSERVICE_PARAM",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"INSERT INTO SERVICE_PARAM (SERVICE_ID, PARAM_NAME, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:SERVICE_ID, :PARAM_NAME, :CREATED_BY_USER_ID, :CREATED_DATE)\"\n  ],\n  \"variableMap\": {\n    \":SERVICE_ID\": $ctx.args.input.SERVICE_ID,\n    \":PARAM_NAME\": \"$ctx.args.input.PARAM_NAME\",\n    \":CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\n    \":CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\"\n  }\n}",
-        "ResponseMappingTemplate": "{\r\n  \"SERVICE_PARAM_ID\": -1,\r\n  \"SERVICE_ID\": $ctx.args.input.SERVICE_ID,\r\n  \"PARAM_NAME\": \"$ctx.args.input.PARAM_NAME\",\r\n  \"CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\r\n  \"CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\"\r\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"INSERT INTO SERVICE_PARAM (SERVICE_ID, PARAM_NAME, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:SERVICE_ID, :PARAM_NAME, :CREATED_BY_USER_ID, :CREATED_DATE)\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":SERVICE_ID\": $ctx.args.input.SERVICE_ID,\r\n    \":PARAM_NAME\": \"$ctx.args.input.PARAM_NAME\",\r\n    \":CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\r\n    \":CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\"\r\n  }\r\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.generatedKeys && $ctx.result.generatedKeys.size() > 0)\r\n  #set($generatedId = $ctx.result.generatedKeys[0])\r\n#else\r\n  #set($generatedId = -1)\r\n#end\r\n\r\n{\r\n  \"SERVICE_PARAM_ID\": $generatedId,\r\n  \"SERVICE_ID\": $ctx.args.input.SERVICE_ID,\r\n  \"PARAM_NAME\": \"$ctx.args.input.PARAM_NAME\",\r\n  \"CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\r\n  \"CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\"\r\n}",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -893,7 +893,7 @@
         },
         "TypeName": "Mutation",
         "FieldName": "updateSERVICE_PARAM",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"UPDATE SERVICE_PARAM SET PARAM_NAME = :PARAM_NAME, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE SERVICE_PARAM_ID = :SERVICE_PARAM_ID\",\n    \"SELECT * FROM SERVICE_PARAM WHERE SERVICE_PARAM_ID = :SERVICE_PARAM_ID\"\n  ],\n  \"variableMap\": {\n    \":SERVICE_PARAM_ID\": $ctx.args.input.SERVICE_PARAM_ID,\n    \":PARAM_NAME\": \"$ctx.args.input.PARAM_NAME\",\n    \":CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\n    \":CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\n  }\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"UPDATE SERVICE_PARAM SET PARAM_NAME = :PARAM_NAME, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE SERVICE_PARAM_ID = :SERVICE_PARAM_ID\",\r\n    \"SELECT * FROM SERVICE_PARAM WHERE SERVICE_PARAM_ID = :SERVICE_PARAM_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":SERVICE_PARAM_ID\": $ctx.args.input.SERVICE_PARAM_ID,\r\n    \":PARAM_NAME\": \"$ctx.args.input.PARAM_NAME\",\r\n    \":CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\r\n    \":CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\r\n  }\r\n}",
         "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -916,7 +916,7 @@
         },
         "TypeName": "Mutation",
         "FieldName": "deleteSERVICE_PARAM",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM SERVICE_PARAM WHERE SERVICE_PARAM_ID = :SERVICE_PARAM_ID\"\n  ],\n  \"variableMap\": {\n    \":SERVICE_PARAM_ID\": $ctx.args.input.SERVICE_PARAM_ID\n  }\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"DELETE FROM SERVICE_PARAM WHERE SERVICE_PARAM_ID = :SERVICE_PARAM_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":SERVICE_PARAM_ID\": $ctx.args.input.SERVICE_PARAM_ID\r\n  }\r\n}",
         "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -939,7 +939,7 @@
         },
         "TypeName": "Mutation",
         "FieldName": "createSERVICE_PARAM_MAPPING",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"INSERT INTO SERVICE_PARAM_MAPPING (ORIGIN_PRODUCT_ID, SYSTEM_NBR, PRIN_NBR, AGENT_NBR, SOURCE_SERVICE_PARAM_ID, TARGET_SERVICE_PARAM_ID, PLASTIC_TYPE_ID, COMMENT_TEXT, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:ORIGIN_PRODUCT_ID, :SYSTEM_NBR, :PRIN_NBR, :AGENT_NBR, :SOURCE_SERVICE_PARAM_ID, :TARGET_SERVICE_PARAM_ID, :PLASTIC_TYPE_ID, :COMMENT_TEXT, :CREATED_BY_USER_ID, :CREATED_DATE)\"\n  ],\n  \"variableMap\": {\n    \":ORIGIN_PRODUCT_ID\": $ctx.args.input.ORIGIN_PRODUCT_ID,\n    \":SYSTEM_NBR\": #if($ctx.args.input.SYSTEM_NBR)\"$ctx.args.input.SYSTEM_NBR\"#else null #end,\n    \":PRIN_NBR\": #if($ctx.args.input.PRIN_NBR)\"$ctx.args.input.PRIN_NBR\"#else null #end,\n    \":AGENT_NBR\": #if($ctx.args.input.AGENT_NBR)\"$ctx.args.input.AGENT_NBR\"#else null #end,\n    \":SOURCE_SERVICE_PARAM_ID\": $ctx.args.input.SOURCE_SERVICE_PARAM_ID,\n    \":TARGET_SERVICE_PARAM_ID\": $ctx.args.input.TARGET_SERVICE_PARAM_ID,\n    \":PLASTIC_TYPE_ID\": #if($ctx.args.input.PLASTIC_TYPE_ID)$ctx.args.input.PLASTIC_TYPE_ID#else null #end,\n    \":COMMENT_TEXT\": #if($ctx.args.input.COMMENT_TEXT)\"$ctx.args.input.COMMENT_TEXT\"#else null #end,\n    \":CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\n    \":CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\"\n  }\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"INSERT INTO SERVICE_PARAM_MAPPING (ORIGIN_PRODUCT_ID, SYSTEM_NBR, PRIN_NBR, AGENT_NBR, SOURCE_SERVICE_PARAM_ID, TARGET_SERVICE_PARAM_ID, PLASTIC_TYPE_ID, COMMENT_TEXT, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:ORIGIN_PRODUCT_ID, :SYSTEM_NBR, :PRIN_NBR, :AGENT_NBR, :SOURCE_SERVICE_PARAM_ID, :TARGET_SERVICE_PARAM_ID, :PLASTIC_TYPE_ID, :COMMENT_TEXT, :CREATED_BY_USER_ID, :CREATED_DATE)\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":ORIGIN_PRODUCT_ID\": $ctx.args.input.ORIGIN_PRODUCT_ID,\r\n    \":SYSTEM_NBR\": #if($ctx.args.input.SYSTEM_NBR)\"$ctx.args.input.SYSTEM_NBR\"#else null #end,\r\n    \":PRIN_NBR\": #if($ctx.args.input.PRIN_NBR)\"$ctx.args.input.PRIN_NBR\"#else null #end,\r\n    \":AGENT_NBR\": #if($ctx.args.input.AGENT_NBR)\"$ctx.args.input.AGENT_NBR\"#else null #end,\r\n    \":SOURCE_SERVICE_PARAM_ID\": $ctx.args.input.SOURCE_SERVICE_PARAM_ID,\r\n    \":TARGET_SERVICE_PARAM_ID\": $ctx.args.input.TARGET_SERVICE_PARAM_ID,\r\n    \":PLASTIC_TYPE_ID\": #if($ctx.args.input.PLASTIC_TYPE_ID)$ctx.args.input.PLASTIC_TYPE_ID#else null #end,\r\n    \":COMMENT_TEXT\": #if($ctx.args.input.COMMENT_TEXT)\"$ctx.args.input.COMMENT_TEXT\"#else null #end,\r\n    \":CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\r\n    \":CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\"\r\n  }\r\n}",
         "ResponseMappingTemplate": "{\r\n  \"SERVICE_PARAM_MAPPING_ID\": -1,\r\n  \"ORIGIN_PRODUCT_ID\": $ctx.args.input.ORIGIN_PRODUCT_ID,\r\n  \"SOURCE_SERVICE_PARAM_ID\": $ctx.args.input.SOURCE_SERVICE_PARAM_ID,\r\n  \"TARGET_SERVICE_PARAM_ID\": $ctx.args.input.TARGET_SERVICE_PARAM_ID,\r\n  \"SYSTEM_NBR\": \"$ctx.args.input.SYSTEM_NBR\",\r\n  \"PRIN_NBR\": \"$ctx.args.input.PRIN_NBR\",\r\n  \"AGENT_NBR\": \"$ctx.args.input.AGENT_NBR\",\r\n  \"CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\r\n  \"CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\"\r\n}",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -962,7 +962,7 @@
         },
         "TypeName": "Mutation",
         "FieldName": "updateSERVICE_PARAM_MAPPING",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"UPDATE SERVICE_PARAM_MAPPING SET ORIGIN_PRODUCT_ID = :ORIGIN_PRODUCT_ID, SYSTEM_NBR = :SYSTEM_NBR, PRIN_NBR = :PRIN_NBR, AGENT_NBR = :AGENT_NBR, SOURCE_SERVICE_PARAM_ID = :SOURCE_SERVICE_PARAM_ID, TARGET_SERVICE_PARAM_ID = :TARGET_SERVICE_PARAM_ID, PLASTIC_TYPE_ID = :PLASTIC_TYPE_ID, COMMENT_TEXT = :COMMENT_TEXT, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE SERVICE_PARAM_MAPPING_ID = :SERVICE_PARAM_MAPPING_ID\",\n    \"SELECT * FROM SERVICE_PARAM_MAPPING WHERE SERVICE_PARAM_MAPPING_ID = :SERVICE_PARAM_MAPPING_ID\"\n  ],\n  \"variableMap\": {\n    \":SERVICE_PARAM_MAPPING_ID\": $ctx.args.input.SERVICE_PARAM_MAPPING_ID,\n    \":ORIGIN_PRODUCT_ID\": $ctx.args.input.ORIGIN_PRODUCT_ID,\n    \":SYSTEM_NBR\": #if($ctx.args.input.SYSTEM_NBR)\"$ctx.args.input.SYSTEM_NBR\"#else null #end,\n    \":PRIN_NBR\": #if($ctx.args.input.PRIN_NBR)\"$ctx.args.input.PRIN_NBR\"#else null #end,\n    \":AGENT_NBR\": #if($ctx.args.input.AGENT_NBR)\"$ctx.args.input.AGENT_NBR\"#else null #end,\n    \":SOURCE_SERVICE_PARAM_ID\": $ctx.args.input.SOURCE_SERVICE_PARAM_ID,\n    \":TARGET_SERVICE_PARAM_ID\": $ctx.args.input.TARGET_SERVICE_PARAM_ID,\n    \":PLASTIC_TYPE_ID\": #if($ctx.args.input.PLASTIC_TYPE_ID)$ctx.args.input.PLASTIC_TYPE_ID#else null #end,\n    \":COMMENT_TEXT\": #if($ctx.args.input.COMMENT_TEXT)\"$ctx.args.input.COMMENT_TEXT\"#else null #end,\n    \":CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\n    \":CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\n  }\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"UPDATE SERVICE_PARAM_MAPPING SET ORIGIN_PRODUCT_ID = :ORIGIN_PRODUCT_ID, SYSTEM_NBR = :SYSTEM_NBR, PRIN_NBR = :PRIN_NBR, AGENT_NBR = :AGENT_NBR, SOURCE_SERVICE_PARAM_ID = :SOURCE_SERVICE_PARAM_ID, TARGET_SERVICE_PARAM_ID = :TARGET_SERVICE_PARAM_ID, PLASTIC_TYPE_ID = :PLASTIC_TYPE_ID, COMMENT_TEXT = :COMMENT_TEXT, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE SERVICE_PARAM_MAPPING_ID = :SERVICE_PARAM_MAPPING_ID\",\r\n    \"SELECT * FROM SERVICE_PARAM_MAPPING WHERE SERVICE_PARAM_MAPPING_ID = :SERVICE_PARAM_MAPPING_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":SERVICE_PARAM_MAPPING_ID\": $ctx.args.input.SERVICE_PARAM_MAPPING_ID,\r\n    \":ORIGIN_PRODUCT_ID\": $ctx.args.input.ORIGIN_PRODUCT_ID,\r\n    \":SYSTEM_NBR\": #if($ctx.args.input.SYSTEM_NBR)\"$ctx.args.input.SYSTEM_NBR\"#else null #end,\r\n    \":PRIN_NBR\": #if($ctx.args.input.PRIN_NBR)\"$ctx.args.input.PRIN_NBR\"#else null #end,\r\n    \":AGENT_NBR\": #if($ctx.args.input.AGENT_NBR)\"$ctx.args.input.AGENT_NBR\"#else null #end,\r\n    \":SOURCE_SERVICE_PARAM_ID\": $ctx.args.input.SOURCE_SERVICE_PARAM_ID,\r\n    \":TARGET_SERVICE_PARAM_ID\": $ctx.args.input.TARGET_SERVICE_PARAM_ID,\r\n    \":PLASTIC_TYPE_ID\": #if($ctx.args.input.PLASTIC_TYPE_ID)$ctx.args.input.PLASTIC_TYPE_ID#else null #end,\r\n    \":COMMENT_TEXT\": #if($ctx.args.input.COMMENT_TEXT)\"$ctx.args.input.COMMENT_TEXT\"#else null #end,\r\n    \":CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\r\n    \":CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\r\n  }\r\n}",
         "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -985,7 +985,7 @@
         },
         "TypeName": "Mutation",
         "FieldName": "deleteSERVICE_PARAM_MAPPING",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM SERVICE_PARAM_MAPPING WHERE SERVICE_PARAM_MAPPING_ID = :SERVICE_PARAM_MAPPING_ID\"\n  ],\n  \"variableMap\": {\n    \":SERVICE_PARAM_MAPPING_ID\": $ctx.args.input.SERVICE_PARAM_MAPPING_ID\n  }\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"DELETE FROM SERVICE_PARAM_MAPPING WHERE SERVICE_PARAM_MAPPING_ID = :SERVICE_PARAM_MAPPING_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":SERVICE_PARAM_MAPPING_ID\": $ctx.args.input.SERVICE_PARAM_MAPPING_ID\r\n  }\r\n}",
         "ResponseMappingTemplate": "{\r\n  \"SERVICE_PARAM_MAPPING_ID\": $ctx.args.input.SERVICE_PARAM_MAPPING_ID\r\n}",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -1008,7 +1008,7 @@
         },
         "TypeName": "Mutation",
         "FieldName": "createSERVICE_EXPR_MAPPING",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"INSERT INTO SERVICE_EXPR_MAPPING (SERVICE_PARAM_MAPPING_ID, SOURCE_EXPR, TARGET_EXPR, COMMENT_TEXT, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:SERVICE_PARAM_MAPPING_ID, :SOURCE_EXPR, :TARGET_EXPR, :COMMENT_TEXT, :CREATED_BY_USER_ID, :CREATED_DATE)\",\n    \"SELECT * FROM SERVICE_EXPR_MAPPING WHERE SERVICE_EXPR_MAPPING_ID = LAST_INSERT_ID()\"\n  ],\n  \"variableMap\": {\n    \":SERVICE_PARAM_MAPPING_ID\": $ctx.args.input.SERVICE_PARAM_MAPPING_ID,\n    \":SOURCE_EXPR\": \"$ctx.args.input.SOURCE_EXPR\",\n    \":TARGET_EXPR\": \"$ctx.args.input.TARGET_EXPR\",\n    \":COMMENT_TEXT\": #if($ctx.args.input.COMMENT_TEXT)\"$ctx.args.input.COMMENT_TEXT\"#else null #end,\n    \":CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\n    \":CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\"\n  }\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"INSERT INTO SERVICE_EXPR_MAPPING (SERVICE_PARAM_MAPPING_ID, SOURCE_EXPR, TARGET_EXPR, COMMENT_TEXT, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:SERVICE_PARAM_MAPPING_ID, :SOURCE_EXPR, :TARGET_EXPR, :COMMENT_TEXT, :CREATED_BY_USER_ID, :CREATED_DATE)\",\r\n    \"SELECT * FROM SERVICE_EXPR_MAPPING WHERE SERVICE_EXPR_MAPPING_ID = LAST_INSERT_ID()\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":SERVICE_PARAM_MAPPING_ID\": $ctx.args.input.SERVICE_PARAM_MAPPING_ID,\r\n    \":SOURCE_EXPR\": \"$ctx.args.input.SOURCE_EXPR\",\r\n    \":TARGET_EXPR\": \"$ctx.args.input.TARGET_EXPR\",\r\n    \":COMMENT_TEXT\": #if($ctx.args.input.COMMENT_TEXT)\"$ctx.args.input.COMMENT_TEXT\"#else null #end,\r\n    \":CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\r\n    \":CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\"\r\n  }\r\n}",
         "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -1031,7 +1031,7 @@
         },
         "TypeName": "Mutation",
         "FieldName": "updateSERVICE_EXPR_MAPPING",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"UPDATE SERVICE_EXPR_MAPPING SET SERVICE_PARAM_MAPPING_ID = :SERVICE_PARAM_MAPPING_ID, SOURCE_EXPR = :SOURCE_EXPR, TARGET_EXPR = :TARGET_EXPR, COMMENT_TEXT = :COMMENT_TEXT, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE SERVICE_EXPR_MAPPING_ID = :SERVICE_EXPR_MAPPING_ID\",\n    \"SELECT * FROM SERVICE_EXPR_MAPPING WHERE SERVICE_EXPR_MAPPING_ID = :SERVICE_EXPR_MAPPING_ID\"\n  ],\n  \"variableMap\": {\n    \":SERVICE_EXPR_MAPPING_ID\": $ctx.args.input.SERVICE_EXPR_MAPPING_ID,\n    \":SERVICE_PARAM_MAPPING_ID\": $ctx.args.input.SERVICE_PARAM_MAPPING_ID,\n    \":SOURCE_EXPR\": \"$ctx.args.input.SOURCE_EXPR\",\n    \":TARGET_EXPR\": \"$ctx.args.input.TARGET_EXPR\",\n    \":COMMENT_TEXT\": #if($ctx.args.input.COMMENT_TEXT)\"$ctx.args.input.COMMENT_TEXT\"#else null #end,\n    \":CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\n    \":CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\n  }\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"UPDATE SERVICE_EXPR_MAPPING SET SERVICE_PARAM_MAPPING_ID = :SERVICE_PARAM_MAPPING_ID, SOURCE_EXPR = :SOURCE_EXPR, TARGET_EXPR = :TARGET_EXPR, COMMENT_TEXT = :COMMENT_TEXT, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE SERVICE_EXPR_MAPPING_ID = :SERVICE_EXPR_MAPPING_ID\",\r\n    \"SELECT * FROM SERVICE_EXPR_MAPPING WHERE SERVICE_EXPR_MAPPING_ID = :SERVICE_EXPR_MAPPING_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":SERVICE_EXPR_MAPPING_ID\": $ctx.args.input.SERVICE_EXPR_MAPPING_ID,\r\n    \":SERVICE_PARAM_MAPPING_ID\": $ctx.args.input.SERVICE_PARAM_MAPPING_ID,\r\n    \":SOURCE_EXPR\": \"$ctx.args.input.SOURCE_EXPR\",\r\n    \":TARGET_EXPR\": \"$ctx.args.input.TARGET_EXPR\",\r\n    \":COMMENT_TEXT\": #if($ctx.args.input.COMMENT_TEXT)\"$ctx.args.input.COMMENT_TEXT\"#else null #end,\r\n    \":CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\r\n    \":CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\r\n  }\r\n}",
         "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -1054,7 +1054,7 @@
         },
         "TypeName": "Mutation",
         "FieldName": "deleteSERVICE_EXPR_MAPPING",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM SERVICE_EXPR_MAPPING WHERE SERVICE_EXPR_MAPPING_ID = :SERVICE_EXPR_MAPPING_ID\"\n  ],\n  \"variableMap\": {\n    \":SERVICE_EXPR_MAPPING_ID\": $ctx.args.input.SERVICE_EXPR_MAPPING_ID\n  }\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"DELETE FROM SERVICE_EXPR_MAPPING WHERE SERVICE_EXPR_MAPPING_ID = :SERVICE_EXPR_MAPPING_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":SERVICE_EXPR_MAPPING_ID\": $ctx.args.input.SERVICE_EXPR_MAPPING_ID\r\n  }\r\n}",
         "ResponseMappingTemplate": "{\r\n  \"SERVICE_EXPR_MAPPING_ID\": $ctx.args.input.SERVICE_EXPR_MAPPING_ID\r\n}",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -1077,7 +1077,7 @@
         },
         "TypeName": "Mutation",
         "FieldName": "createSTEP_TYPE",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"INSERT INTO STEP_TYPE (STEP_TYPE_NAME, STEP_TYPE_DESC, RESOURCE_NAME, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:STEP_TYPE_NAME, :STEP_TYPE_DESC, :RESOURCE_NAME, :CREATED_BY_USER_ID, :CREATED_DATE)\",\n    \"SELECT * FROM STEP_TYPE WHERE STEP_TYPE_ID = LAST_INSERT_ID()\"\n  ],\n  \"variableMap\": {\n    \":STEP_TYPE_NAME\": \"$ctx.args.input.STEP_TYPE_NAME\",\n    \":STEP_TYPE_DESC\": #if($ctx.args.input.STEP_TYPE_DESC)\"$ctx.args.input.STEP_TYPE_DESC\"#else null #end,\n    \":RESOURCE_NAME\": #if($ctx.args.input.RESOURCE_NAME)\"$ctx.args.input.RESOURCE_NAME\"#else null #end,\n    \":CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\n    \":CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\"\n  }\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"INSERT INTO STEP_TYPE (STEP_TYPE_NAME, STEP_TYPE_DESC, RESOURCE_NAME, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:STEP_TYPE_NAME, :STEP_TYPE_DESC, :RESOURCE_NAME, :CREATED_BY_USER_ID, :CREATED_DATE)\",\r\n    \"SELECT * FROM STEP_TYPE WHERE STEP_TYPE_ID = LAST_INSERT_ID()\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":STEP_TYPE_NAME\": \"$ctx.args.input.STEP_TYPE_NAME\",\r\n    \":STEP_TYPE_DESC\": #if($ctx.args.input.STEP_TYPE_DESC)\"$ctx.args.input.STEP_TYPE_DESC\"#else null #end,\r\n    \":RESOURCE_NAME\": #if($ctx.args.input.RESOURCE_NAME)\"$ctx.args.input.RESOURCE_NAME\"#else null #end,\r\n    \":CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\r\n    \":CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\"\r\n  }\r\n}",
         "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -1100,7 +1100,7 @@
         },
         "TypeName": "Mutation",
         "FieldName": "updateSTEP_TYPE",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"UPDATE STEP_TYPE SET STEP_TYPE_NAME = :STEP_TYPE_NAME, STEP_TYPE_DESC = :STEP_TYPE_DESC, RESOURCE_NAME = :RESOURCE_NAME, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE STEP_TYPE_ID = :STEP_TYPE_ID\",\n    \"SELECT * FROM STEP_TYPE WHERE STEP_TYPE_ID = :STEP_TYPE_ID\"\n  ],\n  \"variableMap\": {\n    \":STEP_TYPE_ID\": $ctx.args.input.STEP_TYPE_ID,\n    \":STEP_TYPE_NAME\": \"$ctx.args.input.STEP_TYPE_NAME\",\n    \":STEP_TYPE_DESC\": #if($ctx.args.input.STEP_TYPE_DESC)\"$ctx.args.input.STEP_TYPE_DESC\"#else null #end,\n    \":RESOURCE_NAME\": #if($ctx.args.input.RESOURCE_NAME)\"$ctx.args.input.RESOURCE_NAME\"#else null #end,\n    \":CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\n    \":CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\n  }\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"UPDATE STEP_TYPE SET STEP_TYPE_NAME = :STEP_TYPE_NAME, STEP_TYPE_DESC = :STEP_TYPE_DESC, RESOURCE_NAME = :RESOURCE_NAME, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE STEP_TYPE_ID = :STEP_TYPE_ID\",\r\n    \"SELECT * FROM STEP_TYPE WHERE STEP_TYPE_ID = :STEP_TYPE_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":STEP_TYPE_ID\": $ctx.args.input.STEP_TYPE_ID,\r\n    \":STEP_TYPE_NAME\": \"$ctx.args.input.STEP_TYPE_NAME\",\r\n    \":STEP_TYPE_DESC\": #if($ctx.args.input.STEP_TYPE_DESC)\"$ctx.args.input.STEP_TYPE_DESC\"#else null #end,\r\n    \":RESOURCE_NAME\": #if($ctx.args.input.RESOURCE_NAME)\"$ctx.args.input.RESOURCE_NAME\"#else null #end,\r\n    \":CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\r\n    \":CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\r\n  }\r\n}",
         "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -1123,7 +1123,7 @@
         },
         "TypeName": "Mutation",
         "FieldName": "deleteSTEP_TYPE",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM STEP_TYPE WHERE STEP_TYPE_ID = :STEP_TYPE_ID\"\n  ],\n  \"variableMap\": {\n    \":STEP_TYPE_ID\": $ctx.args.input.STEP_TYPE_ID\n  }\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"DELETE FROM STEP_TYPE WHERE STEP_TYPE_ID = :STEP_TYPE_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":STEP_TYPE_ID\": $ctx.args.input.STEP_TYPE_ID\r\n  }\r\n}",
         "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -1146,7 +1146,7 @@
         },
         "TypeName": "Mutation",
         "FieldName": "createSTEP_SERVICE_MAPPING",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"INSERT INTO STEP_SERVICE_MAPPING (STEP_TYPE_ID, SERVICE_ID, SEQUENCE_NBR) VALUES (:STEP_TYPE_ID, :SERVICE_ID, :SEQUENCE_NBR)\",\n    \"SELECT * FROM STEP_SERVICE_MAPPING WHERE STEP_SERVICE_MAPPING_ID = LAST_INSERT_ID()\"\n  ],\n  \"variableMap\": {\n    \":STEP_TYPE_ID\": $ctx.args.input.STEP_TYPE_ID,\n    \":SERVICE_ID\": $ctx.args.input.SERVICE_ID,\n    \":SEQUENCE_NBR\": $ctx.args.input.SEQUENCE_NBR\n  }\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"INSERT INTO STEP_SERVICE_MAPPING (STEP_TYPE_ID, SERVICE_ID, SEQUENCE_NBR) VALUES (:STEP_TYPE_ID, :SERVICE_ID, :SEQUENCE_NBR)\",\r\n    \"SELECT * FROM STEP_SERVICE_MAPPING WHERE STEP_SERVICE_MAPPING_ID = LAST_INSERT_ID()\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":STEP_TYPE_ID\": $ctx.args.input.STEP_TYPE_ID,\r\n    \":SERVICE_ID\": $ctx.args.input.SERVICE_ID,\r\n    \":SEQUENCE_NBR\": $ctx.args.input.SEQUENCE_NBR\r\n  }\r\n}",
         "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -1169,7 +1169,7 @@
         },
         "TypeName": "Mutation",
         "FieldName": "updateSTEP_SERVICE_MAPPING",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"UPDATE STEP_SERVICE_MAPPING SET STEP_TYPE_ID = :STEP_TYPE_ID, SERVICE_ID = :SERVICE_ID, SEQUENCE_NBR = :SEQUENCE_NBR WHERE STEP_SERVICE_MAPPING_ID = :STEP_SERVICE_MAPPING_ID\",\n    \"SELECT * FROM STEP_SERVICE_MAPPING WHERE STEP_SERVICE_MAPPING_ID = :STEP_SERVICE_MAPPING_ID\"\n  ],\n  \"variableMap\": {\n    \":STEP_SERVICE_MAPPING_ID\": $ctx.args.input.STEP_SERVICE_MAPPING_ID,\n    \":STEP_TYPE_ID\": $ctx.args.input.STEP_TYPE_ID,\n    \":SERVICE_ID\": $ctx.args.input.SERVICE_ID,\n    \":SEQUENCE_NBR\": $ctx.args.input.SEQUENCE_NBR\n  }\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"UPDATE STEP_SERVICE_MAPPING SET STEP_TYPE_ID = :STEP_TYPE_ID, SERVICE_ID = :SERVICE_ID, SEQUENCE_NBR = :SEQUENCE_NBR WHERE STEP_SERVICE_MAPPING_ID = :STEP_SERVICE_MAPPING_ID\",\r\n    \"SELECT * FROM STEP_SERVICE_MAPPING WHERE STEP_SERVICE_MAPPING_ID = :STEP_SERVICE_MAPPING_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":STEP_SERVICE_MAPPING_ID\": $ctx.args.input.STEP_SERVICE_MAPPING_ID,\r\n    \":STEP_TYPE_ID\": $ctx.args.input.STEP_TYPE_ID,\r\n    \":SERVICE_ID\": $ctx.args.input.SERVICE_ID,\r\n    \":SEQUENCE_NBR\": $ctx.args.input.SEQUENCE_NBR\r\n  }\r\n}",
         "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -1192,7 +1192,7 @@
         },
         "TypeName": "Mutation",
         "FieldName": "deleteSTEP_SERVICE_MAPPING",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM STEP_SERVICE_MAPPING WHERE STEP_SERVICE_MAPPING_ID = :STEP_SERVICE_MAPPING_ID\"\n  ],\n  \"variableMap\": {\n    \":STEP_SERVICE_MAPPING_ID\": $ctx.args.input.STEP_SERVICE_MAPPING_ID\n  }\n}",
+        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"DELETE FROM STEP_SERVICE_MAPPING WHERE STEP_SERVICE_MAPPING_ID = :STEP_SERVICE_MAPPING_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":STEP_SERVICE_MAPPING_ID\": $ctx.args.input.STEP_SERVICE_MAPPING_ID\r\n  }\r\n}",
         "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
         "Kind": "UNIT",
         "DataSourceName": {
@@ -1208,7 +1208,7 @@
     "ServerlessDeploymentBucketName": {
       "Value": "hazel-mapping-serverless-deployment-bucket",
       "Export": {
-        "Name": "sls-vue-appsync-api-uat-ServerlessDeploymentBucketName"
+        "Name": "sls-vue-appsync-api-live-ServerlessDeploymentBucketName"
       }
     },
     "GraphQlApiKeyDefault": {
