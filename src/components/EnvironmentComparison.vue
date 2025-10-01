@@ -1291,7 +1291,7 @@ const confirmCopyDifferences = async () => {
     
     // Use comparison client to update the record in target environment
     const { updateComparisonRecord } = await import('../utils/comparisonClient.js');
-    await updateComparisonRecord(props.selectedEntity, targetEnvironment, updateData);
+    await updateComparisonRecord(targetEnvironment, props.selectedEntity, updateData);
     
     console.log(`Successfully copied differences to ${targetEnvironment}`);
     
