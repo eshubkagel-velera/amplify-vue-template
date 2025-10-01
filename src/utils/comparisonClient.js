@@ -241,7 +241,7 @@ export const updateComparisonRecord = async (environment, entityName, updateData
   console.log(`[${Date.now()}] Updating ${entityName} record in ${environment}`);
   
   try {
-    const mutations = await import('../graphql/mutations.js?t=' + Date.now());
+    const mutations = await import('../graphql/mutations.js');
     
     // Remove CREATED fields from update data
     const cleanUpdateData = { ...updateData };
