@@ -1,8 +1,0 @@
-## Authorization check - ensure user is authenticated
-#if(!$ctx.identity || !$ctx.identity.sub)
-  $util.unauthorized()
-#end
-
-## Log user access for audit
-$util.qr($ctx.stash.put("userId", $ctx.identity.sub))
-$util.qr($ctx.stash.put("userEmail", $ctx.identity.claims.email))

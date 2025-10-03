@@ -1,5 +1,0 @@
-stage: prod
-region: us-east-2
-cognitoUserPoolId: us-east-2_ProdPoolId
-databaseEndpoint: prod-database.velera.com
-appSyncDomainName: appsync-prod.velera.com
