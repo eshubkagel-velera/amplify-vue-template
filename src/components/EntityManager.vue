@@ -212,7 +212,7 @@
       <div class="modal-content">
         <h3>Edit {{ entityName }}</h3>
         <form @submit.prevent="submitForm">
-          <div v-for="field in formFields" :key="field.name" class="form-group" v-show="!(getEntityConfig(props.entityName).hasAuditFields && (field.name === 'CREATED_DATE' || field.name === 'CREATED_BY_USER_ID'))">
+          <div v-for="field in formFields" :key="field.name" class="form-group" v-show="!(field.name === 'CREATED_DATE' || field.name === 'CREATED_BY_USER_ID')">
             <label :for="field.name">{{ field.name }}</label>
             <div v-if="field.name === 'VENDOR_NAME' && props.entityName === 'ORIGIN_PRODUCT'">
               <input 
@@ -252,7 +252,7 @@
             />
           </div>
           <!-- Show CHANGED fields for entities with modify audit fields -->
-          <div v-if="getEntityConfig(props.entityName).hasChangedFields" class="form-group">
+          <div class="form-group">
             <label for="CHANGED_DATE">CHANGED_DATE</label>
             <input 
               id="CHANGED_DATE" 
@@ -261,7 +261,7 @@
               disabled
             />
           </div>
-          <div v-if="getEntityConfig(props.entityName).hasChangedFields" class="form-group">
+          <div class="form-group">
             <label for="CHANGED_BY_USER_ID">CHANGED_BY_USER_ID</label>
             <input 
               id="CHANGED_BY_USER_ID" 
@@ -374,7 +374,7 @@ import { useTableOperations } from '../composables/useTableOperations';
 import { useServiceEnhancement } from '../composables/useServiceEnhancement';
 import { useAuth } from '../composables/useAuth';
 import { getCurrentDateString, formatDate } from '../utils/dateUtils';
-import { getEntityConfig } from '../config/entityConfig';
+
 import { fetchUserAttributes } from 'aws-amplify/auth';
 import type { FormField } from '../types';
 import { generateClient } from 'aws-amplify/api';
@@ -549,7 +549,13 @@ const vendorNames = ref([]);
 const loading = ref(false);
 const userProfileId = ref(null);
 
-
+const getEntityConfig = async (entityName) => {
+  // Import the actual entity configuration
+  const { getEntityConfigs } = await import('../config/entityConfig.js');
+  const client = getClient();
+  const configs = getEntityConfigs(client);
+  return configs.find(config => config.name === entityName) || {};
+};
 
 // Subscription management
 const activeSubscriptions = ref([]);
@@ -607,13 +613,7 @@ const stopSubscriptions = () => {
 
 
 const loadEntities = async () => {
-  // For REDIRECT_URL, don't load anything until product is selected (unless parentId is provided)
-  if (props.entityName === 'REDIRECT_URL' && !selectedProductFilter.value && !props.parentId && !props.comparisonMode) {
-    allEntities.value = [];
-    entities.value = [];
-    filteredEntities.value = [];
-    return;
-  }
+  loading.value = true;
   
 
   
@@ -624,6 +624,7 @@ const loadEntities = async () => {
     const listName = `list${props.entityName}S`;
     
     const response = await props.loadFunction({ limit: 1000 });
+    console.log('EntityManager loadEntities response:', response);
     
     if (response.data && response.data[listName]) {
       allItems = response.data[listName].items || [];
@@ -663,6 +664,8 @@ const loadEntities = async () => {
     allEntities.value = [];
     entities.value = [];
     filteredEntities.value = [];
+  } finally {
+    loading.value = false;
   }
 };
 
@@ -699,11 +702,8 @@ const editEntity = (entity) => {
   });
   
   // Set current date and user ID for modifications
-  const entityConfig = getEntityConfig(props.entityName);
-  if (entityConfig.hasChangedFields) {
-    formattedEntity.CHANGED_DATE = getCurrentDateString();
-    formattedEntity.CHANGED_BY_USER_ID = userProfileId.value || 1;
-  }
+  formattedEntity.CHANGED_DATE = getCurrentDateString();
+  formattedEntity.CHANGED_BY_USER_ID = userProfileId.value || 1;
   
   // Always set CHANGED_BY_USER_ID to current user's profile ID for edits if field exists
   if (userProfileId.value && formattedEntity.CHANGED_BY_USER_ID !== undefined) {
@@ -774,10 +774,7 @@ const deleteBulkEntities = async () => {
     
     // Reload data and emit for comparison mode
     await loadEntities();
-    // Reapply service filter if one is selected
-    if (props.entityName === 'SERVICE_PARAM' && selectedServiceFilter.value) {
-      filterByService();
-    }
+    await reapplyActiveFilters();
     if (props.comparisonMode) {
       emit('recordUpdated', { deleted: true });
     }
@@ -813,16 +810,20 @@ watch(showCreateModal, (newVal) => {
       formData.value[props.parentField] = props.parentId;
     }
     
-    // Set SERVICE_ID from filter for SERVICE_PARAM
-    if (props.entityName === 'SERVICE_PARAM' && selectedServiceFilter.value) {
-      formData.value.SERVICE_ID = parseInt(selectedServiceFilter.value);
-    }
+    // Auto-fill from filter based on entity configuration
+    getEntityConfig(props.entityName).then(entityConfig => {
+      if (entityConfig?.autoFillFromFilter) {
+        const { filterField, formField } = entityConfig.autoFillFromFilter;
+        const filterValue = filterField === 'selectedServiceFilter' ? selectedServiceFilter.value : 
+                           filterField === 'selectedProductFilter' ? selectedProductFilter.value : null;
+        if (filterValue) {
+          formData.value[formField] = parseInt(filterValue);
+        }
+      }
+    });
     
     // Set CREATED_BY_USER_ID from user profile for entities with audit fields
-    const entityConfig = getEntityConfig(props.entityName);
-    if (entityConfig.hasAuditFields) {
-      formData.value.CREATED_BY_USER_ID = userProfileId.value || 1;
-    }
+    formData.value.CREATED_BY_USER_ID = userProfileId.value || 1;
   }
 });
 
@@ -836,8 +837,7 @@ const submitForm = async () => {
   
   try {
     const currentDate = getCurrentDateString();
-    const entityConfig = getEntityConfig(props.entityName);
-    const skipDateFields = entityConfig.skipDateFields;
+    const skipDateFields = false;
     
     // Clean form data for specific entities
     let cleanedFormData = { ...formData.value };
@@ -951,10 +951,7 @@ const submitForm = async () => {
         
         // Reload data and emit for comparison mode
         await loadEntities();
-        // Reapply service filter if one is selected
-        if (props.entityName === 'SERVICE_PARAM' && selectedServiceFilter.value) {
-          filterByService();
-        }
+        await reapplyActiveFilters();
         emit('recordUpdated', cleanedFormData);
       }
     } else {
@@ -973,10 +970,7 @@ const submitForm = async () => {
       
       // Reload data and emit for comparison mode
       await loadEntities();
-      // Reapply service filter if one is selected
-      if (props.entityName === 'SERVICE_PARAM' && selectedServiceFilter.value) {
-        filterByService();
-      }
+      await reapplyActiveFilters();
       emit('recordUpdated', cleanedFormData);
     }
     cancelForm();
@@ -1175,30 +1169,36 @@ const filterByService = async () => {
 const filterByProduct = async () => {
   if (props.entityName !== 'REDIRECT_URL') return;
   
+  console.log('filterByProduct called with:', selectedProductFilter.value);
+  console.log('allEntities sample:', allEntities.value[0]);
+  
   if (selectedProductFilter.value) {
-    try {
-      const response = await props.loadFunction({ limit: 1000 });
-      const listName = `list${props.entityName}S`;
-      
-      if (response.data && response.data[listName]) {
-        const allItems = response.data[listName].items || [];
-        const filteredItems = allItems.filter(item => 
-          item.PRODUCT_ID === selectedProductFilter.value
-        );
-        
-        allEntities.value = filteredItems;
-        entities.value = filteredItems;
-        filteredEntities.value = filteredItems;
-      }
-    } catch (error) {
-      entities.value = [];
-      filteredEntities.value = [];
-    }
+    // Filter by ORIGIN_PRODUCT_ID since that's what the data actually has
+    const filteredItems = allEntities.value.filter(item => 
+      item.ORIGIN_PRODUCT_ID === parseInt(selectedProductFilter.value)
+    );
+    
+    console.log('Filtered items:', filteredItems.length);
+    entities.value = filteredItems;
+    filteredEntities.value = filteredItems;
   } else {
-    loadEntities();
+    // Show all data when no filter selected
+    entities.value = allEntities.value;
+    filteredEntities.value = allEntities.value;
   }
   
   applyFilters();
+};
+
+const reapplyActiveFilters = async () => {
+  const entityConfig = await getEntityConfig(props.entityName);
+  if (entityConfig?.hasFilters) {
+    if (entityConfig.filterType === 'service' && selectedServiceFilter.value) {
+      filterByService();
+    } else if (entityConfig.filterType === 'product' && selectedProductFilter.value) {
+      filterByProduct();
+    }
+  }
 };
 
 // Watch for entityName changes and reload data
@@ -1475,8 +1475,14 @@ const loadProductOptions = async () => {
     
     productOptions.value = products.map(product => ({
       value: product.ORIGIN_PRODUCT_ID,
-      label: `${product.PRODUCT_ID}: ${product.VENDOR_NAME} - ${product.PRODUCT_DESC}`
+      label: `${product.ORIGIN_PRODUCT_ID}: ${product.PRODUCT_ID}`
     }));
+    
+    // Update the ORIGIN_PRODUCT_ID field options for forms
+    const productIdField = props.formFields.find(f => f.name === 'ORIGIN_PRODUCT_ID');
+    if (productIdField) {
+      productIdField.options = productOptions.value;
+    }
   } catch (error) {
     productOptions.value = [];
   }

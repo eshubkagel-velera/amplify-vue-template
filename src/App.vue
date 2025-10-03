@@ -6,13 +6,124 @@
 
     
     <main>
-      <MappingManagerStandalone v-if="showMappingManager" :productId="selectedProductId" :readonly="isReadonly" />
-      <RedirectUrlStandalone v-else-if="showRedirectUrlManager" :productId="selectedProductId" :readonly="isReadonly" />
-      <StepServiceMappingStandalone v-else-if="showStepServicesManager" :stepTypeId="selectedStepTypeId" :readonly="isReadonly" />
-      <ServiceParamsStandalone v-else-if="showServiceParamsManager" ref="serviceParamsRef" :serviceId="selectedServiceId" :readonly="isReadonly" @entityCountChanged="handleEntityCountChanged" @selectedCountChanged="handleSelectedCountChanged" />
-      <ServiceStepMappingStandalone v-else-if="showServiceStepMappingManager" :serviceId="selectedServiceId" :readonly="isReadonly" />
-      <RedirectUrlStandalone v-else-if="currentView === 'REDIRECT_URL'" :readonly="isReadonly" />
-      <MappingManagerStandalone v-else-if="currentView === 'SERVICE_PARAM_MAPPING'" :readonly="isReadonly" />
+      <EntityManager
+        v-if="showMappingManager"
+        ref="mappingManagerRef"
+        entityName="SERVICE_PARAM_MAPPING"
+        :fields="getEntityConfig('SERVICE_PARAM_MAPPING').fields"
+        :formFields="getEntityConfig('SERVICE_PARAM_MAPPING').formFields"
+        :idField="getEntityConfig('SERVICE_PARAM_MAPPING').idField"
+        :loadFunction="getEntityConfig('SERVICE_PARAM_MAPPING').loadFunction"
+        :createFunction="getEntityConfig('SERVICE_PARAM_MAPPING').createFunction"
+        :updateFunction="getEntityConfig('SERVICE_PARAM_MAPPING').updateFunction"
+        :deleteFunction="getEntityConfig('SERVICE_PARAM_MAPPING').deleteFunction"
+        :parentId="selectedProductId"
+        parentField="ORIGIN_PRODUCT_ID"
+        :readonly="isReadonly"
+        :canDelete="canDelete"
+        @entityCountChanged="handleEntityCountChanged"
+        @selectedCountChanged="handleSelectedCountChanged"
+      />
+      <EntityManager
+        v-else-if="showRedirectUrlManager"
+        ref="redirectUrlRef"
+        entityName="REDIRECT_URL"
+        :fields="getEntityConfig('REDIRECT_URL').fields"
+        :formFields="getEntityConfig('REDIRECT_URL').formFields"
+        :idField="getEntityConfig('REDIRECT_URL').idField"
+        :loadFunction="getEntityConfig('REDIRECT_URL').loadFunction"
+        :createFunction="getEntityConfig('REDIRECT_URL').createFunction"
+        :updateFunction="getEntityConfig('REDIRECT_URL').updateFunction"
+        :deleteFunction="getEntityConfig('REDIRECT_URL').deleteFunction"
+        :parentId="selectedProductId"
+        parentField="ORIGIN_PRODUCT_ID"
+        :readonly="isReadonly"
+        :canDelete="canDelete"
+        @entityCountChanged="handleEntityCountChanged"
+        @selectedCountChanged="handleSelectedCountChanged"
+      />
+      <EntityManager
+        v-else-if="showStepServicesManager"
+        ref="stepServicesRef"
+        entityName="STEP_SERVICE_MAPPING"
+        :fields="getEntityConfig('STEP_SERVICE_MAPPING').fields"
+        :formFields="getEntityConfig('STEP_SERVICE_MAPPING').formFields"
+        :idField="getEntityConfig('STEP_SERVICE_MAPPING').idField"
+        :loadFunction="getEntityConfig('STEP_SERVICE_MAPPING').loadFunction"
+        :createFunction="getEntityConfig('STEP_SERVICE_MAPPING').createFunction"
+        :updateFunction="getEntityConfig('STEP_SERVICE_MAPPING').updateFunction"
+        :deleteFunction="getEntityConfig('STEP_SERVICE_MAPPING').deleteFunction"
+        :parentId="selectedStepTypeId"
+        parentField="STEP_TYPE_ID"
+        :readonly="isReadonly"
+        :canDelete="canDelete"
+        @entityCountChanged="handleEntityCountChanged"
+        @selectedCountChanged="handleSelectedCountChanged"
+      />
+      <EntityManager
+        v-else-if="showServiceParamsManager"
+        ref="serviceParamsRef"
+        entityName="SERVICE_PARAM"
+        :fields="getEntityConfig('SERVICE_PARAM').fields"
+        :formFields="getEntityConfig('SERVICE_PARAM').formFields"
+        :idField="getEntityConfig('SERVICE_PARAM').idField"
+        :loadFunction="getEntityConfig('SERVICE_PARAM').loadFunction"
+        :createFunction="getEntityConfig('SERVICE_PARAM').createFunction"
+        :updateFunction="getEntityConfig('SERVICE_PARAM').updateFunction"
+        :deleteFunction="getEntityConfig('SERVICE_PARAM').deleteFunction"
+        :parentId="selectedServiceId"
+        parentField="SERVICE_ID"
+        :readonly="isReadonly"
+        :canDelete="canDelete"
+        @entityCountChanged="handleEntityCountChanged"
+        @selectedCountChanged="handleSelectedCountChanged"
+      />
+      <EntityManager
+        v-else-if="showServiceStepMappingManager"
+        ref="serviceStepMappingRef"
+        entityName="STEP_SERVICE_MAPPING"
+        :fields="getEntityConfig('STEP_SERVICE_MAPPING').fields"
+        :formFields="getEntityConfig('STEP_SERVICE_MAPPING').formFields"
+        :idField="getEntityConfig('STEP_SERVICE_MAPPING').idField"
+        :loadFunction="getEntityConfig('STEP_SERVICE_MAPPING').loadFunction"
+        :createFunction="getEntityConfig('STEP_SERVICE_MAPPING').createFunction"
+        :updateFunction="getEntityConfig('STEP_SERVICE_MAPPING').updateFunction"
+        :deleteFunction="getEntityConfig('STEP_SERVICE_MAPPING').deleteFunction"
+        :parentId="selectedServiceId"
+        parentField="SERVICE_ID"
+        :readonly="isReadonly"
+        :canDelete="canDelete"
+        @entityCountChanged="handleEntityCountChanged"
+        @selectedCountChanged="handleSelectedCountChanged"
+      />
+      <EntityManager
+        v-else-if="currentView === 'REDIRECT_URL'"
+        ref="redirectUrlMainRef"
+        entityName="REDIRECT_URL"
+        :fields="getEntityConfig('REDIRECT_URL').fields"
+        :formFields="getEntityConfig('REDIRECT_URL').formFields"
+        :idField="getEntityConfig('REDIRECT_URL').idField"
+        :loadFunction="getEntityConfig('REDIRECT_URL').loadFunction"
+        :createFunction="getEntityConfig('REDIRECT_URL').createFunction"
+        :updateFunction="getEntityConfig('REDIRECT_URL').updateFunction"
+        :deleteFunction="getEntityConfig('REDIRECT_URL').deleteFunction"
+        :readonly="isReadonly"
+        :canDelete="canDelete"
+      />
+      <EntityManager
+        v-else-if="currentView === 'SERVICE_PARAM_MAPPING'"
+        ref="mappingMainRef"
+        entityName="SERVICE_PARAM_MAPPING"
+        :fields="getEntityConfig('SERVICE_PARAM_MAPPING').fields"
+        :formFields="getEntityConfig('SERVICE_PARAM_MAPPING').formFields"
+        :idField="getEntityConfig('SERVICE_PARAM_MAPPING').idField"
+        :loadFunction="getEntityConfig('SERVICE_PARAM_MAPPING').loadFunction"
+        :createFunction="getEntityConfig('SERVICE_PARAM_MAPPING').createFunction"
+        :updateFunction="getEntityConfig('SERVICE_PARAM_MAPPING').updateFunction"
+        :deleteFunction="getEntityConfig('SERVICE_PARAM_MAPPING').deleteFunction"
+        :readonly="isReadonly"
+        :canDelete="canDelete"
+      />
       <ServiceImport v-else-if="currentView === 'import'" :readonly="isReadonly" />
       <HomeScreen v-else-if="currentView === 'home'" />
       <EnvironmentComparison 
@@ -161,6 +272,10 @@ const resetInactivityTimer = () => {
 
 const handleAuthenticated = () => {
   isAuthenticated.value = true;
+  
+  // Initialize entities after authentication
+  initializeEntities();
+  
   loadUserInfo();
   startInactivityTimer();
   
@@ -216,11 +331,7 @@ const loadUserInfo = async () => {
 };
 import EntityManager from './components/EntityManager.vue';
 import ServiceImport from './components/ServiceImport.vue';
-import RedirectUrlStandalone from './components/RedirectUrlStandalone.vue';
-import MappingManagerStandalone from './components/MappingManagerStandalone.vue';
-import ServiceParamsStandalone from './components/ServiceParamsStandalone.vue';
-import StepServiceMappingStandalone from './components/StepServiceMappingStandalone.vue';
-import ServiceStepMappingStandalone from './components/ServiceStepMappingStandalone.vue';
+
 import ThemeToggle from './components/ThemeToggle.vue';
 import HomeScreen from './components/HomeScreen.vue';
 import EnvironmentComparison from './components/EnvironmentComparison.vue';
@@ -300,237 +411,9 @@ const getClientInstance = () => {
   return client;
 };
 
-// All the GraphQL operations and entity configurations
-const listOriginProducts = async () => {
-  const items = await fetchAllPages(getClientInstance(), queries.listOriginProducts, {}, 'listORIGIN_PRODUCTS');
-  return {
-    data: {
-      listORIGIN_PRODUCTS: {
-        items
-      }
-    }
-  };
-};
-
-const createOriginProduct = async (input: any) => {
-  if (!canEdit.value) throw new Error('Permission denied: Read-only access');
-  return await getClientInstance().graphql({ query: mutations.createOriginProduct, variables: { input } });
-};
-
-const updateOriginProduct = async (input: any) => {
-  if (!canEdit.value) throw new Error('Permission denied: Read-only access');
-  try {
-    const result = await getClientInstance().graphql({ query: mutations.updateOriginProduct, variables: { input } });
-    return result;
-  } catch (error) {
-    throw error;
-  }
-};
-
-const deleteOriginProduct = async (input: any) => {
-  if (!canDelete.value) throw new Error('Permission denied: Delete requires admin or deployment role');
-  return await getClientInstance().graphql({ query: mutations.deleteOriginProduct, variables: { input } });
-};
 
 
-
-const createService = async (input: any) => {
-  if (!canEdit.value) throw new Error('Permission denied: Read-only access');
-  return await getClientInstance().graphql({ query: mutations.createService, variables: { input } });
-};
-
-const updateService = async (input: any) => {
-  if (!canEdit.value) throw new Error('Permission denied: Read-only access');
-  return await getClientInstance().graphql({ query: mutations.updateService, variables: { input } });
-};
-
-const deleteService = async (input: any) => {
-  if (!canDelete.value) throw new Error('Permission denied: Delete requires admin or deployment role');
-  return await getClientInstance().graphql({ query: mutations.deleteService, variables: { input } });
-};
-
-// Add all missing entity operations
-
-const createRedirectUrl = async (input: any) => {
-  return await getClientInstance().graphql({ query: mutations.createRedirectUrl, variables: { input } });
-};
-
-const updateRedirectUrl = async (input: any) => {
-  return await getClientInstance().graphql({ query: mutations.updateRedirectUrl, variables: { input } });
-};
-
-const deleteRedirectUrl = async (input: any) => {
-  return await getClientInstance().graphql({ query: mutations.deleteRedirectUrl, variables: { input } });
-};
-
-const listServiceProviders = async () => {
-  const items = await fetchAllPages(getClientInstance(), queries.listServiceProviders, {}, 'listSERVICE_PROVIDERS');
-  return {
-    data: {
-      listSERVICE_PROVIDERS: {
-        items
-      }
-    }
-  };
-};
-
-const listServices = async () => {
-  const [services, providers] = await Promise.all([
-    fetchAllPages(getClientInstance(), queries.listServices, {}, 'listSERVICES'),
-    fetchAllPages(getClientInstance(), queries.listServiceProviders, {}, 'listSERVICE_PROVIDERS')
-  ]);
-  
-  const enhancedServices = services.map(service => {
-    const provider = providers.find(p => p.SERVICE_PROVIDER_ID === service.SERVICE_PROVIDER_ID);
-    return {
-      ...service,
-      'Service Provider': provider ? provider.SERVICE_PROVIDER_NAME : service.SERVICE_PROVIDER_ID
-    };
-  });
-  
-  return { data: { listSERVICES: { items: enhancedServices } } };
-};
-
-const createServiceProvider = async (input: any) => {
-  if (!canEdit.value) throw new Error('Permission denied: Read-only access');
-  return await getClientInstance().graphql({ query: mutations.createServiceProvider, variables: { input } });
-};
-
-const updateServiceProvider = async (input: any) => {
-  if (!canEdit.value) throw new Error('Permission denied: Read-only access');
-  return await getClientInstance().graphql({ query: mutations.updateServiceProvider, variables: { input } });
-};
-
-const deleteServiceProvider = async (input: any) => {
-  if (!canDelete.value) throw new Error('Permission denied: Delete requires admin or deployment role');
-  return await getClientInstance().graphql({ query: mutations.deleteServiceProvider, variables: { input } });
-};
-
-const listServiceParams = async () => {
-  const items = await fetchAllPages(getClientInstance(), queries.listServiceParams, {}, 'listSERVICE_PARAMS');
-  return {
-    data: {
-      listSERVICE_PARAMS: {
-        items
-      }
-    }
-  };
-};
-
-const createServiceParam = async (input: any) => {
-  return await getClientInstance().graphql({ query: mutations.createServiceParam, variables: { input } });
-};
-
-const updateServiceParam = async (input: any) => {
-  return await getClientInstance().graphql({ query: mutations.updateServiceParam, variables: { input } });
-};
-
-const deleteServiceParam = async (input: any) => {
-  return await getClientInstance().graphql({ query: mutations.deleteServiceParam, variables: { input } });
-};
-
-const listServiceParamMappings = async () => {
-  const items = await fetchAllPages(getClientInstance(), queries.listServiceParamMappings, {}, 'listSERVICE_PARAM_MAPPINGS');
-  return {
-    data: {
-      listSERVICE_PARAM_MAPPINGS: {
-        items
-      }
-    }
-  };
-};
-
-const createServiceParamMapping = async (input: any) => {
-  return await getClientInstance().graphql({ query: mutations.createServiceParamMapping, variables: { input } });
-};
-
-const updateServiceParamMapping = async (input: any) => {
-  return await getClientInstance().graphql({ query: mutations.updateServiceParamMapping, variables: { input } });
-};
-
-const deleteServiceParamMapping = async (input: any) => {
-  return await getClientInstance().graphql({ query: mutations.deleteServiceParamMapping, variables: { input } });
-};
-
-const listRedirectUrls = async () => {
-  const [redirectUrls, products] = await Promise.all([
-    fetchAllPages(getClientInstance(), queries.listRedirectUrls, {}, 'listREDIRECT_URLS'),
-    fetchAllPages(getClientInstance(), queries.listOriginProducts, {}, 'listORIGIN_PRODUCTS')
-  ]);
-  
-  const enhancedUrls = redirectUrls.map(url => {
-    const product = products.find(p => p.ORIGIN_PRODUCT_ID === url.ORIGIN_PRODUCT_ID);
-    return {
-      ...url,
-      PRODUCT_ID: product ? product.PRODUCT_ID : ''
-    };
-  });
-  
-  return {
-    data: {
-      listREDIRECT_URLS: {
-        items: enhancedUrls
-      }
-    }
-  };
-};
-
-const listStepServiceMappings = async () => {
-  const [mappings, stepTypes, services] = await Promise.all([
-    fetchAllPages(getClientInstance(), queries.listStepServiceMappings, {}, 'listSTEP_SERVICE_MAPPINGS'),
-    fetchAllPages(getClientInstance(), queries.listStepTypes, {}, 'listSTEP_TYPES'),
-    fetchAllPages(getClientInstance(), queries.listServices, {}, 'listSERVICES')
-  ]);
-  
-  const enhancedMappings = mappings.map(mapping => {
-    const stepType = stepTypes.find(st => st.STEP_TYPE_ID === mapping.STEP_TYPE_ID);
-    const service = services.find(s => s.SERVICE_ID === mapping.SERVICE_ID);
-    return {
-      ...mapping,
-      'STEP_TYPE': stepType ? `${stepType.STEP_TYPE_ID}: ${stepType.STEP_TYPE_NAME}` : mapping.STEP_TYPE_ID,
-      'SERVICE': service ? `${service.SERVICE_ID}: ${service.URI}` : mapping.SERVICE_ID
-    };
-  });
-  
-  return { data: { listSTEP_SERVICE_MAPPINGS: { items: enhancedMappings } } };
-};
-
-const createStepServiceMapping = async (input: any) => {
-  return await getClientInstance().graphql({ query: mutations.createStepServiceMapping, variables: { input } });
-};
-
-const updateStepServiceMapping = async (input: any) => {
-  return await getClientInstance().graphql({ query: mutations.updateStepServiceMapping, variables: { input } });
-};
-
-const deleteStepServiceMapping = async (input: any) => {
-  return await getClientInstance().graphql({ query: mutations.deleteStepServiceMapping, variables: { input } });
-};
-
-const listStepTypes = async () => {
-  const items = await fetchAllPages(getClientInstance(), queries.listStepTypes, {}, 'listSTEP_TYPES');
-  return {
-    data: {
-      listSTEP_TYPES: {
-        items
-      }
-    }
-  };
-};
-
-const createStepType = async (input: any) => {
-  return await getClientInstance().graphql({ query: mutations.createStepType, variables: { input } });
-};
-
-const updateStepType = async (input: any) => {
-  return await getClientInstance().graphql({ query: mutations.updateStepType, variables: { input } });
-};
-
-const deleteStepType = async (input: any) => {
-  return await getClientInstance().graphql({ query: mutations.deleteStepType, variables: { input } });
-};
-
-const currentView = ref('import');
+const currentView = ref('home');
 const previousView = ref('');
 const showMappingManager = ref(false);
 const showRedirectUrlManager = ref(false);
@@ -542,150 +425,34 @@ const selectedStepTypeId = ref(null);
 const selectedServiceId = ref(null);
 const entityManagerRef = ref(null);
 const serviceParamsRef = ref(null);
+const redirectUrlRef = ref(null);
+const mappingManagerRef = ref(null);
+const stepServicesRef = ref(null);
+const serviceStepMappingRef = ref(null);
+
+const getEntityConfig = (entityName) => {
+  return entities.value.find(entity => entity.name === entityName);
+};
+
+const initializeEntities = () => {
+  try {
+    entities.value = getEntityConfigs(getClientInstance());
+    console.log('Entities initialized:', entities.value.length, entities.value.map(e => e.name));
+  } catch (error) {
+    console.error('Failed to initialize entities:', error);
+    entities.value = [];
+  }
+};
 
 const entityCount = ref(0);
 const selectedCount = ref(0);
 
-const entities = [
-  {
-    name: 'ORIGIN_PRODUCT',
-    fields: ['ORIGIN_PRODUCT_ID', 'VENDOR_NAME', 'PRODUCT_ID', 'PRODUCT_DESC', 'PSCU_CLIENT_ID', 'PARTNER_CODE', 'CREATED_BY_USER_ID', 'CREATED_DATE', 'CHANGED_BY_USER_ID', 'CHANGED_DATE'],
-    formFields: [
-      { name: 'VENDOR_NAME', type: 'text', required: true, disabled: false },
-      { name: 'PSCU_CLIENT_ID', type: 'number', required: true, disabled: false },
-      { name: 'PRODUCT_ID', type: 'text', required: true, disabled: false },
-      { name: 'PRODUCT_DESC', type: 'text', required: true, disabled: false },
-      { name: 'PARTNER_CODE', type: 'text', required: false, disabled: false },
-      { name: 'CREATED_DATE', type: 'date', required: true, disabled: true },
-      { name: 'CREATED_BY_USER_ID', type: 'number', required: true, disabled: false }
-    ],
-    idField: 'ORIGIN_PRODUCT_ID',
-    loadFunction: listOriginProducts,
-    createFunction: createOriginProduct,
-    updateFunction: updateOriginProduct,
-    deleteFunction: deleteOriginProduct
-  },
-  {
-    name: 'REDIRECT_URL',
-    fields: ['REDIRECT_URL_ID', 'PRODUCT_ID', 'URL_TYPE_CODE', 'URL', 'RESPONSE_TEXT', 'CREATED_BY_USER_ID', 'CREATED_DATE', 'CHANGED_BY_USER_ID', 'CHANGED_DATE'],
-    formFields: [
-      { name: 'ORIGIN_PRODUCT_ID', type: 'number', required: true, disabled: false },
-      { name: 'URL_TYPE_CODE', type: 'text', required: true, disabled: false },
-      { name: 'URL', type: 'text', required: true, disabled: false },
-      { name: 'RESPONSE_TEXT', type: 'text', required: false, disabled: false },
-      { name: 'CREATED_BY_USER_ID', type: 'number', required: true, disabled: false },
-      { name: 'CREATED_DATE', type: 'date', required: true, disabled: true }
-    ],
-    idField: 'REDIRECT_URL_ID',
-    loadFunction: listRedirectUrls,
-    createFunction: createRedirectUrl,
-    updateFunction: updateRedirectUrl,
-    deleteFunction: deleteRedirectUrl
-  },
-  {
-    name: 'SERVICE_PROVIDER',
-    fields: ['SERVICE_PROVIDER_ID', 'SERVICE_PROVIDER_NAME', 'CREATED_BY_USER_ID', 'CREATED_DATE', 'CHANGED_BY_USER_ID', 'CHANGED_DATE'],
-    formFields: [
-      { name: 'SERVICE_PROVIDER_NAME', type: 'text', required: true, disabled: false },
-      { name: 'CREATED_BY_USER_ID', type: 'number', required: true, disabled: false },
-      { name: 'CREATED_DATE', type: 'date', required: true, disabled: true }
-    ],
-    idField: 'SERVICE_PROVIDER_ID',
-    loadFunction: listServiceProviders,
-    createFunction: createServiceProvider,
-    updateFunction: updateServiceProvider,
-    deleteFunction: deleteServiceProvider
-  },
-  {
-    name: 'SERVICE',
-    fields: ['SERVICE_ID', 'Service Provider', 'URI', 'SECRET_NAME', 'REQUEST_TYPE', 'CREATED_BY_USER_ID', 'CREATED_DATE', 'CHANGED_BY_USER_ID', 'CHANGED_DATE'],
-    formFields: [
-      { name: 'SERVICE_PROVIDER_ID', type: 'select', required: true, disabled: false, options: [] },
-      { name: 'URI', type: 'text', required: true, disabled: false },
-      { name: 'SECRET_NAME', type: 'text', required: false, disabled: false },
-      { name: 'REQUEST_TYPE', type: 'select', required: false, disabled: false, options: [
-        { value: 'get', label: 'GET' },
-        { value: 'post', label: 'POST' },
-        { value: 'put', label: 'PUT' },
-        { value: 'delete', label: 'DELETE' }
-      ] },
-      { name: 'CREATED_BY_USER_ID', type: 'number', required: true, disabled: false },
-      { name: 'CREATED_DATE', type: 'date', required: true, disabled: true }
-    ],
-    idField: 'SERVICE_ID',
-    loadFunction: listServices,
-    createFunction: createService,
-    updateFunction: updateService,
-    deleteFunction: deleteService
-  },
-  {
-    name: 'SERVICE_PARAM',
-    fields: ['SERVICE_PARAM_ID', 'SERVICE_ID', 'PARAM_NAME', 'CREATED_BY_USER_ID', 'CREATED_DATE', 'CHANGED_BY_USER_ID', 'CHANGED_DATE'],
-    formFields: [
-      { name: 'SERVICE_ID', type: 'select', required: true, disabled: false, options: [] },
-      { name: 'PARAM_NAME', type: 'text', required: true, disabled: false },
-      { name: 'CREATED_BY_USER_ID', type: 'number', required: true, disabled: false },
-      { name: 'CREATED_DATE', type: 'date', required: true, disabled: true }
-    ],
-    idField: 'SERVICE_PARAM_ID',
-    loadFunction: listServiceParams,
-    createFunction: createServiceParam,
-    updateFunction: updateServiceParam,
-    deleteFunction: deleteServiceParam
-  },
-  {
-    name: 'SERVICE_PARAM_MAPPING',
-    fields: ['SERVICE_PARAM_MAPPING_ID', 'ORIGIN_PRODUCT_ID', 'SOURCE_SERVICE_PARAM_ID', 'TARGET_SERVICE_PARAM_ID', 'CREATED_BY_USER_ID', 'CREATED_DATE'],
-    formFields: [
-      { name: 'ORIGIN_PRODUCT_ID', type: 'number', required: true, disabled: false },
-      { name: 'SYSTEM_NBR', type: 'text', required: false, disabled: false },
-      { name: 'PRIN_NBR', type: 'text', required: false, disabled: false },
-      { name: 'AGENT_NBR', type: 'text', required: false, disabled: false },
-      { name: 'SOURCE_SERVICE_PARAM_ID', type: 'number', required: true, disabled: false },
-      { name: 'TARGET_SERVICE_PARAM_ID', type: 'number', required: true, disabled: false },
-      { name: 'CREATED_BY_USER_ID', type: 'number', required: true, disabled: false },
-      { name: 'CREATED_DATE', type: 'date', required: true, disabled: true }
-    ],
-    idField: 'SERVICE_PARAM_MAPPING_ID',
-    loadFunction: listServiceParamMappings,
-    createFunction: createServiceParamMapping,
-    updateFunction: updateServiceParamMapping,
-    deleteFunction: deleteServiceParamMapping
-  },
-  {
-    name: 'STEP_TYPE',
-    fields: ['STEP_TYPE_ID', 'STEP_TYPE_NAME', 'STEP_TYPE_DESC', 'RESOURCE_NAME', 'CREATED_BY_USER_ID', 'CREATED_DATE', 'CHANGED_BY_USER_ID', 'CHANGED_DATE'],
-    formFields: [
-      { name: 'STEP_TYPE_NAME', type: 'text', required: true, disabled: false },
-      { name: 'STEP_TYPE_DESC', type: 'text', required: false, disabled: false },
-      { name: 'RESOURCE_NAME', type: 'text', required: true, disabled: false },
-      { name: 'CREATED_BY_USER_ID', type: 'number', required: true, disabled: false },
-      { name: 'CREATED_DATE', type: 'date', required: true, disabled: true }
-    ],
-    idField: 'STEP_TYPE_ID',
-    loadFunction: listStepTypes,
-    createFunction: createStepType,
-    updateFunction: updateStepType,
-    deleteFunction: deleteStepType
-  },
-  {
-    name: 'STEP_SERVICE_MAPPING',
-    fields: ['STEP_SERVICE_MAPPING_ID', 'STEP_TYPE', 'SERVICE', 'SEQUENCE_NBR'],
-    formFields: [
-      { name: 'STEP_TYPE_ID', type: 'select', required: true, disabled: false, options: [] },
-      { name: 'SERVICE_ID', type: 'select', required: true, disabled: false, options: [] },
-      { name: 'SEQUENCE_NBR', type: 'number', required: false, disabled: false }
-    ],
-    idField: 'STEP_SERVICE_MAPPING_ID',
-    loadFunction: listStepServiceMappings,
-    createFunction: createStepServiceMapping,
-    updateFunction: updateStepServiceMapping,
-    deleteFunction: deleteStepServiceMapping
-  }
-];
+import { getEntityConfigs } from './config/entityConfig.js';
+
+const entities = ref([]);
 
 const sortedEntities = computed(() => {
-  return [...entities].sort((a, b) => a.name.localeCompare(b.name));
+  return [...entities.value].sort((a, b) => a.name.localeCompare(b.name));
 });
 
 
@@ -791,33 +558,51 @@ const refreshEntities = () => {
   if (entityManagerRef.value) {
     entityManagerRef.value.loadEntities();
   } else if (serviceParamsRef.value) {
-    serviceParamsRef.value.$refs.entityManager?.loadEntities();
+    serviceParamsRef.value.loadEntities();
+  } else if (redirectUrlRef.value) {
+    redirectUrlRef.value.loadEntities();
+  } else if (mappingManagerRef.value) {
+    mappingManagerRef.value.loadEntities();
+  } else if (stepServicesRef.value) {
+    stepServicesRef.value.loadEntities();
+  } else if (serviceStepMappingRef.value) {
+    serviceStepMappingRef.value.loadEntities();
   }
 };
 
 const showCreateModal = () => {
-  if (isReadonly.value || ((currentView.value === 'REDIRECT_URL' || currentView.value === 'SERVICE_PARAM_MAPPING') && !actionButtonsEnabled.value)) return;
+  if (isReadonly.value) return;
   
   if (entityManagerRef.value) {
     entityManagerRef.value.showCreateModal = true;
   } else if (serviceParamsRef.value) {
-    serviceParamsRef.value.$refs.entityManager.showCreateModal = true;
+    serviceParamsRef.value.showCreateModal = true;
   } else if (redirectUrlRef.value) {
     redirectUrlRef.value.showCreateModal = true;
   } else if (mappingManagerRef.value) {
-    mappingManagerRef.value.addCustomMapping?.();
+    mappingManagerRef.value.showCreateModal = true;
+  } else if (stepServicesRef.value) {
+    stepServicesRef.value.showCreateModal = true;
+  } else if (serviceStepMappingRef.value) {
+    serviceStepMappingRef.value.showCreateModal = true;
   }
 };
 
 const deleteSelected = () => {
-  if (selectedCount.value === 0 || !canDelete.value || ((currentView.value === 'REDIRECT_URL' || currentView.value === 'SERVICE_PARAM_MAPPING') && !actionButtonsEnabled.value)) return;
+  if (selectedCount.value === 0 || !canDelete.value) return;
   
   if (entityManagerRef.value) {
     entityManagerRef.value.confirmBulkDelete();
   } else if (serviceParamsRef.value) {
-    serviceParamsRef.value.$refs.entityManager?.confirmBulkDelete();
+    serviceParamsRef.value.confirmBulkDelete();
   } else if (redirectUrlRef.value) {
     redirectUrlRef.value.confirmBulkDelete();
+  } else if (mappingManagerRef.value) {
+    mappingManagerRef.value.confirmBulkDelete();
+  } else if (stepServicesRef.value) {
+    stepServicesRef.value.confirmBulkDelete();
+  } else if (serviceStepMappingRef.value) {
+    serviceStepMappingRef.value.confirmBulkDelete();
   }
 };
 
@@ -829,7 +614,7 @@ watch(() => localStorage.getItem('selectedEnvironment'), () => {
 
 // Add environment reactivity to entity configs
 const getReactiveEntityConfig = (entityName) => {
-  const baseConfig = entities.find(entity => entity.name === entityName);
+  const baseConfig = entities.value.find(entity => entity.name === entityName);
   if (!baseConfig) return null;
   
   // Force reactivity by including environmentChangeKey
@@ -867,6 +652,9 @@ onMounted(async () => {
     localStorage.setItem('currentView', 'home');
     localStorage.setItem('compareEnvironment', '');
   }
+  
+  // Initialize entities regardless of auth state for dropdown
+  initializeEntities();
   
   // Add activity listeners to reset inactivity timer
   const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
