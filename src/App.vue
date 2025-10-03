@@ -163,6 +163,10 @@ const handleAuthenticated = () => {
   isAuthenticated.value = true;
   loadUserInfo();
   startInactivityTimer();
+  
+  // Always go to home screen on fresh login
+  currentView.value = 'home';
+  localStorage.setItem('currentView', 'home');
 };
 
 const signOut = async () => {
@@ -689,6 +693,7 @@ const sortedEntities = computed(() => {
 const changeView = (event) => {
   if (currentView.value !== 'compare') {
     currentView.value = event.target.value;
+    localStorage.setItem('currentView', currentView.value);
   }
   window.scrollTo(0, 0);
 };
@@ -837,25 +842,30 @@ const currentEntityConfig = computed(() => {
 });
 
 onMounted(async () => {
-  // Preserve comparison state or reset to defaults
-  const savedCompareEnv = localStorage.getItem('compareEnvironment');
-  if (savedCompareEnv) {
-    compareEnvironment.value = savedCompareEnv;
-    const savedPreviousView = localStorage.getItem('previousView');
-    if (savedPreviousView) {
-      previousView.value = savedPreviousView;
-      currentView.value = 'compare';
+  await checkAuthState();
+  
+  if (isAuthenticated.value) {
+    // User is already logged in (page refresh) - preserve current state
+    await loadUserInfo();
+    
+    const savedCompareEnv = localStorage.getItem('compareEnvironment');
+    if (savedCompareEnv) {
+      compareEnvironment.value = savedCompareEnv;
+      const savedPreviousView = localStorage.getItem('previousView');
+      if (savedPreviousView) {
+        previousView.value = savedPreviousView;
+        currentView.value = 'compare';
+      }
+    } else {
+      const savedView = localStorage.getItem('currentView');
+      currentView.value = savedView || 'home';
     }
   } else {
+    // User not logged in - will show login screen
     currentView.value = 'home';
     compareEnvironment.value = '';
     localStorage.setItem('currentView', 'home');
     localStorage.setItem('compareEnvironment', '');
-  }
-  
-  await checkAuthState();
-  if (isAuthenticated.value) {
-    await loadUserInfo();
   }
   
   // Add activity listeners to reset inactivity timer

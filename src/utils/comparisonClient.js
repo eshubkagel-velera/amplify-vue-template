@@ -203,7 +203,8 @@ export const createComparisonRecord = async (environment, entityName, formData) 
       'REDIRECT_URL': mutations.createRedirectUrl(environment),
       'SERVICE': mutations.createService,
       'SERVICE_PROVIDER': mutations.createServiceProvider,
-      'SERVICE_PARAM': mutations.createServiceParam
+      'SERVICE_PARAM': mutations.createServiceParam,
+      'STEP_TYPE': mutations.createStepType
     };
     
     const mutation = mutationMap[entityName];
@@ -255,7 +256,8 @@ export const updateComparisonRecord = async (environment, entityName, updateData
       'REDIRECT_URL': mutations.updateRedirectUrl(environment),
       'SERVICE': mutations.updateService,
       'SERVICE_PROVIDER': mutations.updateServiceProvider,
-      'SERVICE_PARAM': mutations.updateServiceParam
+      'SERVICE_PARAM': mutations.updateServiceParam,
+      'STEP_TYPE': mutations.updateStepType
     };
     
     console.log('Available mutations:', Object.keys(mutationMap));

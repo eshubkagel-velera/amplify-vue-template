@@ -440,7 +440,7 @@ const createServiceProviderIfNeeded = async () => {
   try {
     const providerInput = {
       SERVICE_PROVIDER_NAME: newServiceProviderName.value.trim(),
-      CREATED_BY_USER_ID: 1,
+      CREATED_BY_USER_ID: userProfileId.value || 1,
       CREATED_DATE: new Date().toISOString().split('T')[0]
     };
     
@@ -479,6 +479,7 @@ const onServiceProviderChange = async (event: Event) => {
 
 import { createServiceBatch, createServiceParamBatch } from '../graphql.ts';
 import { createService, createServiceParam, createServiceProvider } from '../graphql/mutations.js';
+import { fetchUserAttributes } from 'aws-amplify/auth';
 
 
 
@@ -534,6 +535,23 @@ const resizeData = ref({ field: '', startX: 0, startWidth: 0 });
 const serviceProviders = ref<ServiceProvider[]>([]);
 const selectedServiceProvider = ref('');
 const newServiceProviderName = ref('');
+const userProfileId = ref(null);
+
+// Load user profile
+const loadUserProfile = async () => {
+  try {
+    const attributes = await fetchUserAttributes();
+    const profileValue = attributes.profile;
+    if (profileValue && !isNaN(parseInt(profileValue))) {
+      userProfileId.value = parseInt(profileValue);
+    }
+  } catch (error) {
+    console.warn('Could not load user profile:', error);
+  }
+};
+
+// Initialize user profile
+loadUserProfile();
 
 // File handling
 const handleFileUpload = (event: Event) => {
@@ -1036,7 +1054,8 @@ const insertService = async () => {
       const serviceInput = {
         SERVICE_PROVIDER_ID: serviceProviderId,
         URI: serviceUri,
-        CREATED_BY_USER_ID: 1,
+        REQUEST_TYPE: selectedService.value.method.toUpperCase(),
+        CREATED_BY_USER_ID: userProfileId.value || 1,
         CREATED_DATE: new Date().toISOString().split('T')[0]
       };
       
@@ -1086,7 +1105,7 @@ const insertService = async () => {
       const paramInputs = paramsToInsert.map(param => ({
         SERVICE_ID: serviceId,
         PARAM_NAME: param.name,
-        CREATED_BY_USER_ID: 1,
+        CREATED_BY_USER_ID: userProfileId.value || 1,
         CREATED_DATE: new Date().toISOString().split('T')[0]
       }));
       
@@ -1154,7 +1173,7 @@ const updateService = async () => {
       const paramInputs = paramsToInsert.map(param => ({
         SERVICE_ID: existingServiceId.value,
         PARAM_NAME: param.name,
-        CREATED_BY_USER_ID: 1,
+        CREATED_BY_USER_ID: userProfileId.value || 1,
         CREATED_DATE: new Date().toISOString().split('T')[0]
       }));
       
