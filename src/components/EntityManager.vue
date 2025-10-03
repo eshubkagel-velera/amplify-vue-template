@@ -842,6 +842,9 @@ const submitForm = async () => {
     // Clean form data for specific entities
     let cleanedFormData = { ...formData.value };
     
+    // Determine if this is create or update based on presence of ID field
+    const isUpdate = formData.value[props.idField] !== undefined && formData.value[props.idField] !== null;
+    
     // Convert number fields to integers for all entities
     props.formFields.forEach(field => {
       if (field.type === 'number' && cleanedFormData[field.name] !== undefined && cleanedFormData[field.name] !== '') {
@@ -874,6 +877,10 @@ const submitForm = async () => {
       if (formData.value.SEQUENCE_NBR) {
         cleanedFormData.SEQUENCE_NBR = parseInt(formData.value.SEQUENCE_NBR);
       }
+      // For updates only, include the ID field
+      if (isUpdate && formData.value.STEP_SERVICE_MAPPING_ID) {
+        cleanedFormData.STEP_SERVICE_MAPPING_ID = parseInt(formData.value.STEP_SERVICE_MAPPING_ID);
+      }
     }
     
     // Remove display fields that shouldn't be sent to GraphQL
@@ -887,24 +894,22 @@ const submitForm = async () => {
     if (props.entityName !== 'ORIGIN_PRODUCT' && cleanedFormData.PRODUCT_ID) {
       delete cleanedFormData.PRODUCT_ID;
     }
-    
-    // Determine if this is create or update based on presence of ID field
-    const isUpdate = cleanedFormData[props.idField] !== undefined && cleanedFormData[props.idField] !== null;
-    
-    // Filter fields based on create vs update operation
-    if (isUpdate) {
-      // For updates, remove CREATED fields that aren't allowed in update input
-      delete cleanedFormData.CREATED_BY_USER_ID;
-      delete cleanedFormData.CREATED_DATE;
-      // Ensure the ID field is present for updates
-      if (!cleanedFormData[props.idField]) {
-        cleanedFormData[props.idField] = formData.value[props.idField];
+    // Filter fields based on create vs update operation (skip for STEP_SERVICE_MAPPING as it's already handled)
+    if (props.entityName !== 'STEP_SERVICE_MAPPING') {
+      if (isUpdate) {
+        // For updates, remove CREATED fields that aren't allowed in update input
+        delete cleanedFormData.CREATED_BY_USER_ID;
+        delete cleanedFormData.CREATED_DATE;
+        // Ensure the ID field is present for updates
+        if (!cleanedFormData[props.idField]) {
+          cleanedFormData[props.idField] = formData.value[props.idField];
+        }
+      } else {
+        // For creates, remove ID and CHANGED fields that aren't allowed in create input
+        delete cleanedFormData[props.idField];
+        delete cleanedFormData.CHANGED_BY_USER_ID;
+        delete cleanedFormData.CHANGED_DATE;
       }
-    } else {
-      // For creates, remove ID and CHANGED fields that aren't allowed in create input
-      delete cleanedFormData[props.idField];
-      delete cleanedFormData.CHANGED_BY_USER_ID;
-      delete cleanedFormData.CHANGED_DATE;
     }
     
 
@@ -953,12 +958,14 @@ const submitForm = async () => {
         emit('recordUpdated', cleanedFormData);
       }
     } else {
-      // Set audit fields for new records
-      if (!skipDateFields && !cleanedFormData.CREATED_DATE) {
-        cleanedFormData.CREATED_DATE = currentDate;
-      }
-      if (!cleanedFormData.CREATED_BY_USER_ID) {
-        cleanedFormData.CREATED_BY_USER_ID = userProfileId.value || 1;
+      // Set audit fields for new records (skip for STEP_SERVICE_MAPPING)
+      if (props.entityName !== 'STEP_SERVICE_MAPPING') {
+        if (!skipDateFields && !cleanedFormData.CREATED_DATE) {
+          cleanedFormData.CREATED_DATE = currentDate;
+        }
+        if (!cleanedFormData.CREATED_BY_USER_ID) {
+          cleanedFormData.CREATED_BY_USER_ID = userProfileId.value || 1;
+        }
       }
       await props.createFunction(cleanedFormData);
       successMessage.value = `${props.entityName} created successfully!`;
@@ -1477,6 +1484,11 @@ const loadProductOptions = async () => {
 
 // Listen for environment changes via custom event
 const handleEnvironmentChange = async () => {
+  // Store current filters before clearing
+  const currentServiceFilter = selectedServiceFilter.value;
+  const currentStepFilter = selectedStepFilter.value;
+  const currentProductFilter = selectedProductFilter.value;
+  
   // Clear data first for SERVICE_PARAM when environment changes
   if (props.entityName === 'SERVICE_PARAM') {
     selectedServiceFilter.value = '';
@@ -1495,6 +1507,11 @@ const handleEnvironmentChange = async () => {
   if (props.entityName === 'STEP_SERVICE_MAPPING') {
     await loadStepServiceMappingOptions();
     await loadStepTypeFilterOptions();
+    // Restore step filter and reload data
+    if (currentStepFilter) {
+      selectedStepFilter.value = currentStepFilter;
+      await filterByStepType();
+    }
   }
   if (props.entityName === 'ORIGIN_PRODUCT') {
     await loadVendorNames();
@@ -1503,15 +1520,45 @@ const handleEnvironmentChange = async () => {
     await loadProductOptions();
   }
   
-  // Then reload entity data
-  if (props.entityName !== 'SERVICE_PARAM' || selectedServiceFilter.value || props.parentId) {
-    if (props.entityName !== 'STEP_SERVICE_MAPPING' || selectedStepFilter.value || props.parentId) {
-      if (props.entityName !== 'REDIRECT_URL' || selectedProductFilter.value || props.parentId) {
-        loadEntities();
-      }
+  // Then reload entity data for other entities
+  if (props.entityName === 'STEP_SERVICE_MAPPING') {
+    // STEP_SERVICE_MAPPING always loads all data
+    loadEntities();
+  } else if (props.entityName !== 'SERVICE_PARAM' || selectedServiceFilter.value || props.parentId) {
+    if (props.entityName !== 'REDIRECT_URL' || selectedProductFilter.value || props.parentId) {
+      loadEntities();
     }
   }
 };
+
+// Watch for environment changes in localStorage
+const currentEnvironment = ref(localStorage.getItem('selectedEnvironment') || 'dev');
+
+// Create a polling mechanism to check for environment changes
+let environmentCheckInterval;
+const startEnvironmentWatcher = () => {
+  environmentCheckInterval = setInterval(() => {
+    const newEnv = localStorage.getItem('selectedEnvironment') || 'dev';
+    if (newEnv !== currentEnvironment.value) {
+      currentEnvironment.value = newEnv;
+      handleEnvironmentChange();
+    }
+  }, 500); // Check every 500ms
+};
+
+const stopEnvironmentWatcher = () => {
+  if (environmentCheckInterval) {
+    clearInterval(environmentCheckInterval);
+  }
+};
+
+// Also listen for storage events from other tabs
+window.addEventListener('storage', (e) => {
+  if (e.key === 'selectedEnvironment' && e.newValue !== currentEnvironment.value) {
+    currentEnvironment.value = e.newValue;
+    handleEnvironmentChange();
+  }
+});
 
 window.addEventListener('environmentChanged', handleEnvironmentChange);
 
@@ -1571,6 +1618,9 @@ onMounted(async () => {
 
   loadEntities();
   
+  // Start environment watcher
+  startEnvironmentWatcher();
+  
   // Subscriptions disabled for serverless backend
   // startSubscriptions();
   
@@ -1580,6 +1630,9 @@ onMounted(async () => {
 onUnmounted(() => {
   document.removeEventListener('keydown', handleEscapeKey);
   window.removeEventListener('environmentChanged', handleEnvironmentChange);
+  
+  // Stop environment watcher
+  stopEnvironmentWatcher();
   
   // Stop subscriptions
   stopSubscriptions();

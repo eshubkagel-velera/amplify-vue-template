@@ -323,9 +323,9 @@ const unmatchedCompare = ref([]);
 
 const filteredFields = computed(() => {
   const auditFields = ['CREATED_BY_USER_ID', 'CREATED_DATE', 'CHANGED_BY_USER_ID', 'CHANGED_DATE'];
-  const primaryKeyFields = ['ORIGIN_PRODUCT_ID', 'SERVICE_ID', 'SERVICE_PROVIDER_ID', 'REDIRECT_URL_ID', 'SERVICE_PARAM_ID'];
+  const identityKey = `${props.selectedEntity}_ID`;
   return (props.entityConfig?.fields || []).filter(field => 
-    !auditFields.includes(field) && !primaryKeyFields.includes(field)
+    !auditFields.includes(field) && field !== identityKey
   );
 });
 
@@ -335,8 +335,9 @@ const analyzeDifferences = () => {
   console.log('Compare data length:', compareData.value.length);
   
   // Global fields to exclude from all comparisons
-  // const globalExcludeFields = ['_ID', 'CREATED_BY_USER_ID', 'CREATED_DATE', 'CHANGED_BY_USER_ID', 'CHANGED_DATE', 'Service Provider', 'SERVICE_ID', 'SERVICE_PROVIDER_ID', 'ORIGIN_PRODUCT_ID', 'PRODUCT_ID', 'REDIRECT_URL_ID', 'SERVICE_PARAM_ID'];
-  const globalExcludeFields = ['CREATED_BY_USER_ID', 'CREATED_DATE', 'CHANGED_BY_USER_ID', 'CHANGED_DATE', 'SERVICE_ID', 'SERVICE_PROVIDER_ID', 'ORIGIN_PRODUCT_ID', 'PRODUCT_ID', 'REDIRECT_URL_ID', 'SERVICE_PARAM_ID'];
+  const baseExcludeFields = ['CREATED_BY_USER_ID', 'CREATED_DATE', 'CHANGED_BY_USER_ID', 'CHANGED_DATE'];
+  const identityKey = `${props.selectedEntity}_ID`;
+  const globalExcludeFields = [...baseExcludeFields, identityKey];
   
   // Entity-specific field configurations
   const entityConfigs = {
@@ -345,7 +346,7 @@ const analyzeDifferences = () => {
       comparisonFields: ['SERVICE_PROVIDER_NAME', 'URI', 'SECRET_NAME', 'REQUEST_TYPE'] // All fields to compare for differences
     },
     ORIGIN_PRODUCT: {
-      matchingFields: ['PRODUCT_ID', 'URL_TYPE_CODE'], // Fields that must match for pairing
+      matchingFields: ['PRODUCT_ID'], // Fields that must match for pairing
       comparisonFields: null // Use all available fields
     },
     REDIRECT_URL: {
@@ -354,7 +355,9 @@ const analyzeDifferences = () => {
     },
     SERVICE_PROVIDER: {
       matchingFields: ['SERVICE_PROVIDER_NAME'],
-      comparisonFields: null // Use all available fields
+      comparisonFields: null, // Use all available fields
+      stringMatchFields: ['SERVICE_PROVIDER_NAME'],
+      stringMatchThreshold: 0.50
     },
     SERVICE_PARAM: {
       matchingFields: ['PARAM_NAME'],
@@ -372,7 +375,9 @@ const analyzeDifferences = () => {
     },
     STEP_TYPE: {
       matchingFields: ['STEP_TYPE_NAME', 'STEP_TYPE_DESC', 'RESOURCE_NAME'],
-      comparisonFields: null // Use all available fields
+      comparisonFields: null, // Use all available fields
+      stringMatchFields: ['STEP_TYPE_NAME', 'STEP_TYPE_DESC', 'RESOURCE_NAME'],
+      stringMatchThreshold: 0.80
     }
   };
   
@@ -874,6 +879,14 @@ watch(() => props.entityConfig?.loadFunction, async () => {
 
 // Watch for compare environment changes to load compare data
 watch(() => props.compareEnvironment, async () => {
+  // Clear existing data first
+  compareData.value = [];
+  matchedPairs.value = [];
+  unmatchedPrimary.value = [];
+  unmatchedCompare.value = [];
+  differences.value = new Map();
+  fieldDifferences.value = new Map();
+  
   if (props.compareEnvironment) {
     console.log('=== COMPARE ENVIRONMENT CHANGED ===');
     console.log('Loading compare data for', props.selectedEntity, 'from', props.compareEnvironment);
@@ -891,15 +904,15 @@ watch(() => props.compareEnvironment, async () => {
         console.log('Compare data loaded:', items.length, 'items');
         compareData.value = items;
         
-        console.log('Both primary and compare data available, analyzing differences');
-        analyzeDifferences();
+        if (primaryData.value.length > 0) {
+          console.log('Both primary and compare data available, analyzing differences');
+          analyzeDifferences();
+        }
       }
     } catch (error) {
       console.error('Error loading compare data:', error);
       compareData.value = [];
     }
-  } else {
-    compareData.value = [];
   }
 }, { immediate: true });
 
