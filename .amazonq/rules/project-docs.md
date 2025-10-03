@@ -48,3 +48,5 @@ App.vue
 - `src/utils/comparisonClient.js`: Cross-environment API calls
 - `src/config/entityConfig.js`: Entity configurations
 - `amplify/data/resource.ts`: GraphQL schema definitions
+
+*Last updated: 2025-10-03*
