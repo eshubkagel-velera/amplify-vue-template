@@ -1,0 +1,40 @@
+name: Auto-update Documentation
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'src/components/**'
+      - 'src/composables/**'
+      - 'src/utils/**'
+      - 'src/config/**'
+      - 'amplify/data/**'
+
+permissions:
+  contents: write
+
+jobs:
+  update-docs:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Update documentation
+      run: node scripts/update-docs.js
+      
+    - name: Commit updated docs
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add .amazonq/rules/project-docs.md
+        git diff --staged --quiet || git commit -m "docs: auto-update project documentation [skip ci]"
+        git push

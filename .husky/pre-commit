@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Update documentation if code changes detected
+node scripts/update-docs.js
+
+# Stage updated documentation files
+git add .amazonq/rules/project-docs.md docs/
