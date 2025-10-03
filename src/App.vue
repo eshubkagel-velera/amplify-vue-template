@@ -219,7 +219,7 @@
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <div style="display: flex; align-items: center; gap: 10px;">
-            <template v-if="showServiceParamsManager">
+            <template v-if="isChildScreen">
               <button @click="refreshEntities" class="btn-primary">Refresh</button>
               <button @click="showCreateModal" class="btn-success" :disabled="isReadonly">{{ isReadonly ? 'View Only Mode' : 'Add New' }}</button>
               <button @click="deleteSelected" :disabled="selectedCount === 0 || !canDelete" class="btn-danger">Delete Selected ({{ selectedCount }})</button>
@@ -329,7 +329,7 @@ const loadUserInfo = async () => {
     // Handle user info loading error silently
   }
 };
-import EntityManager from './components/EntityManager.vue';
+import EntityManager from './components/EntityManagerRefactored.vue';
 import ServiceImport from './components/ServiceImport.vue';
 
 import ThemeToggle from './components/ThemeToggle.vue';
@@ -400,6 +400,10 @@ const canAccessImport = computed(() => {
 
 const canCompare = computed(() => {
   return currentView.value !== 'home' && currentView.value !== 'import' && currentView.value !== 'compare';
+});
+
+const isChildScreen = computed(() => {
+  return showMappingManager.value || showRedirectUrlManager.value || showStepServicesManager.value || showServiceParamsManager.value || showServiceStepMappingManager.value;
 });
 
 // Initialize client lazily to ensure Amplify is configured first

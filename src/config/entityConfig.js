@@ -1,6 +1,7 @@
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
 import { fetchAllPages } from '../utils/pagination.js';
+import { getEntityConfig, getAllEntityConfigs } from './entityConfigLoader.js';
 
 // CRUD function generators
 const createCrudFunctions = (entityName, client, fieldLookups = {}) => {
@@ -70,8 +71,9 @@ const createCrudFunctions = (entityName, client, fieldLookups = {}) => {
   };
 };
 
-// Entity configurations
-export const getEntityConfigs = (client) => [
+// Legacy entity configurations with CRUD functions
+export const getEntityConfigs = (client) => {
+  const baseConfigs = [
   {
     name: 'ORIGIN_PRODUCT',
     fields: ['ORIGIN_PRODUCT_ID', 'VENDOR_NAME', 'PRODUCT_ID', 'PRODUCT_DESC', 'PSCU_CLIENT_ID', 'PARTNER_CODE', 'CREATED_BY_USER_ID', 'CREATED_DATE', 'CHANGED_BY_USER_ID', 'CHANGED_DATE'],
@@ -243,4 +245,14 @@ export const getEntityConfigs = (client) => [
     idField: 'STEP_SERVICE_MAPPING_ID',
     ...createCrudFunctions('STEP_SERVICE_MAPPING', client)
   }
-];
+  ];
+  
+  // Merge with new entity configurations
+  return baseConfigs.map(config => {
+    const entityConfig = getEntityConfig(config.name);
+    return { ...config, ...entityConfig };
+  });
+};
+
+// Export new configuration system
+export { getEntityConfig, getAllEntityConfigs };
