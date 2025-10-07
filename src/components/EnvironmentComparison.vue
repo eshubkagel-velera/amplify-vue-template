@@ -85,7 +85,9 @@
                 <input v-if="row.primary && !row.primary.__isBlank && (!row.compare || row.compare.__isBlank)" type="checkbox" :value="getPrimaryRowId(row)" v-model="selectedPrimaryRows">
               </td>
               <td class="actions-cell">
-                <button v-if="row.primary && !row.primary.__isBlank" @click="editRecord(row.primary, 'primary')" class="btn-primary">Edit</button>
+                <button v-if="row.primary && !row.primary.__isBlank" @click="editRecord(row.primary, 'primary')" class="btn-primary">
+                  {{ (entityConfig?.copyOnEditWithMappings && hasEntityMappings(row.primary)) ? 'Copy & Edit' : 'Edit' }}
+                </button>
                 <button v-if="row.primary && !row.primary.__isBlank && (!row.compare || row.compare.__isBlank)" @click="addToOther(row.primary, compareEnvironment)" class="btn-success">Add to {{ compareEnvironment.toUpperCase() }}</button>
                 <button v-if="row.primary && !row.primary.__isBlank && row.compare && !row.compare.__isBlank && hasDifferences(row.primary)" @click="copyToOther(row.primary, compareEnvironment)" class="btn-warning">Copy to {{ compareEnvironment.toUpperCase() }}</button>
               </td>
@@ -97,7 +99,9 @@
                 <input v-if="row.compare && !row.compare.__isBlank && (!row.primary || row.primary.__isBlank)" type="checkbox" :value="getCompareRowId(row)" v-model="selectedCompareRows">
               </td>
               <td class="actions-cell">
-                <button v-if="row.compare && !row.compare.__isBlank" @click="editRecord(row.compare, 'compare')" class="btn-primary">Edit</button>
+                <button v-if="row.compare && !row.compare.__isBlank" @click="editRecord(row.compare, 'compare')" class="btn-primary">
+                  {{ (entityConfig?.copyOnEditWithMappings && hasEntityMappings(row.compare)) ? 'Copy & Edit' : 'Edit' }}
+                </button>
                 <button v-if="row.compare && !row.compare.__isBlank && (!row.primary || row.primary.__isBlank)" @click="addToOther(row.compare, primaryEnvironment)" class="btn-success">Add to {{ primaryEnvironment.toUpperCase() }}</button>
                 <button v-if="row.compare && !row.compare.__isBlank && row.primary && !row.primary.__isBlank && hasDifferences(row.compare)" @click="copyToOther(row.compare, primaryEnvironment)" class="btn-warning">Copy to {{ primaryEnvironment.toUpperCase() }}</button>
               </td>
@@ -228,6 +232,7 @@ import EntityManager from './EntityManager.vue';
 import { getClient } from '../client.js';
 import { useAuth } from '../composables/useAuth';
 import { fetchUserAttributes } from 'aws-amplify/auth';
+import * as queries from '../graphql/queries.js';
 
 const props = defineProps({
   primaryEnvironment: {
@@ -259,6 +264,7 @@ const selectedServiceFilter = ref('');
 const selectedRows = ref([]);
 const selectedPrimaryRows = ref([]);
 const selectedCompareRows = ref([]);
+const paramMappings = ref(new Map());
 
 // Watch compareData changes
 watch(compareData, (newVal) => {
@@ -324,7 +330,11 @@ const unmatchedCompare = ref([]);
 const filteredFields = computed(() => {
   const auditFields = ['CREATED_BY_USER_ID', 'CREATED_DATE', 'CHANGED_BY_USER_ID', 'CHANGED_DATE'];
   const identityKey = `${props.selectedEntity}_ID`;
-  return (props.entityConfig?.fields || []).filter(field => 
+  
+  // Use comparison-specific fields if available
+  const fieldsToUse = props.entityConfig?.comparisonConfig?.comparisonFields || props.entityConfig?.fields || [];
+  
+  return fieldsToUse.filter(field => 
     !auditFields.includes(field) && field !== identityKey
   );
 });
@@ -339,47 +349,8 @@ const analyzeDifferences = () => {
   const identityKey = `${props.selectedEntity}_ID`;
   const globalExcludeFields = [...baseExcludeFields, identityKey];
   
-  // Entity-specific field configurations
-  const entityConfigs = {
-    SERVICE: {
-      matchingFields: ['SERVICE_PROVIDER_NAME', 'URI'], // Fields that must match for pairing
-      comparisonFields: ['SERVICE_PROVIDER_NAME', 'URI', 'SECRET_NAME', 'REQUEST_TYPE'] // All fields to compare for differences
-    },
-    ORIGIN_PRODUCT: {
-      matchingFields: ['PRODUCT_ID'], // Fields that must match for pairing
-      comparisonFields: null // Use all available fields
-    },
-    REDIRECT_URL: {
-      matchingFields: ['PRODUCT_ID'],
-      comparisonFields: null // Use all available fields
-    },
-    SERVICE_PROVIDER: {
-      matchingFields: ['SERVICE_PROVIDER_NAME'],
-      comparisonFields: null, // Use all available fields
-      stringMatchFields: ['SERVICE_PROVIDER_NAME'],
-      stringMatchThreshold: 0.50
-    },
-    SERVICE_PARAM: {
-      matchingFields: ['PARAM_NAME'],
-      comparisonFields: null, // Use all available fields
-      stringMatchFields: ['PARAM_NAME'],
-      stringMatchThreshold: 0.75
-    },
-    SERVICE_PARAM_MAPPING: {
-      matchingFields: ['Target Service', 'Source Service', 'Target Param Name', 'Target Expr', 'Source Param Name', 'Source Expr'],
-      comparisonFields: null // Use all available fields
-    },
-    STEP_SERVICE_MAPPING: {
-      matchingFields: ['STEP_TYPE', 'SERVICE'],
-      comparisonFields: null // Use all available fields
-    },
-    STEP_TYPE: {
-      matchingFields: ['STEP_TYPE_NAME', 'STEP_TYPE_DESC', 'RESOURCE_NAME'],
-      comparisonFields: null, // Use all available fields
-      stringMatchFields: ['STEP_TYPE_NAME', 'STEP_TYPE_DESC', 'RESOURCE_NAME'],
-      stringMatchThreshold: 0.80
-    }
-  };
+  // Use entity-specific comparison configuration
+  const config = props.entityConfig?.comparisonConfig || {};
   
   const diffs = new Map();
   const fieldDiffs = new Map();
@@ -416,7 +387,6 @@ const analyzeDifferences = () => {
 
   // Calculate match percentage between two records with entity-specific logic
   const calculateMatch = (record1, record2) => {
-    const config = entityConfigs[props.selectedEntity] || {};
     
     // Determine fields to use for comparison
     let comparisonFields;
@@ -1066,16 +1036,62 @@ const closeEditModal = () => {
 
 const saveEditRecord = async () => {
   try {
-    // Create clean update data with proper JSON serialization
+    const isUpdate = editFormData.value[props.entityConfig?.idField] !== undefined;
+    
+    // For entities with copyOnEditWithMappings and mappings, create new record instead of update
+    if (props.entityConfig?.copyOnEditWithMappings && isUpdate && hasEntityMappings(editingEntity.value)) {
+      const cleanData = { ...editFormData.value };
+      
+      // Remove ID field and audit fields for create operation
+      delete cleanData[props.entityConfig.idField];
+      delete cleanData.CHANGED_BY_USER_ID;
+      delete cleanData.CHANGED_DATE;
+      
+      // Remove entity-specific fields
+      if (props.entityConfig.fieldsToRemove) {
+        props.entityConfig.fieldsToRemove.forEach(field => {
+          delete cleanData[field];
+        });
+      }
+      
+      // Set create fields
+      cleanData.CREATED_DATE = new Date().toISOString().split('T')[0];
+      cleanData.CREATED_BY_USER_ID = userProfileId.value || 1;
+      
+      // Convert number fields
+      if (cleanData.SERVICE_ID) cleanData.SERVICE_ID = parseInt(cleanData.SERVICE_ID);
+      if (cleanData.CREATED_BY_USER_ID) cleanData.CREATED_BY_USER_ID = parseInt(cleanData.CREATED_BY_USER_ID);
+      
+      console.log(`Creating new ${props.selectedEntity} (has mappings):`, cleanData);
+      
+      const isCompareEnvironment = editingEntity.value.environment === 'compare';
+      let result;
+      
+      if (isCompareEnvironment) {
+        const { createComparisonRecord } = await import('../utils/comparisonClient.js');
+        result = await createComparisonRecord(props.compareEnvironment, props.selectedEntity, cleanData);
+      } else {
+        result = await props.entityConfig.createFunction(cleanData);
+      }
+      
+      if (result && !result.errors) {
+        closeEditModal();
+        await handleRecordUpdated();
+        successMessage.value = `New ${props.selectedEntity} created (original has mappings)!`;
+        showSuccessModal.value = true;
+      } else {
+        console.error('Create failed:', result?.errors || 'Unknown error');
+        successMessage.value = `Create failed: ${result?.errors?.[0]?.message || 'Unknown error'}`;
+        showSuccessModal.value = true;
+      }
+      return;
+    }
+    
+    // Regular update logic
     const cleanData = {};
     Object.keys(editFormData.value).forEach(key => {
       const value = editFormData.value[key];
       if (value !== null && value !== undefined && value !== '') {
-        // Skip primary key fields that shouldn't be updated
-        if (key === 'ORIGIN_PRODUCT_ID' || key === '_ID') {
-          return;
-        }
-        // Convert to proper types based on field name
         if (key.includes('_ID') && !isNaN(value)) {
           cleanData[key] = parseInt(value);
         } else {
@@ -1084,31 +1100,15 @@ const saveEditRecord = async () => {
       }
     });
     
-    // Add the primary key for identification - use the correct ID for the environment being edited
-    if (props.selectedEntity === 'REDIRECT_URL' && editingEntity.value.REDIRECT_URL_ID) {
-      cleanData.REDIRECT_URL_ID = parseInt(editingEntity.value.REDIRECT_URL_ID);
-    } else if (editingEntity.value.ORIGIN_PRODUCT_ID) {
-      cleanData.ORIGIN_PRODUCT_ID = parseInt(editingEntity.value.ORIGIN_PRODUCT_ID);
+    // Remove entity-specific fields for updates
+    if (props.entityConfig.fieldsToRemove) {
+      props.entityConfig.fieldsToRemove.forEach(field => {
+        delete cleanData[field];
+      });
     }
+    delete cleanData.CREATED_BY_USER_ID;
+    delete cleanData.CREATED_DATE;
     
-    // Remove fields not part of update schemas
-    if (props.selectedEntity === 'REDIRECT_URL') {
-      delete cleanData.PRODUCT_ID;
-      delete cleanData.CREATED_BY_USER_ID;
-      delete cleanData.CREATED_DATE;
-      // Ensure ORIGIN_PRODUCT_ID is included for REDIRECT_URL
-      if (editingEntity.value.ORIGIN_PRODUCT_ID) {
-        cleanData.ORIGIN_PRODUCT_ID = parseInt(editingEntity.value.ORIGIN_PRODUCT_ID);
-      }
-    }
-    
-    // Remove CREATED fields for SERVICE_PROVIDER and SERVICE updates
-    if (props.selectedEntity === 'SERVICE_PROVIDER' || props.selectedEntity === 'SERVICE') {
-      delete cleanData.CREATED_BY_USER_ID;
-      delete cleanData.CREATED_DATE;
-    }
-    
-    // Add audit fields for update
     cleanData.CHANGED_DATE = new Date().toISOString().split('T')[0];
     if (cleanData.CHANGED_BY_USER_ID) {
       cleanData.CHANGED_BY_USER_ID = parseInt(cleanData.CHANGED_BY_USER_ID);
@@ -1116,17 +1116,13 @@ const saveEditRecord = async () => {
     
     console.log('Clean data being sent:', JSON.stringify(cleanData, null, 2));
     
+    const isCompareEnvironment = editingEntity.value.environment === 'compare';
     let result;
     
-    // Determine which environment we're editing based on the edit button clicked
-    const isCompareEnvironment = editingEntity.value.environment === 'compare';
-    
     if (isCompareEnvironment) {
-      // Use comparison client for compare environment
       const { updateComparisonRecord } = await import('../utils/comparisonClient.js');
       result = await updateComparisonRecord(props.compareEnvironment, props.selectedEntity, cleanData);
     } else {
-      // Use regular update function for primary environment
       result = await props.entityConfig.updateFunction(cleanData);
     }
     
@@ -1134,11 +1130,7 @@ const saveEditRecord = async () => {
     
     if (result && !result.errors) {
       closeEditModal();
-      
-      // Immediately refresh data
       await handleRecordUpdated();
-      
-      // Show success modal after refresh
       successMessage.value = 'Record updated successfully!';
       showSuccessModal.value = true;
     } else {
@@ -1284,12 +1276,23 @@ const confirmCopyDifferences = async () => {
     
     // Override with the different field values from the source record
     diffInfo.differentFields.forEach(field => {
+      // Skip fields that should preserve destination values
+      const preserveFields = props.entityConfig?.preserveOnCopy || [];
+      if (preserveFields.includes(field)) {
+        return;
+      }
       updateData[field] = sourceRecord[field];
     });
     
     // Remove CREATED fields from updates
     delete updateData.CREATED_BY_USER_ID;
     delete updateData.CREATED_DATE;
+    
+    // Remove fields specified in entity configuration
+    const fieldsToRemove = props.entityConfig?.fieldsToRemove || [];
+    fieldsToRemove.forEach(field => {
+      delete updateData[field];
+    });
     
     // Remove PRODUCT_ID for REDIRECT_URL updates (not accepted by schema)
     if (props.selectedEntity === 'REDIRECT_URL') {
@@ -1396,7 +1399,7 @@ const confirmAddToOther = async () => {
         
         // Find the source provider name
         const sourceProvider = primaryData.value.find(s => s.SERVICE_PROVIDER_ID === formData.SERVICE_PROVIDER_ID);
-        const sourceProviderName = sourceProvider?.['Service Provider']?.split(': ')[1];
+        const sourceProviderName = sourceProvider?.['Service Provider'];
         
         if (sourceProviderName && targetProviders?.data?.listSERVICE_PROVIDERS?.items) {
           const targetProvider = targetProviders.data.listSERVICE_PROVIDERS.items.find(p => 
@@ -1506,6 +1509,40 @@ const loadUserProfile = async () => {
   }
 };
 
+const hasEntityMappings = (record) => {
+  if (!record || !props.entityConfig?.copyOnEditWithMappings) return false;
+  
+  if (props.selectedEntity === 'SERVICE_PARAM') {
+    const paramId = record[props.entityConfig.idField];
+    return paramMappings.value.get(paramId) > 0;
+  }
+  
+  return false;
+};
+
+const checkParameterMappings = async () => {
+  if (props.selectedEntity !== 'SERVICE_PARAM') return;
+  
+  try {
+    const { getClient } = await import('../client.js');
+    const result = await getClient().graphql({ query: queries.listServiceParamMappings });
+    const mappings = result.data.listSERVICE_PARAM_MAPPINGS?.items || [];
+    const mappingCounts = new Map();
+    
+    mappings.forEach(mapping => {
+      const sourceId = mapping.SOURCE_SERVICE_PARAM_ID;
+      const targetId = mapping.TARGET_SERVICE_PARAM_ID;
+      
+      mappingCounts.set(sourceId, (mappingCounts.get(sourceId) || 0) + 1);
+      mappingCounts.set(targetId, (mappingCounts.get(targetId) || 0) + 1);
+    });
+    
+    paramMappings.value = mappingCounts;
+  } catch (error) {
+    console.error('Failed to check parameter mappings:', error);
+  }
+};
+
 const handleRecordUpdated = async () => {
   console.log('Record updated, reloading data and re-analyzing differences');
   
@@ -1549,6 +1586,7 @@ onMounted(async () => {
   }
   if (props.selectedEntity === 'SERVICE_PARAM' && props.compareEnvironment) {
     await loadCommonServices();
+    await checkParameterMappings();
   }
   console.log('Environment comparison mounted', {
     primary: props.primaryEnvironment,

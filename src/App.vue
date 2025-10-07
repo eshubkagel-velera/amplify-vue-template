@@ -329,7 +329,7 @@ const loadUserInfo = async () => {
     // Handle user info loading error silently
   }
 };
-import EntityManager from './components/EntityManagerRefactored.vue';
+import EntityManager from './components/EntityManager.vue';
 import ServiceImport from './components/ServiceImport.vue';
 
 import ThemeToggle from './components/ThemeToggle.vue';
@@ -761,8 +761,8 @@ select {
 main {
   background-color: var(--bg-color, #f9f9f9);
   width: 100%;
-  min-height: calc(100vh - 120px);
-  overflow: auto;
+  height: calc(100vh - 250px);
+  overflow: hidden;
   padding: 0;
   box-sizing: border-box;
 }

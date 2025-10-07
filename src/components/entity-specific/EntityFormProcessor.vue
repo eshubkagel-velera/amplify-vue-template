@@ -34,13 +34,18 @@ const processFormData = (isUpdate = false) => {
   if (props.entityName === 'STEP_SERVICE_MAPPING') {
     cleanedFormData = processStepServiceMapping(cleanedFormData, isUpdate);
   } else if (props.entityName === 'SERVICE_PARAM' && isUpdate) {
-    cleanedFormData = processServiceParam(cleanedFormData, isUpdate);
+    const result = processServiceParam(cleanedFormData, isUpdate);
+    if (result.shouldCreateCopy) {
+      emit('formProcessed', result);
+      return result;
+    }
+    cleanedFormData = result;
   } else {
     cleanedFormData = processGenericEntity(cleanedFormData, isUpdate);
   }
   
   emit('formProcessed', { cleanedFormData, shouldCreateCopy: false });
-  return cleanedFormData;
+  return { cleanedFormData, shouldCreateCopy: false };
 };
 
 const processStepServiceMapping = (data, isUpdate) => {
@@ -55,17 +60,22 @@ const processStepServiceMapping = (data, isUpdate) => {
 };
 
 const processServiceParam = (data, isUpdate) => {
-  const cleaned = { ...data };
+  let cleaned = { ...data };
   
   // Check if param has mappings - if so, create copy instead of update
   if (isUpdate && props.paramMappings.get(cleaned.SERVICE_PARAM_ID) > 0) {
+    // Remove all fields that shouldn't be in create input
     delete cleaned.SERVICE_PARAM_ID;
     delete cleaned.CHANGED_BY_USER_ID;
     delete cleaned.CHANGED_DATE;
+    delete cleaned.SERVICE_DISPLAY;
+    delete cleaned['Service Provider'];
+    
+    // Set create fields
     cleaned.CREATED_DATE = getCurrentDateString();
     cleaned.CREATED_BY_USER_ID = props.userProfileId || 1;
-    emit('formProcessed', { cleanedFormData: cleaned, shouldCreateCopy: true });
-    return cleaned;
+    
+    return { cleanedFormData: cleaned, shouldCreateCopy: true };
   }
   
   return processGenericEntity(cleaned, isUpdate);
@@ -77,10 +87,21 @@ const processGenericEntity = (data, isUpdate) => {
   // Remove display fields
   delete cleaned.SERVICE_DISPLAY;
   delete cleaned['Service Provider'];
+  // delete cleaned.PRODUCT_ID;
+  
+  // Remove display fields based on config
+  if (props.config?.fieldsToRemove) {
+    props.config.fieldsToRemove.forEach(field => {
+      delete cleaned[field];
+    });
+  }
   
   if (isUpdate) {
-    delete cleaned.CREATED_BY_USER_ID;
-    delete cleaned.CREATED_DATE;
+    // Keep required fields for updates based on config
+    if (!props.config?.keepAuditFieldsOnUpdate) {
+      delete cleaned.CREATED_BY_USER_ID;
+      delete cleaned.CREATED_DATE;
+    }
     cleaned.CHANGED_DATE = getCurrentDateString();
     cleaned.CHANGED_BY_USER_ID = props.userProfileId || 1;
   } else {

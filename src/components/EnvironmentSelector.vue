@@ -11,7 +11,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, defineProps } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useAuth } from '../composables/useAuth';
 
 const props = defineProps({

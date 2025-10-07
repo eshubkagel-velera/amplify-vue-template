@@ -89,6 +89,7 @@ export const getEntityConfigs = (client) => {
     idField: 'ORIGIN_PRODUCT_ID',
     hasRowActions: true,
     rowActions: ['mapping', 'redirectUrls'],
+    keepAuditFieldsOnUpdate: true,
     ...createCrudFunctions('ORIGIN_PRODUCT', client)
   },
   {
@@ -115,7 +116,7 @@ export const getEntityConfigs = (client) => {
         lookupTable: 'SERVICE_PROVIDER',
         foreignKey: 'SERVICE_PROVIDER_ID',
         displayField: 'SERVICE_PROVIDER_NAME',
-        displayFormat: '{SERVICE_PROVIDER_ID}: {SERVICE_PROVIDER_NAME}'
+        displayFormat: '{SERVICE_PROVIDER_NAME}'
       }
     },
     ...createCrudFunctions('SERVICE', client, {
@@ -123,7 +124,7 @@ export const getEntityConfigs = (client) => {
         lookupTable: 'SERVICE_PROVIDER',
         foreignKey: 'SERVICE_PROVIDER_ID',
         displayField: 'SERVICE_PROVIDER_NAME',
-        displayFormat: '{SERVICE_PROVIDER_ID}: {SERVICE_PROVIDER_NAME}'
+        displayFormat: '{SERVICE_PROVIDER_NAME}'
       }
     })
   },
@@ -187,6 +188,8 @@ export const getEntityConfigs = (client) => {
     hasFilters: true,
     filterType: 'product',
     autoFillFromFilter: { filterField: 'selectedProductFilter', formField: 'ORIGIN_PRODUCT_ID' },
+    fieldsToRemove: ['PRODUCT_ID'],
+    keepAuditFieldsOnUpdate: false,
     loadFunction: async () => {
       const [redirectUrls, products] = await Promise.all([
         fetchAllPages(client, queries.listRedirectUrls, {}, 'listREDIRECT_URLS'),

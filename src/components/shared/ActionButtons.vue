@@ -6,7 +6,7 @@
       @click="$emit('edit', entity)" 
       class="btn-primary"
     >
-      {{ readonly ? 'View' : 'Edit' }}
+      {{ readonly ? 'View' : (copyOnEditWithMappings && mappingCount > 0) ? 'Copy & Edit' : 'Edit' }}
     </button>
 
     <!-- Comparison Mode Buttons -->
@@ -81,7 +81,8 @@ const props = defineProps({
   otherEnvironment: { type: String, default: '' },
   isMatched: { type: Boolean, default: false },
   hasDifferences: { type: Boolean, default: false },
-  mappingCount: { type: Number, default: 0 }
+  mappingCount: { type: Number, default: 0 },
+  copyOnEditWithMappings: { type: Boolean, default: false }
 });
 
 defineEmits([

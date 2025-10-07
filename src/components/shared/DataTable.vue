@@ -120,7 +120,7 @@ const getCellClass = (entity, field) => {
 
 <style scoped>
 .table-container {
-  max-height: 600px;
+  height: calc(100vh - 400px);
   overflow: auto;
   border: 1px solid var(--border-color);
   border-radius: 4px;
@@ -151,7 +151,7 @@ const getCellClass = (entity, field) => {
   background-color: var(--table-header-bg);
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 20;
   height: 45px;
   vertical-align: middle;
 }
@@ -161,7 +161,7 @@ const getCellClass = (entity, field) => {
   padding: 4px;
   position: sticky;
   top: 45px;
-  z-index: 10;
+  z-index: 20;
   height: 35px;
 }
 
