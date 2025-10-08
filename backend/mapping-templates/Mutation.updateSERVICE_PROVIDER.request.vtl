@@ -1,13 +1,12 @@
 {
   "version": "2018-05-29",
   "statements": [
-    "UPDATE SERVICE_PROVIDER SET SERVICE_PROVIDER_NAME = :SERVICE_PROVIDER_NAME, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE SERVICE_PROVIDER_ID = :SERVICE_PROVIDER_ID",
-    "SELECT * FROM SERVICE_PROVIDER WHERE SERVICE_PROVIDER_ID = :SERVICE_PROVIDER_ID"
-  ],
-  "variableMap": {
-    ":SERVICE_PROVIDER_ID": $ctx.args.input.SERVICE_PROVIDER_ID,
-    ":SERVICE_PROVIDER_NAME": "$ctx.args.input.SERVICE_PROVIDER_NAME",
-    ":CHANGED_BY_USER_ID": $ctx.args.input.CHANGED_BY_USER_ID,
-    ":CHANGED_DATE": "$ctx.args.input.CHANGED_DATE"
-  }
+    #set($updates = [])
+    #foreach($entry in $ctx.args.input.entrySet())
+      #if($entry.key != "SERVICE_PROVIDER_ID" && $entry.value)
+        $util.qr($updates.add("$entry.key = '$entry.value'"))
+      #end
+    #end
+    "UPDATE SERVICE_PROVIDER SET $util.str.join($updates, ', ') WHERE SERVICE_PROVIDER_ID = '$ctx.args.input.SERVICE_PROVIDER_ID'"
+  ]
 }

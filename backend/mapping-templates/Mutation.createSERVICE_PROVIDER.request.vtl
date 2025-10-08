@@ -1,12 +1,14 @@
 {
   "version": "2018-05-29",
   "statements": [
-    "INSERT INTO SERVICE_PROVIDER (SERVICE_PROVIDER_NAME, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:SERVICE_PROVIDER_NAME, :CREATED_BY_USER_ID, :CREATED_DATE)",
-    "SELECT * FROM SERVICE_PROVIDER WHERE SERVICE_PROVIDER_ID = LAST_INSERT_ID()"
-  ],
-  "variableMap": {
-    ":SERVICE_PROVIDER_NAME": "$ctx.args.input.SERVICE_PROVIDER_NAME",
-    ":CREATED_BY_USER_ID": $ctx.args.input.CREATED_BY_USER_ID,
-    ":CREATED_DATE": "$ctx.args.input.CREATED_DATE"
-  }
+    #set($cols = [])
+    #set($vals = [])
+    #foreach($entry in $ctx.args.input.entrySet())
+      #if($entry.value)
+        $util.qr($cols.add($entry.key))
+        $util.qr($vals.add("'$entry.value'"))
+      #end
+    #end
+    "INSERT INTO SERVICE_PROVIDER ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))"
+  ]
 }

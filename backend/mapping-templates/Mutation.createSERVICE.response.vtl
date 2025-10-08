@@ -1,9 +1,5 @@
-{
-  "SERVICE_ID": -1,
-  "SERVICE_PROVIDER_ID": $ctx.args.input.SERVICE_PROVIDER_ID,
-  "URI": "$ctx.args.input.URI",
-  "SECRET_NAME": "$ctx.args.input.SECRET_NAME",
-  "REQUEST_TYPE": "$ctx.args.input.REQUEST_TYPE",
-  "CREATED_BY_USER_ID": $ctx.args.input.CREATED_BY_USER_ID,
-  "CREATED_DATE": "$ctx.args.input.CREATED_DATE"
-}
+#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)
+  $util.toJson($ctx.result.sqlStatementResults[0].records[0])
+#else
+  $util.toJson($ctx.args.input)
+#end

@@ -1,11 +1,5 @@
-{
-  "SERVICE_PARAM_MAPPING_ID": -1,
-  "ORIGIN_PRODUCT_ID": $ctx.args.input.ORIGIN_PRODUCT_ID,
-  "SOURCE_SERVICE_PARAM_ID": $ctx.args.input.SOURCE_SERVICE_PARAM_ID,
-  "TARGET_SERVICE_PARAM_ID": $ctx.args.input.TARGET_SERVICE_PARAM_ID,
-  "SYSTEM_NBR": "$ctx.args.input.SYSTEM_NBR",
-  "PRIN_NBR": "$ctx.args.input.PRIN_NBR",
-  "AGENT_NBR": "$ctx.args.input.AGENT_NBR",
-  "CREATED_BY_USER_ID": $ctx.args.input.CREATED_BY_USER_ID,
-  "CREATED_DATE": "$ctx.args.input.CREATED_DATE"
-}
+#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)
+  $util.toJson($ctx.result.sqlStatementResults[0].records[0])
+#else
+  $util.toJson($ctx.args.input)
+#end

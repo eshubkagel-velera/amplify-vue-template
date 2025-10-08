@@ -1,0 +1,29 @@
+stages:
+  dev:
+    enabled: true
+    secretArn: arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-a11d98c5-d647-45a2-9978-f81be7aa3d60-iDsvX3
+    databaseName: hazel_mapping_dev
+    clusterIdentifier: hazel-mapping
+    minCapacity: 1
+    maxCapacity: 2
+  test:
+    enabled: true
+    secretArn: arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-cb7e7e17-e3eb-4916-a783-a3fad3597623-NOkBYH
+    databaseName: hazel_mapping_test
+    clusterIdentifier: hazel-mapping-test
+    minCapacity: 1
+    maxCapacity: 4
+  uat:
+    enabled: true
+    secretArn: arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-5caa7e9f-9f43-4073-ba7f-af959e3cf6bb-yn4rKu
+    databaseName: hazel_mapping_uat
+    clusterIdentifier: hazel-mapping-uat
+    minCapacity: 1
+    maxCapacity: 4
+  live:
+    enabled: true
+    secretArn: arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-5975818b-f15c-4381-b0ba-1f281f97610d-GlpEdy
+    databaseName: hazel_mapping_live
+    clusterIdentifier: hazel-mapping-live
+    minCapacity: 2
+    maxCapacity: 8

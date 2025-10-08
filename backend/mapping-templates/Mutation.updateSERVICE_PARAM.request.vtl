@@ -1,13 +1,12 @@
 {
   "version": "2018-05-29",
   "statements": [
-    "UPDATE SERVICE_PARAM SET PARAM_NAME = :PARAM_NAME, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE SERVICE_PARAM_ID = :SERVICE_PARAM_ID",
-    "SELECT * FROM SERVICE_PARAM WHERE SERVICE_PARAM_ID = :SERVICE_PARAM_ID"
-  ],
-  "variableMap": {
-    ":SERVICE_PARAM_ID": $ctx.args.input.SERVICE_PARAM_ID,
-    ":PARAM_NAME": "$ctx.args.input.PARAM_NAME",
-    ":CHANGED_BY_USER_ID": $ctx.args.input.CHANGED_BY_USER_ID,
-    ":CHANGED_DATE": "$ctx.args.input.CHANGED_DATE"
-  }
+    #set($updates = [])
+    #foreach($entry in $ctx.args.input.entrySet())
+      #if($entry.key != "SERVICE_PARAM_ID" && $entry.value)
+        $util.qr($updates.add("$entry.key = '$entry.value'"))
+      #end
+    #end
+    "UPDATE SERVICE_PARAM SET $util.str.join($updates, ', ') WHERE SERVICE_PARAM_ID = '$ctx.args.input.SERVICE_PARAM_ID'"
+  ]
 }

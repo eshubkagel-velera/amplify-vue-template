@@ -1,0 +1,12 @@
+{
+  "version": "2018-05-29",
+  "statements": [
+    #set($updates = [])
+    #foreach($entry in $ctx.args.input.entrySet())
+      #if($entry.key != "STEP_TYPE_PARAM_MAP_ID" && $entry.value)
+        $util.qr($updates.add("$entry.key = '$entry.value'"))
+      #end
+    #end
+    "UPDATE STEP_TYPE_PARAM_MAP SET $util.str.join($updates, ', ') WHERE STEP_TYPE_PARAM_MAP_ID = '$ctx.args.input.STEP_TYPE_PARAM_MAP_ID'"
+  ]
+}

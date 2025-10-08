@@ -1,0 +1,14 @@
+{
+  "version": "2018-05-29",
+  "statements": [
+    #set($cols = [])
+    #set($vals = [])
+    #foreach($entry in $ctx.args.input.entrySet())
+      #if($entry.value)
+        $util.qr($cols.add($entry.key))
+        $util.qr($vals.add("'$entry.value'"))
+      #end
+    #end
+    "INSERT INTO FILTER_CRITERIA ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))"
+  ]
+}

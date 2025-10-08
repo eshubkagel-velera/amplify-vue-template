@@ -1,27 +1,14 @@
-## Authorization check
-#if(!$ctx.identity || !$ctx.identity.sub)
-  $util.unauthorized()
-#end
-
-## Input validation
-#if(!$ctx.args.input.URL || $ctx.args.input.URL.length() == 0)
-  $util.error("URL is required", "ValidationError")
-#end
-#if(!$ctx.args.input.URL_TYPE_CODE.matches("^[EN]$"))
-  $util.error("URL_TYPE_CODE must be E or N", "ValidationError")
-#end
-
 {
   "version": "2018-05-29",
   "statements": [
-    "INSERT INTO REDIRECT_URL (ORIGIN_PRODUCT_ID, URL_TYPE_CODE, URL, RESPONSE_TEXT, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:ORIGIN_PRODUCT_ID, :URL_TYPE_CODE, :URL, :RESPONSE_TEXT, :CREATED_BY_USER_ID, :CREATED_DATE)"
-  ],
-  "variableMap": {
-    ":ORIGIN_PRODUCT_ID": $util.toJson($ctx.args.input.ORIGIN_PRODUCT_ID),
-    ":URL_TYPE_CODE": $util.toJson($ctx.args.input.URL_TYPE_CODE),
-    ":URL": $util.toJson($ctx.args.input.URL),
-    ":RESPONSE_TEXT": $util.toJson($ctx.args.input.RESPONSE_TEXT),
-    ":CREATED_BY_USER_ID": $util.toJson($ctx.args.input.CREATED_BY_USER_ID),
-    ":CREATED_DATE": $util.toJson($ctx.args.input.CREATED_DATE)
-  }
+    #set($cols = [])
+    #set($vals = [])
+    #foreach($entry in $ctx.args.input.entrySet())
+      #if($entry.value)
+        $util.qr($cols.add($entry.key))
+        $util.qr($vals.add("'$entry.value'"))
+      #end
+    #end
+    "INSERT INTO REDIRECT_URL ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))"
+  ]
 }

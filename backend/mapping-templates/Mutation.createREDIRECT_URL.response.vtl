@@ -1,15 +1,5 @@
-#if($ctx.error)
-  $util.error($ctx.error.message, $ctx.error.type)
+#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)
+  $util.toJson($ctx.result.sqlStatementResults[0].records[0])
+#else
+  $util.toJson($ctx.args.input)
 #end
-
-{
-  "REDIRECT_URL_ID": 999,
-  "ORIGIN_PRODUCT_ID": $ctx.args.input.ORIGIN_PRODUCT_ID,
-  "URL_TYPE_CODE": "$ctx.args.input.URL_TYPE_CODE",
-  "URL": "$ctx.args.input.URL",
-  "RESPONSE_TEXT": "$ctx.args.input.RESPONSE_TEXT",
-  "CREATED_BY_USER_ID": $ctx.args.input.CREATED_BY_USER_ID,
-  "CREATED_DATE": "$ctx.args.input.CREATED_DATE",
-  "CHANGED_BY_USER_ID": null,
-  "CHANGED_DATE": null
-}

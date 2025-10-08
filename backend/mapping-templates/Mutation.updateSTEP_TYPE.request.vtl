@@ -1,15 +1,12 @@
 {
   "version": "2018-05-29",
   "statements": [
-    "UPDATE STEP_TYPE SET STEP_TYPE_NAME = :STEP_TYPE_NAME, STEP_TYPE_DESC = :STEP_TYPE_DESC, RESOURCE_NAME = :RESOURCE_NAME, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE STEP_TYPE_ID = :STEP_TYPE_ID",
-    "SELECT * FROM STEP_TYPE WHERE STEP_TYPE_ID = :STEP_TYPE_ID"
-  ],
-  "variableMap": {
-    ":STEP_TYPE_ID": $ctx.args.input.STEP_TYPE_ID,
-    ":STEP_TYPE_NAME": "$ctx.args.input.STEP_TYPE_NAME",
-    ":STEP_TYPE_DESC": #if($ctx.args.input.STEP_TYPE_DESC)"$ctx.args.input.STEP_TYPE_DESC"#else null #end,
-    ":RESOURCE_NAME": #if($ctx.args.input.RESOURCE_NAME)"$ctx.args.input.RESOURCE_NAME"#else null #end,
-    ":CHANGED_BY_USER_ID": $ctx.args.input.CHANGED_BY_USER_ID,
-    ":CHANGED_DATE": "$ctx.args.input.CHANGED_DATE"
-  }
+    #set($updates = [])
+    #foreach($entry in $ctx.args.input.entrySet())
+      #if($entry.key != "STEP_TYPE_ID" && $entry.value)
+        $util.qr($updates.add("$entry.key = '$entry.value'"))
+      #end
+    #end
+    "UPDATE STEP_TYPE SET $util.str.join($updates, ', ') WHERE STEP_TYPE_ID = '$ctx.args.input.STEP_TYPE_ID'"
+  ]
 }

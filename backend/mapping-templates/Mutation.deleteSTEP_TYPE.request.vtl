@@ -1,9 +1,6 @@
 {
   "version": "2018-05-29",
   "statements": [
-    "DELETE FROM STEP_TYPE WHERE STEP_TYPE_ID = :STEP_TYPE_ID"
-  ],
-  "variableMap": {
-    ":STEP_TYPE_ID": $ctx.args.input.STEP_TYPE_ID
-  }
+    "DELETE FROM STEP_TYPE WHERE STEP_TYPE_ID = '$ctx.args.input.STEP_TYPE_ID'"
+  ]
 }

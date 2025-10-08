@@ -1,14 +1,14 @@
 {
   "version": "2018-05-29",
   "statements": [
-    "INSERT INTO STEP_TYPE (STEP_TYPE_NAME, STEP_TYPE_DESC, RESOURCE_NAME, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:STEP_TYPE_NAME, :STEP_TYPE_DESC, :RESOURCE_NAME, :CREATED_BY_USER_ID, :CREATED_DATE)",
-    "SELECT * FROM STEP_TYPE WHERE STEP_TYPE_ID = LAST_INSERT_ID()"
-  ],
-  "variableMap": {
-    ":STEP_TYPE_NAME": "$ctx.args.input.STEP_TYPE_NAME",
-    ":STEP_TYPE_DESC": #if($ctx.args.input.STEP_TYPE_DESC)"$ctx.args.input.STEP_TYPE_DESC"#else null #end,
-    ":RESOURCE_NAME": #if($ctx.args.input.RESOURCE_NAME)"$ctx.args.input.RESOURCE_NAME"#else null #end,
-    ":CREATED_BY_USER_ID": $ctx.args.input.CREATED_BY_USER_ID,
-    ":CREATED_DATE": "$ctx.args.input.CREATED_DATE"
-  }
+    #set($cols = [])
+    #set($vals = [])
+    #foreach($entry in $ctx.args.input.entrySet())
+      #if($entry.value)
+        $util.qr($cols.add($entry.key))
+        $util.qr($vals.add("'$entry.value'"))
+      #end
+    #end
+    "INSERT INTO STEP_TYPE ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))"
+  ]
 }

@@ -1,0 +1,12 @@
+{
+  "version": "2018-05-29",
+  "statements": [
+    #set($updates = [])
+    #foreach($entry in $ctx.args.input.entrySet())
+      #if($entry.key != "SORT_CRITERIA_ID" && $entry.value)
+        $util.qr($updates.add("$entry.key = '$entry.value'"))
+      #end
+    #end
+    "UPDATE SORT_CRITERIA SET $util.str.join($updates, ', ') WHERE SORT_CRITERIA_ID = '$ctx.args.input.SORT_CRITERIA_ID'"
+  ]
+}

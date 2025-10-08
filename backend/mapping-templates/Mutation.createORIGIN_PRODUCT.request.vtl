@@ -1,15 +1,14 @@
 {
   "version": "2018-05-29",
   "statements": [
-    "INSERT INTO ORIGIN_PRODUCT (VENDOR_NAME, PRODUCT_ID, PRODUCT_DESC, PSCU_CLIENT_ID, PARTNER_CODE, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:VENDOR_NAME, :PRODUCT_ID, :PRODUCT_DESC, :PSCU_CLIENT_ID, :PARTNER_CODE, :CREATED_BY_USER_ID, :CREATED_DATE)"
-  ],
-  "variableMap": {
-    ":VENDOR_NAME": "$ctx.args.input.VENDOR_NAME",
-    ":PRODUCT_ID": "$ctx.args.input.PRODUCT_ID",
-    ":PRODUCT_DESC": "$ctx.args.input.PRODUCT_DESC",
-    ":PSCU_CLIENT_ID": $ctx.args.input.PSCU_CLIENT_ID,
-    ":PARTNER_CODE": #if($ctx.args.input.PARTNER_CODE)"$ctx.args.input.PARTNER_CODE"#else null #end,
-    ":CREATED_BY_USER_ID": $ctx.args.input.CREATED_BY_USER_ID,
-    ":CREATED_DATE": "$ctx.args.input.CREATED_DATE"
-  }
+    #set($cols = [])
+    #set($vals = [])
+    #foreach($entry in $ctx.args.input.entrySet())
+      #if($entry.value)
+        $util.qr($cols.add($entry.key))
+        $util.qr($vals.add("'$entry.value'"))
+      #end
+    #end
+    "INSERT INTO ORIGIN_PRODUCT ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))"
+  ]
 }

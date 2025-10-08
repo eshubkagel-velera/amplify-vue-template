@@ -1,14 +1,14 @@
 {
   "version": "2018-05-29",
   "statements": [
-    "INSERT INTO CONFIG_PARAM (CONFIG_PARAM_ID, CONFIG_NAME, CONFIG_VALUE, DESCRIPTION, CREATED_DATE, CHANGED_DATE) VALUES (:CONFIG_PARAM_ID, :CONFIG_NAME, :CONFIG_VALUE, :DESCRIPTION, :CREATED_DATE, :CHANGED_DATE)"
-  ],
-  "variableMap": {
-    ":CONFIG_PARAM_ID": $context.arguments.input.CONFIG_PARAM_ID,
-    ":CONFIG_NAME": "$context.arguments.input.CONFIG_NAME",
-    ":CONFIG_VALUE": "$context.arguments.input.CONFIG_VALUE",
-    ":DESCRIPTION": "$context.arguments.input.DESCRIPTION",
-    ":CREATED_DATE": "$context.arguments.input.CREATED_DATE",
-    ":CHANGED_DATE": "$context.arguments.input.CHANGED_DATE"
-  }
+    #set($cols = [])
+    #set($vals = [])
+    #foreach($entry in $ctx.args.input.entrySet())
+      #if($entry.value)
+        $util.qr($cols.add($entry.key))
+        $util.qr($vals.add("'$entry.value'"))
+      #end
+    #end
+    "INSERT INTO CONFIG_PARAM ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))"
+  ]
 }

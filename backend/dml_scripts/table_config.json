@@ -1,0 +1,22 @@
+{
+  "tables": {
+    "CONFIG_PARAM": { "includeInGraphQL": true, "includeInApp": true, "allowQuery": true, "allowCreate": true, "allowUpdate": true, "allowDelete": true },
+    "LOAN_APP": { "includeInGraphQL": true, "includeInApp": true, "allowQuery": true, "allowCreate": false, "allowUpdate": false, "allowDelete": false },
+    "LOAN_APP_EXECS": { "includeInGraphQL": true, "includeInApp": true, "allowQuery": true, "allowCreate": false, "allowUpdate": false, "allowDelete": false },
+    "LOAN_APP_STEP_STATUS": { "includeInGraphQL": true, "includeInApp": true, "allowQuery": true, "allowCreate": false, "allowUpdate": false, "allowDelete": false },
+    "NEW_MEMBER_TOKEN": { "includeInGraphQL": true, "includeInApp": true, "allowQuery": true, "allowCreate": false, "allowUpdate": false, "allowDelete": false },
+    "ORIGIN_PRODUCT": { "includeInGraphQL": true, "includeInApp": true, "allowQuery": true, "allowCreate": true, "allowUpdate": true, "allowDelete": true },
+    "REDIRECT_URL": { "includeInGraphQL": true, "includeInApp": true, "allowQuery": true, "allowCreate": true, "allowUpdate": true, "allowDelete": true },
+    "SERVICE": { "includeInGraphQL": true, "includeInApp": true, "allowQuery": true, "allowCreate": true, "allowUpdate": true, "allowDelete": true },
+    "SERVICE_DOMAIN": { "includeInGraphQL": true, "includeInApp": true, "allowQuery": true, "allowCreate": true, "allowUpdate": true, "allowDelete": true },
+    "SERVICE_EXPR_MAPPING": { "includeInGraphQL": true, "includeInApp": true, "allowQuery": true, "allowCreate": true, "allowUpdate": true, "allowDelete": true },
+    "SERVICE_PARAM": { "includeInGraphQL": true, "includeInApp": true, "allowQuery": true, "allowCreate": true, "allowUpdate": true, "allowDelete": true },
+    "SERVICE_PARAM_MAPPING": { "includeInGraphQL": true, "includeInApp": true, "allowQuery": true, "allowCreate": true, "allowUpdate": true, "allowDelete": true },
+    "SERVICE_PROVIDER": { "includeInGraphQL": true, "includeInApp": true, "allowQuery": true, "allowCreate": true, "allowUpdate": true, "allowDelete": true },
+    "STEP_SERVICE_MAPPING": { "includeInGraphQL": true, "includeInApp": true, "allowQuery": true, "allowCreate": true, "allowUpdate": true, "allowDelete": true },
+    "STEP_TYPE": { "includeInGraphQL": true, "includeInApp": true, "allowQuery": true, "allowCreate": true, "allowUpdate": true, "allowDelete": true },
+    "STEP_TYPE_PARAM_MAP": { "includeInGraphQL": true, "includeInApp": true, "allowQuery": true, "allowCreate": true, "allowUpdate": true, "allowDelete": true },
+    "FILTER_CRITERIA": { "includeInGraphQL": true, "includeInApp": true, "allowQuery": true, "allowCreate": true, "allowUpdate": true, "allowDelete": true },
+    "SORT_CRITERIA": { "includeInGraphQL": true, "includeInApp": true, "allowQuery": true, "allowCreate": true, "allowUpdate": true, "allowDelete": true }
+  }
+}

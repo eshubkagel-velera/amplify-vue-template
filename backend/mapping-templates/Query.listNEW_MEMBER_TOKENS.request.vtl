@@ -1,6 +1,6 @@
 {
   "version": "2018-05-29",
   "statements": [
-    "SELECT * FROM NEW_MEMBER_TOKEN"
+    "SELECT * FROM NEW_MEMBER_TOKEN ORDER BY NEW_MEMBER_TOKEN_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end"
   ]
 }

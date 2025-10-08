@@ -1,16 +1,12 @@
 {
   "version": "2018-05-29",
   "statements": [
-    "UPDATE SERVICE SET SERVICE_PROVIDER_ID = :SERVICE_PROVIDER_ID, URI = :URI, SECRET_NAME = :SECRET_NAME, REQUEST_TYPE = :REQUEST_TYPE, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE SERVICE_ID = :SERVICE_ID",
-    "SELECT * FROM SERVICE WHERE SERVICE_ID = :SERVICE_ID"
-  ],
-  "variableMap": {
-    ":SERVICE_ID": $ctx.args.input.SERVICE_ID,
-    ":SERVICE_PROVIDER_ID": $ctx.args.input.SERVICE_PROVIDER_ID,
-    ":URI": "$ctx.args.input.URI",
-    ":SECRET_NAME": #if($ctx.args.input.SECRET_NAME)"$ctx.args.input.SECRET_NAME"#else null #end,
-    ":REQUEST_TYPE": #if($ctx.args.input.REQUEST_TYPE)"$ctx.args.input.REQUEST_TYPE"#else null #end,
-    ":CHANGED_BY_USER_ID": $ctx.args.input.CHANGED_BY_USER_ID,
-    ":CHANGED_DATE": "$ctx.args.input.CHANGED_DATE"
-  }
+    #set($updates = [])
+    #foreach($entry in $ctx.args.input.entrySet())
+      #if($entry.key != "SERVICE_ID" && $entry.value)
+        $util.qr($updates.add("$entry.key = '$entry.value'"))
+      #end
+    #end
+    "UPDATE SERVICE SET $util.str.join($updates, ', ') WHERE SERVICE_ID = '$ctx.args.input.SERVICE_ID'"
+  ]
 }

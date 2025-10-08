@@ -1,28 +1,12 @@
-## Authorization check
-#if(!$ctx.identity || !$ctx.identity.sub)
-  $util.unauthorized()
-#end
-
-## Input validation
-#if(!$ctx.args.input.URL || $ctx.args.input.URL.length() == 0)
-  $util.error("URL is required", "ValidationError")
-#end
-#if(!$ctx.args.input.URL_TYPE_CODE.matches("^[EN]$"))
-  $util.error("URL_TYPE_CODE must be E or N", "ValidationError")
-#end
-
 {
   "version": "2018-05-29",
   "statements": [
-    "UPDATE REDIRECT_URL SET ORIGIN_PRODUCT_ID = :ORIGIN_PRODUCT_ID, URL_TYPE_CODE = :URL_TYPE_CODE, URL = :URL, RESPONSE_TEXT = :RESPONSE_TEXT, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE REDIRECT_URL_ID = :REDIRECT_URL_ID"
-  ],
-  "variableMap": {
-    ":REDIRECT_URL_ID": $util.toJson($ctx.args.input.REDIRECT_URL_ID),
-    ":ORIGIN_PRODUCT_ID": $util.toJson($ctx.args.input.ORIGIN_PRODUCT_ID),
-    ":URL_TYPE_CODE": $util.toJson($ctx.args.input.URL_TYPE_CODE),
-    ":URL": $util.toJson($ctx.args.input.URL),
-    ":RESPONSE_TEXT": $util.toJson($ctx.args.input.RESPONSE_TEXT),
-    ":CHANGED_BY_USER_ID": $util.toJson($ctx.args.input.CHANGED_BY_USER_ID),
-    ":CHANGED_DATE": $util.toJson($ctx.args.input.CHANGED_DATE)
-  }
+    #set($updates = [])
+    #foreach($entry in $ctx.args.input.entrySet())
+      #if($entry.key != "REDIRECT_URL_ID" && $entry.value)
+        $util.qr($updates.add("$entry.key = '$entry.value'"))
+      #end
+    #end
+    "UPDATE REDIRECT_URL SET $util.str.join($updates, ', ') WHERE REDIRECT_URL_ID = '$ctx.args.input.REDIRECT_URL_ID'"
+  ]
 }

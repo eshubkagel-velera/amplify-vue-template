@@ -1,15 +1,14 @@
 {
   "version": "2018-05-29",
   "statements": [
-    "INSERT INTO SERVICE_EXPR_MAPPING (SERVICE_PARAM_MAPPING_ID, SOURCE_EXPR, TARGET_EXPR, COMMENT_TEXT, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:SERVICE_PARAM_MAPPING_ID, :SOURCE_EXPR, :TARGET_EXPR, :COMMENT_TEXT, :CREATED_BY_USER_ID, :CREATED_DATE)",
-    "SELECT * FROM SERVICE_EXPR_MAPPING WHERE SERVICE_EXPR_MAPPING_ID = LAST_INSERT_ID()"
-  ],
-  "variableMap": {
-    ":SERVICE_PARAM_MAPPING_ID": $ctx.args.input.SERVICE_PARAM_MAPPING_ID,
-    ":SOURCE_EXPR": "$ctx.args.input.SOURCE_EXPR",
-    ":TARGET_EXPR": "$ctx.args.input.TARGET_EXPR",
-    ":COMMENT_TEXT": #if($ctx.args.input.COMMENT_TEXT)"$ctx.args.input.COMMENT_TEXT"#else null #end,
-    ":CREATED_BY_USER_ID": $ctx.args.input.CREATED_BY_USER_ID,
-    ":CREATED_DATE": "$ctx.args.input.CREATED_DATE"
-  }
+    #set($cols = [])
+    #set($vals = [])
+    #foreach($entry in $ctx.args.input.entrySet())
+      #if($entry.value)
+        $util.qr($cols.add($entry.key))
+        $util.qr($vals.add("'$entry.value'"))
+      #end
+    #end
+    "INSERT INTO SERVICE_EXPR_MAPPING ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))"
+  ]
 }

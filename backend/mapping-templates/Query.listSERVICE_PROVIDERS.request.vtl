@@ -1,6 +1,6 @@
 {
   "version": "2018-05-29",
   "statements": [
-    "SELECT SERVICE_PROVIDER_ID, SERVICE_PROVIDER_NAME, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE FROM SERVICE_PROVIDER ORDER BY SERVICE_PROVIDER_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end"
+    "SELECT * FROM SERVICE_PROVIDER ORDER BY SERVICE_PROVIDER_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end"
   ]
 }

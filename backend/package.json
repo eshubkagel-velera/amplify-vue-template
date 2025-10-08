@@ -2,11 +2,28 @@
   "name": "vue-appsync-backend",
   "version": "1.0.0",
   "scripts": {
+    "remove": "serverless remove",
+    "db": "node scripts/run-dml-via-rds-data.js",
+    "db:dev": "node scripts/run-dml-via-rds-data.js dev",
+    "db:test": "node scripts/run-dml-via-rds-data.js test",
+    "db:uat": "node scripts/run-dml-via-rds-data.js uat",
+    "db:live": "node scripts/run-dml-via-rds-data.js live",
+    "schema": "node scripts/generate-schema-from-sql.js",
     "deploy": "serverless deploy",
-    "remove": "serverless remove"
+    "deploy:dev": "serverless deploy --stage dev",
+    "deploy:test": "serverless deploy --stage test",
+    "deploy:uat": "serverless deploy --stage uat",
+    "deploy:live": "serverless deploy --stage live",
+    "full-deploy": "npm run schema && npm run db $npm_config_stage && npm run deploy --stage=$npm_config_stage",
+    "full-deploy:dev": "npm run schema && npm run db:dev && npm run deploy:dev",
+    "full-deploy:test": "npm run schema && npm run db:test && npm run deploy:test",
+    "full-deploy:uat": "npm run schema && npm run db:uat && npm run deploy:uat",
+    "full-deploy:live": "npm run schema && npm run db:live && npm run deploy:live"
   },
   "dependencies": {
-    "serverless-appsync-plugin": "^1.14.0"
+    "serverless-appsync-plugin": "^1.14.0",
+    "@aws-sdk/client-rds-data": "^3.0.0",
+    "js-yaml": "^4.1.0"
   },
   "devDependencies": {
     "serverless": "^3.38.0"

@@ -1,0 +1,12 @@
+{
+  "version": "2018-05-29",
+  "statements": [
+    #set($updates = [])
+    #foreach($entry in $ctx.args.input.entrySet())
+      #if($entry.key != "SERVICE_DOMAIN_ID" && $entry.value)
+        $util.qr($updates.add("$entry.key = '$entry.value'"))
+      #end
+    #end
+    "UPDATE SERVICE_DOMAIN SET $util.str.join($updates, ', ') WHERE SERVICE_DOMAIN_ID = '$ctx.args.input.SERVICE_DOMAIN_ID'"
+  ]
+}

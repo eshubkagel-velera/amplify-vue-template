@@ -5,7 +5,7 @@
     "EmailDomainValidationFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
-        "FunctionName": "email-domain-validation-live",
+        "FunctionName": "email-domain-validation-dev",
         "Runtime": "nodejs18.x",
         "Handler": "index.handler",
         "Code": {
@@ -22,7 +22,7 @@
     "PostConfirmationFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
-        "FunctionName": "post-confirmation-live",
+        "FunctionName": "post-confirmation-dev",
         "Runtime": "nodejs18.x",
         "Handler": "index.handler",
         "Code": {
@@ -188,7 +188,7 @@
                     "rds-data:*"
                   ],
                   "Resource": [
-                    "arn:aws:rds:us-east-2:*:cluster:hazel-mapping-live"
+                    "arn:aws:rds:us-east-2:*:cluster:hazel-mapping"
                   ]
                 },
                 {
@@ -199,7 +199,7 @@
                     "kms:DescribeKey"
                   ],
                   "Resource": [
-                    "arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-5975818b-f15c-4381-b0ba-1f281f97610d-GlpEdy",
+                    "arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-a11d98c5-d647-45a2-9978-f81be7aa3d60-iDsvX3",
                     "arn:aws:kms:us-east-2:*:key/*"
                   ]
                 },
@@ -223,7 +223,7 @@
     "GraphQlApi": {
       "Type": "AWS::AppSync::GraphQLApi",
       "Properties": {
-        "Name": "vue-appsync-api-live",
+        "Name": "vue-appsync-api-dev",
         "AuthenticationType": "AMAZON_COGNITO_USER_POOLS",
         "AdditionalAuthenticationProviders": [
           {
@@ -248,13 +248,13 @@
           ]
         },
         "Description": "Auto-generated api key",
-        "Expires": 1790791200
+        "Expires": 1791482400
       }
     },
     "GraphQlSchema": {
       "Type": "AWS::AppSync::GraphQLSchema",
       "Properties": {
-        "Definition": "schema {\n  query: Query\n  mutation: Mutation\n  subscription: Subscription\n}\n\ntype CONFIG_PARAM {\n  CHANGED_DATE: String\n  CONFIG_NAME: String!\n  CONFIG_PARAM_ID: Int!\n  CONFIG_VALUE: String!\n  CREATED_DATE: String\n  DESCRIPTION: String\n}\n\ntype LOAN_APP {\n  CHANGED_DATE: String\n  CREATED_DATE: String!\n  EXEC_ID: String\n  LOAN_APP_ID: Int!\n  ORIGIN_LOAN_APP_ID: String!\n  ORIGIN_PRODUCT_ID: Int!\n  PROCESS_FLAG: String!\n}\n\ntype NEW_MEMBER_TOKEN {\n  CARD_NBR: String\n  CHANGED_DATE: String\n  CREATED_DATE: String!\n  DOB: String\n  EMAIL_ADDRESS_TEXT: String\n  FIRST_NAME: String\n  HOME_PHONE_NBR: String\n  LAST_NAME: String\n  LOAN_APP_ID: Int!\n  MEMBER_NBR: String\n  MOBILE_PHONE_NBR: String\n  NEW_MEMBER_TOKEN_ID: Int!\n  PERSON_NBR: String\n  TAX_ID: String\n  TOKEN_USED_FLAG: String!\n  TOKEN_VALUE: String\n  ZIP_CODE: String\n}\n\ntype ORIGIN_PRODUCT {\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  ORIGIN_PRODUCT_ID: Int!\n  PARTNER_CODE: String\n  PRODUCT_DESC: String!\n  PRODUCT_ID: String!\n  PSCU_CLIENT_ID: Int!\n  VENDOR_NAME: String!\n}\n\ninput CreateCONFIG_PARAMInput {\n  CHANGED_DATE: String\n  CONFIG_NAME: String!\n  CONFIG_PARAM_ID: Int!\n  CONFIG_VALUE: String!\n  CREATED_DATE: String\n  DESCRIPTION: String\n}\n\ninput CreateLOAN_APPInput {\n  CHANGED_DATE: String\n  CREATED_DATE: String!\n  EXEC_ID: String\n  LOAN_APP_ID: Int!\n  ORIGIN_LOAN_APP_ID: String!\n  ORIGIN_PRODUCT_ID: Int!\n  PROCESS_FLAG: String!\n}\n\ninput CreateNEW_MEMBER_TOKENInput {\n  CARD_NBR: String\n  CHANGED_DATE: String\n  CREATED_DATE: String!\n  DOB: String\n  EMAIL_ADDRESS_TEXT: String\n  FIRST_NAME: String\n  HOME_PHONE_NBR: String\n  LAST_NAME: String\n  LOAN_APP_ID: Int!\n  MEMBER_NBR: String\n  MOBILE_PHONE_NBR: String\n  NEW_MEMBER_TOKEN_ID: Int!\n  PERSON_NBR: String\n  TAX_ID: String\n  TOKEN_USED_FLAG: String!\n  TOKEN_VALUE: String\n  ZIP_CODE: String\n}\n\ninput CreateORIGIN_PRODUCTInput {\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  ORIGIN_PRODUCT_ID: Int\n  PARTNER_CODE: String\n  PRODUCT_DESC: String!\n  PRODUCT_ID: String!\n  PSCU_CLIENT_ID: Int!\n  VENDOR_NAME: String!\n}\n\ninput CreateREDIRECT_URLInput {\n  ORIGIN_PRODUCT_ID: Int!\n  URL_TYPE_CODE: String!\n  URL: String!\n  RESPONSE_TEXT: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n}\n\ninput UpdateREDIRECT_URLInput {\n  REDIRECT_URL_ID: Int!\n  ORIGIN_PRODUCT_ID: Int!\n  URL_TYPE_CODE: String!\n  URL: String!\n  RESPONSE_TEXT: String\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ninput DeleteREDIRECT_URLInput {\n  REDIRECT_URL_ID: Int!\n}\n\ninput CreateSERVICE_PROVIDERInput {\n  SERVICE_PROVIDER_NAME: String!\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n}\n\ninput UpdateSERVICE_PROVIDERInput {\n  SERVICE_PROVIDER_ID: Int!\n  SERVICE_PROVIDER_NAME: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ninput DeleteSERVICE_PROVIDERInput {\n  SERVICE_PROVIDER_ID: Int!\n}\n\ninput CreateSERVICEInput {\n  SERVICE_PROVIDER_ID: Int!\n  URI: String!\n  SECRET_NAME: String\n  REQUEST_TYPE: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n}\n\ninput UpdateSERVICEInput {\n  SERVICE_ID: Int!\n  SERVICE_PROVIDER_ID: Int!\n  URI: String!\n  SECRET_NAME: String\n  REQUEST_TYPE: String\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ninput DeleteSERVICEInput {\n  SERVICE_ID: Int!\n}\n\ninput CreateSERVICE_PARAMInput {\n  SERVICE_ID: Int!\n  PARAM_NAME: String!\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n}\n\ninput UpdateSERVICE_PARAMInput {\n  SERVICE_PARAM_ID: Int!\n  SERVICE_ID: Int!\n  PARAM_NAME: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ninput DeleteSERVICE_PARAMInput {\n  SERVICE_PARAM_ID: Int!\n}\n\ninput CreateSERVICE_PARAM_MAPPINGInput {\n  ORIGIN_PRODUCT_ID: Int!\n  SYSTEM_NBR: String\n  PRIN_NBR: String\n  AGENT_NBR: String\n  SOURCE_SERVICE_PARAM_ID: Int!\n  TARGET_SERVICE_PARAM_ID: Int!\n  PLASTIC_TYPE_ID: Int\n  COMMENT_TEXT: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n}\n\ninput UpdateSERVICE_PARAM_MAPPINGInput {\n  SERVICE_PARAM_MAPPING_ID: Int!\n  ORIGIN_PRODUCT_ID: Int!\n  SYSTEM_NBR: String\n  PRIN_NBR: String\n  AGENT_NBR: String\n  SOURCE_SERVICE_PARAM_ID: Int!\n  TARGET_SERVICE_PARAM_ID: Int!\n  PLASTIC_TYPE_ID: Int\n  COMMENT_TEXT: String\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ninput DeleteSERVICE_PARAM_MAPPINGInput {\n  SERVICE_PARAM_MAPPING_ID: Int!\n}\n\ninput CreateSERVICE_EXPR_MAPPINGInput {\n  SERVICE_PARAM_MAPPING_ID: Int!\n  SOURCE_EXPR: String!\n  TARGET_EXPR: String!\n  COMMENT_TEXT: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n}\n\ninput UpdateSERVICE_EXPR_MAPPINGInput {\n  SERVICE_EXPR_MAPPING_ID: Int!\n  SERVICE_PARAM_MAPPING_ID: Int!\n  SOURCE_EXPR: String!\n  TARGET_EXPR: String!\n  COMMENT_TEXT: String\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ninput DeleteSERVICE_EXPR_MAPPINGInput {\n  SERVICE_EXPR_MAPPING_ID: Int!\n}\n\ninput CreateSTEP_TYPEInput {\n  STEP_TYPE_NAME: String!\n  STEP_TYPE_DESC: String\n  RESOURCE_NAME: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n}\n\ninput UpdateSTEP_TYPEInput {\n  STEP_TYPE_ID: Int!\n  STEP_TYPE_NAME: String!\n  STEP_TYPE_DESC: String\n  RESOURCE_NAME: String\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ninput DeleteSTEP_TYPEInput {\n  STEP_TYPE_ID: Int!\n}\n\ninput CreateSTEP_SERVICE_MAPPINGInput {\n  STEP_TYPE_ID: Int!\n  SERVICE_ID: Int!\n  SEQUENCE_NBR: Int!\n}\n\ninput UpdateSTEP_SERVICE_MAPPINGInput {\n  STEP_SERVICE_MAPPING_ID: Int!\n  STEP_TYPE_ID: Int!\n  SERVICE_ID: Int!\n  SEQUENCE_NBR: Int!\n}\n\ninput DeleteSTEP_SERVICE_MAPPINGInput {\n  STEP_SERVICE_MAPPING_ID: Int!\n}\n\ninput UpdateORIGIN_PRODUCTInput {\n  ORIGIN_PRODUCT_ID: Int!\n  VENDOR_NAME: String!\n  PRODUCT_ID: String!\n  PRODUCT_DESC: String!\n  PSCU_CLIENT_ID: Int!\n  PARTNER_CODE: String\n  CREATED_BY_USER_ID: Int\n  CREATED_DATE: String\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ninput DeleteORIGIN_PRODUCTInput {\n  ORIGIN_PRODUCT_ID: Int!\n}\n\ntype ORIGIN_PRODUCTConnection {\n  items: [ORIGIN_PRODUCT]\n  nextToken: String\n}\n\ntype SERVICE_PROVIDERConnection {\n  items: [SERVICE_PROVIDER]\n  nextToken: String\n}\n\ntype SERVICEConnection {\n  items: [SERVICE]\n  nextToken: String\n}\n\ntype SERVICE_PARAMConnection {\n  items: [SERVICE_PARAM]\n  nextToken: String\n}\n\ntype SERVICE_PARAM_MAPPINGConnection {\n  items: [SERVICE_PARAM_MAPPING]\n  nextToken: String\n}\n\ntype SERVICE_EXPR_MAPPINGConnection {\n  items: [SERVICE_EXPR_MAPPING]\n  nextToken: String\n}\n\ntype STEP_TYPEConnection {\n  items: [STEP_TYPE]\n  nextToken: String\n}\n\ntype STEP_SERVICE_MAPPINGConnection {\n  items: [STEP_SERVICE_MAPPING]\n  nextToken: String\n}\n\ntype REDIRECT_URLConnection {\n  items: [REDIRECT_URL]\n  nextToken: String\n}\n\ntype Query {\n  \n    listCONFIG_PARAMS: [CONFIG_PARAM] @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n  listLOAN_APPS: [LOAN_APP] @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n  listNEW_MEMBER_TOKENS: [NEW_MEMBER_TOKEN] @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n  listORIGIN_PRODUCTS: ORIGIN_PRODUCTConnection @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n  listSERVICE_PROVIDERS: SERVICE_PROVIDERConnection @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n  listSERVICES: SERVICEConnection @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n  listSERVICE_PARAMS: SERVICE_PARAMConnection @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n  listSERVICE_PARAM_MAPPINGS: SERVICE_PARAM_MAPPINGConnection @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n  listSERVICE_EXPR_MAPPINGS: SERVICE_EXPR_MAPPINGConnection @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n  listSTEP_TYPES: STEP_TYPEConnection @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n  listSTEP_SERVICE_MAPPINGS: STEP_SERVICE_MAPPINGConnection @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n  listREDIRECT_URLS: REDIRECT_URLConnection @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n}\n\ntype Mutation {\n  \n    createCONFIG_PARAM(input: CreateCONFIG_PARAMInput!): CONFIG_PARAM @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  createLOAN_APP(input: CreateLOAN_APPInput!): LOAN_APP @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  createNEW_MEMBER_TOKEN(input: CreateNEW_MEMBER_TOKENInput!): NEW_MEMBER_TOKEN @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  createORIGIN_PRODUCT(input: CreateORIGIN_PRODUCTInput!): ORIGIN_PRODUCT @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  createSERVICE_PROVIDER(input: CreateSERVICE_PROVIDERInput!): SERVICE_PROVIDER @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  createSERVICE(input: CreateSERVICEInput!): SERVICE @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  createSERVICE_PARAM(input: CreateSERVICE_PARAMInput!): SERVICE_PARAM @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  createSERVICE_PARAM_MAPPING(input: CreateSERVICE_PARAM_MAPPINGInput!): SERVICE_PARAM_MAPPING @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  createSERVICE_EXPR_MAPPING(input: CreateSERVICE_EXPR_MAPPINGInput!): SERVICE_EXPR_MAPPING @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  createSTEP_TYPE(input: CreateSTEP_TYPEInput!): STEP_TYPE @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  createSTEP_SERVICE_MAPPING(input: CreateSTEP_SERVICE_MAPPINGInput!): STEP_SERVICE_MAPPING @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  createREDIRECT_URL(input: CreateREDIRECT_URLInput!): REDIRECT_URL @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  \n    updateORIGIN_PRODUCT(input: UpdateORIGIN_PRODUCTInput!): ORIGIN_PRODUCT @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  updateSERVICE_PROVIDER(input: UpdateSERVICE_PROVIDERInput!): SERVICE_PROVIDER @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  updateSERVICE(input: UpdateSERVICEInput!): SERVICE @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  updateSERVICE_PARAM(input: UpdateSERVICE_PARAMInput!): SERVICE_PARAM @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  updateSERVICE_PARAM_MAPPING(input: UpdateSERVICE_PARAM_MAPPINGInput!): SERVICE_PARAM_MAPPING @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  updateSERVICE_EXPR_MAPPING(input: UpdateSERVICE_EXPR_MAPPINGInput!): SERVICE_EXPR_MAPPING @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  updateSTEP_TYPE(input: UpdateSTEP_TYPEInput!): STEP_TYPE @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  updateSTEP_SERVICE_MAPPING(input: UpdateSTEP_SERVICE_MAPPINGInput!): STEP_SERVICE_MAPPING @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  updateREDIRECT_URL(input: UpdateREDIRECT_URLInput!): REDIRECT_URL @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  \n    deleteORIGIN_PRODUCT(input: DeleteORIGIN_PRODUCTInput!): ORIGIN_PRODUCT @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  deleteSERVICE_PROVIDER(input: DeleteSERVICE_PROVIDERInput!): SERVICE_PROVIDER @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  deleteSERVICE(input: DeleteSERVICEInput!): SERVICE @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  deleteSERVICE_PARAM(input: DeleteSERVICE_PARAMInput!): SERVICE_PARAM @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  deleteSERVICE_PARAM_MAPPING(input: DeleteSERVICE_PARAM_MAPPINGInput!): SERVICE_PARAM_MAPPING @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  deleteSERVICE_EXPR_MAPPING(input: DeleteSERVICE_EXPR_MAPPINGInput!): SERVICE_EXPR_MAPPING @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  deleteSTEP_TYPE(input: DeleteSTEP_TYPEInput!): STEP_TYPE @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  deleteSTEP_SERVICE_MAPPING(input: DeleteSTEP_SERVICE_MAPPINGInput!): STEP_SERVICE_MAPPING @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  deleteREDIRECT_URL(input: DeleteREDIRECT_URLInput!): REDIRECT_URL @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n}\n\ntype SERVICE_PROVIDER {\n  SERVICE_PROVIDER_ID: Int!\n  SERVICE_PROVIDER_NAME: String!\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ntype SERVICE {\n  SERVICE_ID: Int!\n  SERVICE_PROVIDER_ID: Int!\n  URI: String!\n  SECRET_NAME: String\n  REQUEST_TYPE: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ntype SERVICE_PARAM {\n  SERVICE_PARAM_ID: Int!\n  SERVICE_ID: Int!\n  PARAM_NAME: String!\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ntype SERVICE_PARAM_MAPPING {\n  SERVICE_PARAM_MAPPING_ID: Int!\n  ORIGIN_PRODUCT_ID: Int!\n  SYSTEM_NBR: String\n  PRIN_NBR: String\n  AGENT_NBR: String\n  SOURCE_SERVICE_PARAM_ID: Int!\n  TARGET_SERVICE_PARAM_ID: Int!\n  PLASTIC_TYPE_ID: Int\n  COMMENT_TEXT: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ntype SERVICE_EXPR_MAPPING {\n  SERVICE_EXPR_MAPPING_ID: Int!\n  SERVICE_PARAM_MAPPING_ID: Int!\n  SOURCE_EXPR: String!\n  TARGET_EXPR: String!\n  COMMENT_TEXT: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ntype STEP_TYPE {\n  STEP_TYPE_ID: Int!\n  STEP_TYPE_NAME: String!\n  STEP_TYPE_DESC: String\n  RESOURCE_NAME: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ntype STEP_SERVICE_MAPPING {\n  STEP_SERVICE_MAPPING_ID: Int!\n  STEP_TYPE_ID: Int!\n  SERVICE_ID: Int!\n  SEQUENCE_NBR: Int!\n}\n\ntype REDIRECT_URL {\n  REDIRECT_URL_ID: Int!\n  ORIGIN_PRODUCT_ID: Int!\n  URL_TYPE_CODE: String!\n  URL: String!\n  RESPONSE_TEXT: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ntype Subscription {\n  onCreateCONFIG_PARAM: CONFIG_PARAM\n  onCreateLOAN_APP: LOAN_APP\n  onCreateNEW_MEMBER_TOKEN: NEW_MEMBER_TOKEN\n  onCreateORIGIN_PRODUCT: ORIGIN_PRODUCT\n}",
+        "Definition": "schema {\n  query: Query\n  mutation: Mutation\n  subscription: Subscription\n}\n\ntype CONFIG_PARAM {\n  CONFIG_PARAM_ID: Int\n  CONFIG_NAME: String!\n  CONFIG_VALUE: String!\n  DESCRIPTION: String\n  CREATED_DATE: String\n  CHANGED_DATE: String\n}\n\ntype FILTER_CRITERIA {\n  FILTER_CRITERIA_ID: Int\n  ORIGIN_PRODUCT_ID: Int!\n  STEP_TYPE_ID: Int!\n  CRITERIA: String!\n  SEQUENCE_NBR: Int!\n  CREATED_DATE: String\n  CHANGED_DATE: String\n}\n\ntype LOAN_APP {\n  LOAN_APP_ID: Int\n  ORIGIN_LOAN_APP_ID: String!\n  ORIGIN_PRODUCT_ID: Int!\n  PROCESS_FLAG: String!\n  EXEC_ID: String\n  CREATED_DATE: String!\n  CHANGED_DATE: String\n}\n\ntype LOAN_APP_EXECS {\n  LOAN_APP_EXEC_ID: Int\n  LOAN_APP_ID: Int!\n  AWS_EXEC_ID: String!\n  CREATED_DATE: String!\n}\n\ntype LOAN_APP_STEP_STATUS {\n  LOAN_APP_STEP_STATUS_ID: Int\n  LOAN_APP_ID: Int!\n  LOAN_APP_EXEC_ID: Int\n  STEP_TYPE_ID: Int!\n  COMPLETE_FLAG: String!\n  SEQUENCE_NBR: Int!\n  IDX_JSON_PATH: String\n  RESPONSE_TEXT: String\n  OUTPUT_JSON: String\n  CREATED_DATE: String\n}\n\ntype NEW_MEMBER_TOKEN {\n  NEW_MEMBER_TOKEN_ID: Int\n  MEMBER_NBR: String\n  CARD_NBR: String\n  PERSON_NBR: String\n  LOAN_APP_ID: Int!\n  FIRST_NAME: String\n  LAST_NAME: String\n  DOB: String\n  TAX_ID: String\n  EMAIL_ADDRESS_TEXT: String\n  ZIP_CODE: String\n  HOME_PHONE_NBR: String\n  MOBILE_PHONE_NBR: String\n  TOKEN_VALUE: String\n  TOKEN_USED_FLAG: String!\n  CREATED_DATE: String!\n  CHANGED_DATE: String\n}\n\ntype ORIGIN_PRODUCT {\n  ORIGIN_PRODUCT_ID: Int\n  VENDOR_NAME: String!\n  PRODUCT_ID: String!\n  PSCU_CLIENT_ID: Int!\n  PRODUCT_DESC: String!\n  PARTNER_CODE: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ntype REDIRECT_URL {\n  REDIRECT_URL_ID: Int\n  ORIGIN_PRODUCT_ID: Int!\n  URL_TYPE_CODE: String!\n  URL: String!\n  RESPONSE_TEXT: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ntype SERVICE {\n  SERVICE_ID: Int\n  SERVICE_PROVIDER_ID: Int!\n  URI: String!\n  SECRET_NAME: String\n  REQUEST_TYPE: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ntype SERVICE_DOMAIN {\n  SERVICE_DOMAIN_ID: Int\n  DOMAIN_URL: String\n  SERVICE_PROVIDER_ID: Int!\n  CREATED_DATE: String\n  CHANGED_DATE: String\n}\n\ntype SERVICE_EXPR_MAPPING {\n  SERVICE_EXPR_MAPPING_ID: Int\n  SERVICE_PARAM_MAPPING_ID: Int!\n  SOURCE_EXPR: String\n  TARGET_EXPR: String\n  COMMENT_TEXT: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ntype SERVICE_PARAM {\n  SERVICE_PARAM_ID: Int\n  SERVICE_ID: Int!\n  PARAM_NAME: String!\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ntype SERVICE_PARAM_MAPPING {\n  SERVICE_PARAM_MAPPING_ID: Int\n  ORIGIN_PRODUCT_ID: Int!\n  SYSTEM_NBR: String\n  PRIN_NBR: String\n  AGENT_NBR: String\n  SOURCE_SERVICE_PARAM_ID: Int!\n  TARGET_SERVICE_PARAM_ID: Int!\n  PLASTIC_TYPE_ID: String\n  COMMENT_TEXT: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ntype SERVICE_PROVIDER {\n  SERVICE_PROVIDER_ID: Int\n  SERVICE_PROVIDER_NAME: String!\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ntype SORT_CRITERIA {\n  SORT_CRITERIA_ID: Int\n  ORIGIN_PRODUCT_ID: Int!\n  STEP_TYPE_ID: Int!\n  JSON_PATH: String!\n  SORT_ORDER: String!\n  SORT_PRIORITY: Int!\n  SEQUENCE_NBR: Int!\n  CREATED_DATE: String\n  CHANGED_DATE: String\n}\n\ntype STEP_SERVICE_MAPPING {\n  STEP_SERVICE_MAPPING_ID: Int\n  STEP_TYPE_ID: Int!\n  SERVICE_ID: Int!\n  SEQUENCE_NBR: Int\n}\n\ntype STEP_TYPE {\n  STEP_TYPE_ID: Int\n  STEP_TYPE_NAME: String!\n  STEP_TYPE_DESC: String\n  RESOURCE_NAME: String!\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ntype STEP_TYPE_PARAM_MAP {\n  STEP_TYPE_PARAM_MAP_ID: Int\n  STEP_TYPE_ID: Int\n  SERVICE_PARAM_MAPPING_ID: Int!\n  CREATED_BY_USER_ID: String\n  CREATED_DATE: String\n}\n\ninput CreateCONFIG_PARAMInput {\n  CONFIG_NAME: String!\n  CONFIG_VALUE: String!\n  DESCRIPTION: String\n  CREATED_DATE: String\n  CHANGED_DATE: String\n}\n\ninput UpdateCONFIG_PARAMInput {\n  CONFIG_PARAM_ID: Int!\n  CONFIG_NAME: String\n  CONFIG_VALUE: String\n  DESCRIPTION: String\n  CREATED_DATE: String\n  CHANGED_DATE: String\n}\n\ninput DeleteCONFIG_PARAMInput {\n  CONFIG_PARAM_ID: Int!\n}\n\ninput CreateFILTER_CRITERIAInput {\n  ORIGIN_PRODUCT_ID: Int!\n  STEP_TYPE_ID: Int!\n  CRITERIA: String!\n  SEQUENCE_NBR: Int!\n  CREATED_DATE: String\n  CHANGED_DATE: String\n}\n\ninput UpdateFILTER_CRITERIAInput {\n  FILTER_CRITERIA_ID: Int!\n  ORIGIN_PRODUCT_ID: Int\n  STEP_TYPE_ID: Int\n  CRITERIA: String\n  SEQUENCE_NBR: Int\n  CREATED_DATE: String\n  CHANGED_DATE: String\n}\n\ninput DeleteFILTER_CRITERIAInput {\n  FILTER_CRITERIA_ID: Int!\n}\n\ninput CreateLOAN_APPInput {\n  ORIGIN_LOAN_APP_ID: String!\n  ORIGIN_PRODUCT_ID: Int!\n  PROCESS_FLAG: String!\n  EXEC_ID: String\n  CREATED_DATE: String!\n  CHANGED_DATE: String\n}\n\ninput UpdateLOAN_APPInput {\n  LOAN_APP_ID: Int!\n  ORIGIN_LOAN_APP_ID: String\n  ORIGIN_PRODUCT_ID: Int\n  PROCESS_FLAG: String\n  EXEC_ID: String\n  CREATED_DATE: String\n  CHANGED_DATE: String\n}\n\ninput DeleteLOAN_APPInput {\n  LOAN_APP_ID: Int!\n}\n\ninput CreateLOAN_APP_EXECSInput {\n  LOAN_APP_ID: Int!\n  AWS_EXEC_ID: String!\n  CREATED_DATE: String!\n}\n\ninput UpdateLOAN_APP_EXECSInput {\n  LOAN_APP_EXEC_ID: Int!\n  LOAN_APP_ID: Int\n  AWS_EXEC_ID: String\n  CREATED_DATE: String\n}\n\ninput DeleteLOAN_APP_EXECSInput {\n  LOAN_APP_EXEC_ID: Int!\n}\n\ninput CreateLOAN_APP_STEP_STATUSInput {\n  LOAN_APP_ID: Int!\n  LOAN_APP_EXEC_ID: Int\n  STEP_TYPE_ID: Int!\n  COMPLETE_FLAG: String!\n  SEQUENCE_NBR: Int!\n  IDX_JSON_PATH: String\n  RESPONSE_TEXT: String\n  OUTPUT_JSON: String\n  CREATED_DATE: String\n}\n\ninput UpdateLOAN_APP_STEP_STATUSInput {\n  LOAN_APP_STEP_STATUS_ID: Int!\n  LOAN_APP_ID: Int\n  LOAN_APP_EXEC_ID: Int\n  STEP_TYPE_ID: Int\n  COMPLETE_FLAG: String\n  SEQUENCE_NBR: Int\n  IDX_JSON_PATH: String\n  RESPONSE_TEXT: String\n  OUTPUT_JSON: String\n  CREATED_DATE: String\n}\n\ninput DeleteLOAN_APP_STEP_STATUSInput {\n  LOAN_APP_STEP_STATUS_ID: Int!\n}\n\ninput CreateNEW_MEMBER_TOKENInput {\n  MEMBER_NBR: String\n  CARD_NBR: String\n  PERSON_NBR: String\n  LOAN_APP_ID: Int!\n  FIRST_NAME: String\n  LAST_NAME: String\n  DOB: String\n  TAX_ID: String\n  EMAIL_ADDRESS_TEXT: String\n  ZIP_CODE: String\n  HOME_PHONE_NBR: String\n  MOBILE_PHONE_NBR: String\n  TOKEN_VALUE: String\n  TOKEN_USED_FLAG: String!\n  CREATED_DATE: String!\n  CHANGED_DATE: String\n}\n\ninput UpdateNEW_MEMBER_TOKENInput {\n  NEW_MEMBER_TOKEN_ID: Int!\n  MEMBER_NBR: String\n  CARD_NBR: String\n  PERSON_NBR: String\n  LOAN_APP_ID: Int\n  FIRST_NAME: String\n  LAST_NAME: String\n  DOB: String\n  TAX_ID: String\n  EMAIL_ADDRESS_TEXT: String\n  ZIP_CODE: String\n  HOME_PHONE_NBR: String\n  MOBILE_PHONE_NBR: String\n  TOKEN_VALUE: String\n  TOKEN_USED_FLAG: String\n  CREATED_DATE: String\n  CHANGED_DATE: String\n}\n\ninput DeleteNEW_MEMBER_TOKENInput {\n  NEW_MEMBER_TOKEN_ID: Int!\n}\n\ninput CreateORIGIN_PRODUCTInput {\n  VENDOR_NAME: String!\n  PRODUCT_ID: String!\n  PSCU_CLIENT_ID: Int!\n  PRODUCT_DESC: String!\n  PARTNER_CODE: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ninput UpdateORIGIN_PRODUCTInput {\n  ORIGIN_PRODUCT_ID: Int!\n  VENDOR_NAME: String\n  PRODUCT_ID: String\n  PSCU_CLIENT_ID: Int\n  PRODUCT_DESC: String\n  PARTNER_CODE: String\n  CREATED_BY_USER_ID: Int\n  CREATED_DATE: String\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ninput DeleteORIGIN_PRODUCTInput {\n  ORIGIN_PRODUCT_ID: Int!\n}\n\ninput CreateREDIRECT_URLInput {\n  ORIGIN_PRODUCT_ID: Int!\n  URL_TYPE_CODE: String!\n  URL: String!\n  RESPONSE_TEXT: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ninput UpdateREDIRECT_URLInput {\n  REDIRECT_URL_ID: Int!\n  ORIGIN_PRODUCT_ID: Int\n  URL_TYPE_CODE: String\n  URL: String\n  RESPONSE_TEXT: String\n  CREATED_BY_USER_ID: Int\n  CREATED_DATE: String\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ninput DeleteREDIRECT_URLInput {\n  REDIRECT_URL_ID: Int!\n}\n\ninput CreateSERVICEInput {\n  SERVICE_PROVIDER_ID: Int!\n  URI: String!\n  SECRET_NAME: String\n  REQUEST_TYPE: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ninput UpdateSERVICEInput {\n  SERVICE_ID: Int!\n  SERVICE_PROVIDER_ID: Int\n  URI: String\n  SECRET_NAME: String\n  REQUEST_TYPE: String\n  CREATED_BY_USER_ID: Int\n  CREATED_DATE: String\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ninput DeleteSERVICEInput {\n  SERVICE_ID: Int!\n}\n\ninput CreateSERVICE_DOMAINInput {\n  DOMAIN_URL: String\n  SERVICE_PROVIDER_ID: Int!\n  CREATED_DATE: String\n  CHANGED_DATE: String\n}\n\ninput UpdateSERVICE_DOMAINInput {\n  SERVICE_DOMAIN_ID: Int!\n  DOMAIN_URL: String\n  SERVICE_PROVIDER_ID: Int\n  CREATED_DATE: String\n  CHANGED_DATE: String\n}\n\ninput DeleteSERVICE_DOMAINInput {\n  SERVICE_DOMAIN_ID: Int!\n}\n\ninput CreateSERVICE_EXPR_MAPPINGInput {\n  SERVICE_PARAM_MAPPING_ID: Int!\n  SOURCE_EXPR: String\n  TARGET_EXPR: String\n  COMMENT_TEXT: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ninput UpdateSERVICE_EXPR_MAPPINGInput {\n  SERVICE_EXPR_MAPPING_ID: Int!\n  SERVICE_PARAM_MAPPING_ID: Int\n  SOURCE_EXPR: String\n  TARGET_EXPR: String\n  COMMENT_TEXT: String\n  CREATED_BY_USER_ID: Int\n  CREATED_DATE: String\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ninput DeleteSERVICE_EXPR_MAPPINGInput {\n  SERVICE_EXPR_MAPPING_ID: Int!\n}\n\ninput CreateSERVICE_PARAMInput {\n  SERVICE_ID: Int!\n  PARAM_NAME: String!\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ninput UpdateSERVICE_PARAMInput {\n  SERVICE_PARAM_ID: Int!\n  SERVICE_ID: Int\n  PARAM_NAME: String\n  CREATED_BY_USER_ID: Int\n  CREATED_DATE: String\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ninput DeleteSERVICE_PARAMInput {\n  SERVICE_PARAM_ID: Int!\n}\n\ninput CreateSERVICE_PARAM_MAPPINGInput {\n  ORIGIN_PRODUCT_ID: Int!\n  SYSTEM_NBR: String\n  PRIN_NBR: String\n  AGENT_NBR: String\n  SOURCE_SERVICE_PARAM_ID: Int!\n  TARGET_SERVICE_PARAM_ID: Int!\n  PLASTIC_TYPE_ID: String\n  COMMENT_TEXT: String\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ninput UpdateSERVICE_PARAM_MAPPINGInput {\n  SERVICE_PARAM_MAPPING_ID: Int!\n  ORIGIN_PRODUCT_ID: Int\n  SYSTEM_NBR: String\n  PRIN_NBR: String\n  AGENT_NBR: String\n  SOURCE_SERVICE_PARAM_ID: Int\n  TARGET_SERVICE_PARAM_ID: Int\n  PLASTIC_TYPE_ID: String\n  COMMENT_TEXT: String\n  CREATED_BY_USER_ID: Int\n  CREATED_DATE: String\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ninput DeleteSERVICE_PARAM_MAPPINGInput {\n  SERVICE_PARAM_MAPPING_ID: Int!\n}\n\ninput CreateSERVICE_PROVIDERInput {\n  SERVICE_PROVIDER_NAME: String!\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ninput UpdateSERVICE_PROVIDERInput {\n  SERVICE_PROVIDER_ID: Int!\n  SERVICE_PROVIDER_NAME: String\n  CREATED_BY_USER_ID: Int\n  CREATED_DATE: String\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ninput DeleteSERVICE_PROVIDERInput {\n  SERVICE_PROVIDER_ID: Int!\n}\n\ninput CreateSORT_CRITERIAInput {\n  ORIGIN_PRODUCT_ID: Int!\n  STEP_TYPE_ID: Int!\n  JSON_PATH: String!\n  SORT_ORDER: String!\n  SORT_PRIORITY: Int!\n  SEQUENCE_NBR: Int!\n  CREATED_DATE: String\n  CHANGED_DATE: String\n}\n\ninput UpdateSORT_CRITERIAInput {\n  SORT_CRITERIA_ID: Int!\n  ORIGIN_PRODUCT_ID: Int\n  STEP_TYPE_ID: Int\n  JSON_PATH: String\n  SORT_ORDER: String\n  SORT_PRIORITY: Int\n  SEQUENCE_NBR: Int\n  CREATED_DATE: String\n  CHANGED_DATE: String\n}\n\ninput DeleteSORT_CRITERIAInput {\n  SORT_CRITERIA_ID: Int!\n}\n\ninput CreateSTEP_SERVICE_MAPPINGInput {\n  STEP_TYPE_ID: Int!\n  SERVICE_ID: Int!\n  SEQUENCE_NBR: Int\n}\n\ninput UpdateSTEP_SERVICE_MAPPINGInput {\n  STEP_SERVICE_MAPPING_ID: Int!\n  STEP_TYPE_ID: Int\n  SERVICE_ID: Int\n  SEQUENCE_NBR: Int\n}\n\ninput DeleteSTEP_SERVICE_MAPPINGInput {\n  STEP_SERVICE_MAPPING_ID: Int!\n}\n\ninput CreateSTEP_TYPEInput {\n  STEP_TYPE_NAME: String!\n  STEP_TYPE_DESC: String\n  RESOURCE_NAME: String!\n  CREATED_BY_USER_ID: Int!\n  CREATED_DATE: String!\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ninput UpdateSTEP_TYPEInput {\n  STEP_TYPE_ID: Int!\n  STEP_TYPE_NAME: String\n  STEP_TYPE_DESC: String\n  RESOURCE_NAME: String\n  CREATED_BY_USER_ID: Int\n  CREATED_DATE: String\n  CHANGED_BY_USER_ID: Int\n  CHANGED_DATE: String\n}\n\ninput DeleteSTEP_TYPEInput {\n  STEP_TYPE_ID: Int!\n}\n\ninput CreateSTEP_TYPE_PARAM_MAPInput {\n  STEP_TYPE_ID: Int\n  SERVICE_PARAM_MAPPING_ID: Int!\n  CREATED_BY_USER_ID: String\n  CREATED_DATE: String\n}\n\ninput UpdateSTEP_TYPE_PARAM_MAPInput {\n  STEP_TYPE_PARAM_MAP_ID: Int!\n  STEP_TYPE_ID: Int\n  SERVICE_PARAM_MAPPING_ID: Int\n  CREATED_BY_USER_ID: String\n  CREATED_DATE: String\n}\n\ninput DeleteSTEP_TYPE_PARAM_MAPInput {\n  STEP_TYPE_PARAM_MAP_ID: Int!\n}\n\ntype CONFIG_PARAMConnection {\n  items: [CONFIG_PARAM]\n  nextToken: String\n}\n\ntype FILTER_CRITERIAConnection {\n  items: [FILTER_CRITERIA]\n  nextToken: String\n}\n\ntype LOAN_APPConnection {\n  items: [LOAN_APP]\n  nextToken: String\n}\n\ntype LOAN_APP_EXECSConnection {\n  items: [LOAN_APP_EXECS]\n  nextToken: String\n}\n\ntype LOAN_APP_STEP_STATUSConnection {\n  items: [LOAN_APP_STEP_STATUS]\n  nextToken: String\n}\n\ntype NEW_MEMBER_TOKENConnection {\n  items: [NEW_MEMBER_TOKEN]\n  nextToken: String\n}\n\ntype ORIGIN_PRODUCTConnection {\n  items: [ORIGIN_PRODUCT]\n  nextToken: String\n}\n\ntype REDIRECT_URLConnection {\n  items: [REDIRECT_URL]\n  nextToken: String\n}\n\ntype SERVICEConnection {\n  items: [SERVICE]\n  nextToken: String\n}\n\ntype SERVICE_DOMAINConnection {\n  items: [SERVICE_DOMAIN]\n  nextToken: String\n}\n\ntype SERVICE_EXPR_MAPPINGConnection {\n  items: [SERVICE_EXPR_MAPPING]\n  nextToken: String\n}\n\ntype SERVICE_PARAMConnection {\n  items: [SERVICE_PARAM]\n  nextToken: String\n}\n\ntype SERVICE_PARAM_MAPPINGConnection {\n  items: [SERVICE_PARAM_MAPPING]\n  nextToken: String\n}\n\ntype SERVICE_PROVIDERConnection {\n  items: [SERVICE_PROVIDER]\n  nextToken: String\n}\n\ntype SORT_CRITERIAConnection {\n  items: [SORT_CRITERIA]\n  nextToken: String\n}\n\ntype STEP_SERVICE_MAPPINGConnection {\n  items: [STEP_SERVICE_MAPPING]\n  nextToken: String\n}\n\ntype STEP_TYPEConnection {\n  items: [STEP_TYPE]\n  nextToken: String\n}\n\ntype STEP_TYPE_PARAM_MAPConnection {\n  items: [STEP_TYPE_PARAM_MAP]\n  nextToken: String\n}\n\ntype Query {\n  listCONFIG_PARAMS: CONFIG_PARAMConnection @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n  listFILTER_CRITERIAS: FILTER_CRITERIAConnection @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n  listLOAN_APPS: LOAN_APPConnection @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n  listLOAN_APP_EXECSS: LOAN_APP_EXECSConnection @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n  listLOAN_APP_STEP_STATUSS: LOAN_APP_STEP_STATUSConnection @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n  listNEW_MEMBER_TOKENS: NEW_MEMBER_TOKENConnection @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n  listORIGIN_PRODUCTS: ORIGIN_PRODUCTConnection @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n  listREDIRECT_URLS: REDIRECT_URLConnection @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n  listSERVICES: SERVICEConnection @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n  listSERVICE_DOMAINS: SERVICE_DOMAINConnection @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n  listSERVICE_EXPR_MAPPINGS: SERVICE_EXPR_MAPPINGConnection @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n  listSERVICE_PARAMS: SERVICE_PARAMConnection @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n  listSERVICE_PARAM_MAPPINGS: SERVICE_PARAM_MAPPINGConnection @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n  listSERVICE_PROVIDERS: SERVICE_PROVIDERConnection @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n  listSORT_CRITERIAS: SORT_CRITERIAConnection @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n  listSTEP_SERVICE_MAPPINGS: STEP_SERVICE_MAPPINGConnection @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n  listSTEP_TYPES: STEP_TYPEConnection @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n  listSTEP_TYPE_PARAM_MAPS: STEP_TYPE_PARAM_MAPConnection @aws_auth(cognito_groups: [\"readonly\", \"developer\", \"deployment\", \"admin\"])\n}\n\ntype Mutation {\n  createCONFIG_PARAM(input: CreateCONFIG_PARAMInput!): CONFIG_PARAM @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  updateCONFIG_PARAM(input: UpdateCONFIG_PARAMInput!): CONFIG_PARAM @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  deleteCONFIG_PARAM(input: DeleteCONFIG_PARAMInput!): CONFIG_PARAM @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  createFILTER_CRITERIA(input: CreateFILTER_CRITERIAInput!): FILTER_CRITERIA @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  updateFILTER_CRITERIA(input: UpdateFILTER_CRITERIAInput!): FILTER_CRITERIA @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  deleteFILTER_CRITERIA(input: DeleteFILTER_CRITERIAInput!): FILTER_CRITERIA @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  createORIGIN_PRODUCT(input: CreateORIGIN_PRODUCTInput!): ORIGIN_PRODUCT @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  updateORIGIN_PRODUCT(input: UpdateORIGIN_PRODUCTInput!): ORIGIN_PRODUCT @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  deleteORIGIN_PRODUCT(input: DeleteORIGIN_PRODUCTInput!): ORIGIN_PRODUCT @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  createREDIRECT_URL(input: CreateREDIRECT_URLInput!): REDIRECT_URL @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  updateREDIRECT_URL(input: UpdateREDIRECT_URLInput!): REDIRECT_URL @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  deleteREDIRECT_URL(input: DeleteREDIRECT_URLInput!): REDIRECT_URL @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  createSERVICE(input: CreateSERVICEInput!): SERVICE @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  updateSERVICE(input: UpdateSERVICEInput!): SERVICE @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  deleteSERVICE(input: DeleteSERVICEInput!): SERVICE @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  createSERVICE_DOMAIN(input: CreateSERVICE_DOMAINInput!): SERVICE_DOMAIN @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  updateSERVICE_DOMAIN(input: UpdateSERVICE_DOMAINInput!): SERVICE_DOMAIN @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  deleteSERVICE_DOMAIN(input: DeleteSERVICE_DOMAINInput!): SERVICE_DOMAIN @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  createSERVICE_EXPR_MAPPING(input: CreateSERVICE_EXPR_MAPPINGInput!): SERVICE_EXPR_MAPPING @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  updateSERVICE_EXPR_MAPPING(input: UpdateSERVICE_EXPR_MAPPINGInput!): SERVICE_EXPR_MAPPING @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  deleteSERVICE_EXPR_MAPPING(input: DeleteSERVICE_EXPR_MAPPINGInput!): SERVICE_EXPR_MAPPING @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  createSERVICE_PARAM(input: CreateSERVICE_PARAMInput!): SERVICE_PARAM @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  updateSERVICE_PARAM(input: UpdateSERVICE_PARAMInput!): SERVICE_PARAM @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  deleteSERVICE_PARAM(input: DeleteSERVICE_PARAMInput!): SERVICE_PARAM @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  createSERVICE_PARAM_MAPPING(input: CreateSERVICE_PARAM_MAPPINGInput!): SERVICE_PARAM_MAPPING @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  updateSERVICE_PARAM_MAPPING(input: UpdateSERVICE_PARAM_MAPPINGInput!): SERVICE_PARAM_MAPPING @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  deleteSERVICE_PARAM_MAPPING(input: DeleteSERVICE_PARAM_MAPPINGInput!): SERVICE_PARAM_MAPPING @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  createSERVICE_PROVIDER(input: CreateSERVICE_PROVIDERInput!): SERVICE_PROVIDER @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  updateSERVICE_PROVIDER(input: UpdateSERVICE_PROVIDERInput!): SERVICE_PROVIDER @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  deleteSERVICE_PROVIDER(input: DeleteSERVICE_PROVIDERInput!): SERVICE_PROVIDER @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  createSORT_CRITERIA(input: CreateSORT_CRITERIAInput!): SORT_CRITERIA @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  updateSORT_CRITERIA(input: UpdateSORT_CRITERIAInput!): SORT_CRITERIA @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  deleteSORT_CRITERIA(input: DeleteSORT_CRITERIAInput!): SORT_CRITERIA @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  createSTEP_SERVICE_MAPPING(input: CreateSTEP_SERVICE_MAPPINGInput!): STEP_SERVICE_MAPPING @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  updateSTEP_SERVICE_MAPPING(input: UpdateSTEP_SERVICE_MAPPINGInput!): STEP_SERVICE_MAPPING @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  deleteSTEP_SERVICE_MAPPING(input: DeleteSTEP_SERVICE_MAPPINGInput!): STEP_SERVICE_MAPPING @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  createSTEP_TYPE(input: CreateSTEP_TYPEInput!): STEP_TYPE @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  updateSTEP_TYPE(input: UpdateSTEP_TYPEInput!): STEP_TYPE @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  deleteSTEP_TYPE(input: DeleteSTEP_TYPEInput!): STEP_TYPE @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  createSTEP_TYPE_PARAM_MAP(input: CreateSTEP_TYPE_PARAM_MAPInput!): STEP_TYPE_PARAM_MAP @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  updateSTEP_TYPE_PARAM_MAP(input: UpdateSTEP_TYPE_PARAM_MAPInput!): STEP_TYPE_PARAM_MAP @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n  deleteSTEP_TYPE_PARAM_MAP(input: DeleteSTEP_TYPE_PARAM_MAPInput!): STEP_TYPE_PARAM_MAP @aws_auth(cognito_groups: [\"developer\", \"deployment\", \"admin\"])\n}\n\ntype Subscription {\n  onCreateCONFIG_PARAM: CONFIG_PARAM\n  onCreateLOAN_APP: LOAN_APP\n  onCreateNEW_MEMBER_TOKEN: NEW_MEMBER_TOKEN\n  onCreateORIGIN_PRODUCT: ORIGIN_PRODUCT\n}",
         "ApiId": {
           "Fn::GetAtt": [
             "GraphQlApi",
@@ -295,18 +295,18 @@
                     "Ref": "AWS::AccountId"
                   },
                   "cluster",
-                  "hazel-mapping-live"
+                  "hazel-mapping"
                 ]
               ]
             },
-            "DatabaseName": "hazel_mapping_live",
-            "AwsSecretStoreArn": "arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-5975818b-f15c-4381-b0ba-1f281f97610d-GlpEdy"
+            "DatabaseName": "hazel_mapping_dev",
+            "AwsSecretStoreArn": "arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-a11d98c5-d647-45a2-9978-f81be7aa3d60-iDsvX3"
           },
           "RelationalDatabaseSourceType": "RDS_HTTP_ENDPOINT"
         }
       }
     },
-    "GraphQlResolverQuerylistCONFIGPARAMS": {
+    "GraphQlResolverMutationcreateCONFIGPARAM": {
       "Type": "AWS::AppSync::Resolver",
       "DependsOn": "GraphQlSchema",
       "Properties": {
@@ -316,10 +316,10 @@
             "ApiId"
           ]
         },
-        "TypeName": "Query",
-        "FieldName": "listCONFIG_PARAMS",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"SELECT * FROM CONFIG_PARAM\"\r\n  ]\r\n}",
-        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\r\n#if($ctx.error)\r\n    $utils.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n$utils.toJson($utils.rds.toJsonObject($ctx.result)[0])",
+        "TypeName": "Mutation",
+        "FieldName": "createCONFIG_PARAM",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($cols = [])\n    #set($vals = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        $util.qr($cols.add($entry.key))\n        $util.qr($vals.add(\"'$entry.value'\"))\n      #end\n    #end\n    \"INSERT INTO CONFIG_PARAM ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -329,7 +329,7 @@
         }
       }
     },
-    "GraphQlResolverQuerylistLOANAPPS": {
+    "GraphQlResolverMutationcreateFILTERCRITERIA": {
       "Type": "AWS::AppSync::Resolver",
       "DependsOn": "GraphQlSchema",
       "Properties": {
@@ -339,240 +339,10 @@
             "ApiId"
           ]
         },
-        "TypeName": "Query",
-        "FieldName": "listLOAN_APPS",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"SELECT * FROM LOAN_APP\"\r\n  ]\r\n}",
-        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\r\n#if($ctx.error)\r\n    $utils.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n$utils.toJson($utils.rds.toJsonObject($ctx.result)[0])",
-        "Kind": "UNIT",
-        "DataSourceName": {
-          "Fn::GetAtt": [
-            "GraphQlDsStageDataSource",
-            "Name"
-          ]
-        }
-      }
-    },
-    "GraphQlResolverQuerylistNEWMEMBERTOKENS": {
-      "Type": "AWS::AppSync::Resolver",
-      "DependsOn": "GraphQlSchema",
-      "Properties": {
-        "ApiId": {
-          "Fn::GetAtt": [
-            "GraphQlApi",
-            "ApiId"
-          ]
-        },
-        "TypeName": "Query",
-        "FieldName": "listNEW_MEMBER_TOKENS",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"SELECT * FROM NEW_MEMBER_TOKEN\"\r\n  ]\r\n}",
-        "ResponseMappingTemplate": "$util.toJson($context.result.sqlStatementResults[0])",
-        "Kind": "UNIT",
-        "DataSourceName": {
-          "Fn::GetAtt": [
-            "GraphQlDsStageDataSource",
-            "Name"
-          ]
-        }
-      }
-    },
-    "GraphQlResolverQuerylistORIGINPRODUCTS": {
-      "Type": "AWS::AppSync::Resolver",
-      "DependsOn": "GraphQlSchema",
-      "Properties": {
-        "ApiId": {
-          "Fn::GetAtt": [
-            "GraphQlApi",
-            "ApiId"
-          ]
-        },
-        "TypeName": "Query",
-        "FieldName": "listORIGIN_PRODUCTS",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"SELECT ORIGIN_PRODUCT_ID, VENDOR_NAME, PRODUCT_ID, PRODUCT_DESC, PSCU_CLIENT_ID, PARTNER_CODE, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE FROM ORIGIN_PRODUCT ORDER BY ORIGIN_PRODUCT_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\r\n  ]\r\n}",
-        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\r\n#if($ctx.error)\r\n    $utils.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n#set($result = $utils.rds.toJsonObject($ctx.result)[0])\r\n#set($items = $result)\r\n#set($hasNextToken = false)\r\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\r\n  #set($hasNextToken = true)\r\n  #set($nextTokenValue = $ctx.args.nextToken)\r\n  #if(!$nextTokenValue)\r\n    #set($nextTokenValue = 0)\r\n  #end\r\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\r\n#end\r\n{\r\n  \"items\": $util.toJson($items),\r\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\r\n}",
-        "Kind": "UNIT",
-        "DataSourceName": {
-          "Fn::GetAtt": [
-            "GraphQlDsStageDataSource",
-            "Name"
-          ]
-        }
-      }
-    },
-    "GraphQlResolverQuerylistSERVICEPROVIDERS": {
-      "Type": "AWS::AppSync::Resolver",
-      "DependsOn": "GraphQlSchema",
-      "Properties": {
-        "ApiId": {
-          "Fn::GetAtt": [
-            "GraphQlApi",
-            "ApiId"
-          ]
-        },
-        "TypeName": "Query",
-        "FieldName": "listSERVICE_PROVIDERS",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"SELECT SERVICE_PROVIDER_ID, SERVICE_PROVIDER_NAME, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE FROM SERVICE_PROVIDER ORDER BY SERVICE_PROVIDER_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\r\n  ]\r\n}",
-        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\r\n#if($ctx.error)\r\n    $utils.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n#set($result = $utils.rds.toJsonObject($ctx.result)[0])\r\n#set($items = $result)\r\n#set($hasNextToken = false)\r\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\r\n  #set($hasNextToken = true)\r\n  #set($nextTokenValue = $ctx.args.nextToken)\r\n  #if(!$nextTokenValue)\r\n    #set($nextTokenValue = 0)\r\n  #end\r\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\r\n#end\r\n{\r\n  \"items\": $util.toJson($items),\r\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\r\n}",
-        "Kind": "UNIT",
-        "DataSourceName": {
-          "Fn::GetAtt": [
-            "GraphQlDsStageDataSource",
-            "Name"
-          ]
-        }
-      }
-    },
-    "GraphQlResolverQuerylistSERVICES": {
-      "Type": "AWS::AppSync::Resolver",
-      "DependsOn": "GraphQlSchema",
-      "Properties": {
-        "ApiId": {
-          "Fn::GetAtt": [
-            "GraphQlApi",
-            "ApiId"
-          ]
-        },
-        "TypeName": "Query",
-        "FieldName": "listSERVICES",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"SELECT * FROM SERVICE ORDER BY SERVICE_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\r\n  ]\r\n}",
-        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\r\n#if($ctx.error)\r\n    $utils.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n#set($result = $utils.rds.toJsonObject($ctx.result)[0])\r\n#set($items = $result)\r\n#set($hasNextToken = false)\r\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\r\n  #set($hasNextToken = true)\r\n  #set($nextTokenValue = $ctx.args.nextToken)\r\n  #if(!$nextTokenValue)\r\n    #set($nextTokenValue = 0)\r\n  #end\r\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\r\n#end\r\n{\r\n  \"items\": $util.toJson($items),\r\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\r\n}",
-        "Kind": "UNIT",
-        "DataSourceName": {
-          "Fn::GetAtt": [
-            "GraphQlDsStageDataSource",
-            "Name"
-          ]
-        }
-      }
-    },
-    "GraphQlResolverQuerylistREDIRECTURLS": {
-      "Type": "AWS::AppSync::Resolver",
-      "DependsOn": "GraphQlSchema",
-      "Properties": {
-        "ApiId": {
-          "Fn::GetAtt": [
-            "GraphQlApi",
-            "ApiId"
-          ]
-        },
-        "TypeName": "Query",
-        "FieldName": "listREDIRECT_URLS",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"SELECT REDIRECT_URL_ID, ORIGIN_PRODUCT_ID, URL_TYPE_CODE, URL, RESPONSE_TEXT, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE FROM REDIRECT_URL ORDER BY REDIRECT_URL_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\r\n  ]\r\n}",
-        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\r\n#if($ctx.error)\r\n    $utils.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n#set($result = $utils.rds.toJsonObject($ctx.result)[0])\r\n#set($items = $result)\r\n#set($hasNextToken = false)\r\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\r\n  #set($hasNextToken = true)\r\n  #set($nextTokenValue = $ctx.args.nextToken)\r\n  #if(!$nextTokenValue)\r\n    #set($nextTokenValue = 0)\r\n  #end\r\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\r\n#end\r\n{\r\n  \"items\": $util.toJson($items),\r\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\r\n}",
-        "Kind": "UNIT",
-        "DataSourceName": {
-          "Fn::GetAtt": [
-            "GraphQlDsStageDataSource",
-            "Name"
-          ]
-        }
-      }
-    },
-    "GraphQlResolverQuerylistSERVICEPARAMS": {
-      "Type": "AWS::AppSync::Resolver",
-      "DependsOn": "GraphQlSchema",
-      "Properties": {
-        "ApiId": {
-          "Fn::GetAtt": [
-            "GraphQlApi",
-            "ApiId"
-          ]
-        },
-        "TypeName": "Query",
-        "FieldName": "listSERVICE_PARAMS",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"SELECT * FROM SERVICE_PARAM ORDER BY SERVICE_PARAM_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\r\n  ]\r\n}",
-        "ResponseMappingTemplate": "#set($result = $utils.rds.toJsonObject($ctx.result)[0])\r\n#set($items = $result)\r\n#set($hasNextToken = false)\r\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\r\n  #set($hasNextToken = true)\r\n  #set($nextTokenValue = $ctx.args.nextToken)\r\n  #if(!$nextTokenValue)\r\n    #set($nextTokenValue = 0)\r\n  #end\r\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\r\n#end\r\n{\r\n  \"items\": $util.toJson($items),\r\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\r\n}",
-        "Kind": "UNIT",
-        "DataSourceName": {
-          "Fn::GetAtt": [
-            "GraphQlDsStageDataSource",
-            "Name"
-          ]
-        }
-      }
-    },
-    "GraphQlResolverQuerylistSERVICEPARAMMAPPINGS": {
-      "Type": "AWS::AppSync::Resolver",
-      "DependsOn": "GraphQlSchema",
-      "Properties": {
-        "ApiId": {
-          "Fn::GetAtt": [
-            "GraphQlApi",
-            "ApiId"
-          ]
-        },
-        "TypeName": "Query",
-        "FieldName": "listSERVICE_PARAM_MAPPINGS",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"SELECT * FROM SERVICE_PARAM_MAPPING ORDER BY SERVICE_PARAM_MAPPING_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\r\n  ]\r\n}",
-        "ResponseMappingTemplate": "#set($result = $utils.rds.toJsonObject($ctx.result)[0])\r\n#set($items = $result)\r\n#set($hasNextToken = false)\r\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\r\n  #set($hasNextToken = true)\r\n  #set($nextTokenValue = $ctx.args.nextToken)\r\n  #if(!$nextTokenValue)\r\n    #set($nextTokenValue = 0)\r\n  #end\r\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\r\n#end\r\n{\r\n  \"items\": $util.toJson($items),\r\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\r\n}",
-        "Kind": "UNIT",
-        "DataSourceName": {
-          "Fn::GetAtt": [
-            "GraphQlDsStageDataSource",
-            "Name"
-          ]
-        }
-      }
-    },
-    "GraphQlResolverQuerylistSTEPTYPES": {
-      "Type": "AWS::AppSync::Resolver",
-      "DependsOn": "GraphQlSchema",
-      "Properties": {
-        "ApiId": {
-          "Fn::GetAtt": [
-            "GraphQlApi",
-            "ApiId"
-          ]
-        },
-        "TypeName": "Query",
-        "FieldName": "listSTEP_TYPES",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"SELECT * FROM STEP_TYPE ORDER BY STEP_TYPE_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\r\n  ]\r\n}",
-        "ResponseMappingTemplate": "#set($result = $utils.rds.toJsonObject($ctx.result)[0])\r\n#set($items = $result)\r\n#set($hasNextToken = false)\r\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\r\n  #set($hasNextToken = true)\r\n  #set($nextTokenValue = $ctx.args.nextToken)\r\n  #if(!$nextTokenValue)\r\n    #set($nextTokenValue = 0)\r\n  #end\r\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\r\n#end\r\n{\r\n  \"items\": $util.toJson($items),\r\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\r\n}",
-        "Kind": "UNIT",
-        "DataSourceName": {
-          "Fn::GetAtt": [
-            "GraphQlDsStageDataSource",
-            "Name"
-          ]
-        }
-      }
-    },
-    "GraphQlResolverQuerylistSTEPSERVICEMAPPINGS": {
-      "Type": "AWS::AppSync::Resolver",
-      "DependsOn": "GraphQlSchema",
-      "Properties": {
-        "ApiId": {
-          "Fn::GetAtt": [
-            "GraphQlApi",
-            "ApiId"
-          ]
-        },
-        "TypeName": "Query",
-        "FieldName": "listSTEP_SERVICE_MAPPINGS",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"SELECT * FROM STEP_SERVICE_MAPPING ORDER BY STEP_SERVICE_MAPPING_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\r\n  ]\r\n}",
-        "ResponseMappingTemplate": "#set($result = $utils.rds.toJsonObject($ctx.result)[0])\r\n#set($items = $result)\r\n#set($hasNextToken = false)\r\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\r\n  #set($hasNextToken = true)\r\n  #set($nextTokenValue = $ctx.args.nextToken)\r\n  #if(!$nextTokenValue)\r\n    #set($nextTokenValue = 0)\r\n  #end\r\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\r\n#end\r\n{\r\n  \"items\": $util.toJson($items),\r\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\r\n}",
-        "Kind": "UNIT",
-        "DataSourceName": {
-          "Fn::GetAtt": [
-            "GraphQlDsStageDataSource",
-            "Name"
-          ]
-        }
-      }
-    },
-    "GraphQlResolverQuerylistSERVICEEXPRMAPPINGS": {
-      "Type": "AWS::AppSync::Resolver",
-      "DependsOn": "GraphQlSchema",
-      "Properties": {
-        "ApiId": {
-          "Fn::GetAtt": [
-            "GraphQlApi",
-            "ApiId"
-          ]
-        },
-        "TypeName": "Query",
-        "FieldName": "listSERVICE_EXPR_MAPPINGS",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"SELECT * FROM SERVICE_EXPR_MAPPING ORDER BY SERVICE_EXPR_MAPPING_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\r\n  ]\r\n}",
-        "ResponseMappingTemplate": "#set($result = $utils.rds.toJsonObject($ctx.result)[0])\r\n#set($items = $result)\r\n#set($hasNextToken = false)\r\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\r\n  #set($hasNextToken = true)\r\n  #set($nextTokenValue = $ctx.args.nextToken)\r\n  #if(!$nextTokenValue)\r\n    #set($nextTokenValue = 0)\r\n  #end\r\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\r\n#end\r\n{\r\n  \"items\": $util.toJson($items),\r\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\r\n}",
+        "TypeName": "Mutation",
+        "FieldName": "createFILTER_CRITERIA",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($cols = [])\n    #set($vals = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        $util.qr($cols.add($entry.key))\n        $util.qr($vals.add(\"'$entry.value'\"))\n      #end\n    #end\n    \"INSERT INTO FILTER_CRITERIA ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -594,54 +364,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "createORIGIN_PRODUCT",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"INSERT INTO ORIGIN_PRODUCT (VENDOR_NAME, PRODUCT_ID, PRODUCT_DESC, PSCU_CLIENT_ID, PARTNER_CODE, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:VENDOR_NAME, :PRODUCT_ID, :PRODUCT_DESC, :PSCU_CLIENT_ID, :PARTNER_CODE, :CREATED_BY_USER_ID, :CREATED_DATE)\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":VENDOR_NAME\": \"$ctx.args.input.VENDOR_NAME\",\r\n    \":PRODUCT_ID\": \"$ctx.args.input.PRODUCT_ID\",\r\n    \":PRODUCT_DESC\": \"$ctx.args.input.PRODUCT_DESC\",\r\n    \":PSCU_CLIENT_ID\": $ctx.args.input.PSCU_CLIENT_ID,\r\n    \":PARTNER_CODE\": #if($ctx.args.input.PARTNER_CODE)\"$ctx.args.input.PARTNER_CODE\"#else null #end,\r\n    \":CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\r\n    \":CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\"\r\n  }\r\n}",
-        "ResponseMappingTemplate": "#if($ctx.error)\r\n  $util.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n{\r\n  \"ORIGIN_PRODUCT_ID\": 999,\r\n  \"VENDOR_NAME\": \"$ctx.args.input.VENDOR_NAME\",\r\n  \"PRODUCT_ID\": \"$ctx.args.input.PRODUCT_ID\",\r\n  \"PRODUCT_DESC\": \"$ctx.args.input.PRODUCT_DESC\",\r\n  \"PSCU_CLIENT_ID\": $ctx.args.input.PSCU_CLIENT_ID,\r\n  \"PARTNER_CODE\": \"$ctx.args.input.PARTNER_CODE\",\r\n  \"CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\r\n  \"CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\",\r\n  \"CHANGED_BY_USER_ID\": null,\r\n  \"CHANGED_DATE\": null\r\n}",
-        "Kind": "UNIT",
-        "DataSourceName": {
-          "Fn::GetAtt": [
-            "GraphQlDsStageDataSource",
-            "Name"
-          ]
-        }
-      }
-    },
-    "GraphQlResolverMutationupdateORIGINPRODUCT": {
-      "Type": "AWS::AppSync::Resolver",
-      "DependsOn": "GraphQlSchema",
-      "Properties": {
-        "ApiId": {
-          "Fn::GetAtt": [
-            "GraphQlApi",
-            "ApiId"
-          ]
-        },
-        "TypeName": "Mutation",
-        "FieldName": "updateORIGIN_PRODUCT",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"UPDATE ORIGIN_PRODUCT SET VENDOR_NAME = :VENDOR_NAME, PRODUCT_ID = :PRODUCT_ID, PRODUCT_DESC = :PRODUCT_DESC, PSCU_CLIENT_ID = :PSCU_CLIENT_ID, PARTNER_CODE = :PARTNER_CODE, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE ORIGIN_PRODUCT_ID = :ORIGIN_PRODUCT_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":ORIGIN_PRODUCT_ID\": $ctx.args.input.ORIGIN_PRODUCT_ID,\r\n    \":VENDOR_NAME\": \"$ctx.args.input.VENDOR_NAME\",\r\n    \":PRODUCT_ID\": \"$ctx.args.input.PRODUCT_ID\",\r\n    \":PRODUCT_DESC\": \"$ctx.args.input.PRODUCT_DESC\",\r\n    \":PSCU_CLIENT_ID\": $ctx.args.input.PSCU_CLIENT_ID,\r\n    \":PARTNER_CODE\": #if($ctx.args.input.PARTNER_CODE)\"$ctx.args.input.PARTNER_CODE\"#else null #end,\r\n    \":CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\r\n    \":CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\r\n  }\r\n}",
-        "ResponseMappingTemplate": "#if($ctx.error)\r\n  $util.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n{\r\n  \"ORIGIN_PRODUCT_ID\": $ctx.args.input.ORIGIN_PRODUCT_ID,\r\n  \"VENDOR_NAME\": \"$ctx.args.input.VENDOR_NAME\",\r\n  \"PRODUCT_ID\": \"$ctx.args.input.PRODUCT_ID\",\r\n  \"PRODUCT_DESC\": \"$ctx.args.input.PRODUCT_DESC\",\r\n  \"PSCU_CLIENT_ID\": $ctx.args.input.PSCU_CLIENT_ID,\r\n  \"PARTNER_CODE\": \"$ctx.args.input.PARTNER_CODE\",\r\n  \"CREATED_BY_USER_ID\": 1,\r\n  \"CREATED_DATE\": \"2024-01-01\",\r\n  \"CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\r\n  \"CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\r\n}",
-        "Kind": "UNIT",
-        "DataSourceName": {
-          "Fn::GetAtt": [
-            "GraphQlDsStageDataSource",
-            "Name"
-          ]
-        }
-      }
-    },
-    "GraphQlResolverMutationdeleteORIGINPRODUCT": {
-      "Type": "AWS::AppSync::Resolver",
-      "DependsOn": "GraphQlSchema",
-      "Properties": {
-        "ApiId": {
-          "Fn::GetAtt": [
-            "GraphQlApi",
-            "ApiId"
-          ]
-        },
-        "TypeName": "Mutation",
-        "FieldName": "deleteORIGIN_PRODUCT",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"DELETE FROM ORIGIN_PRODUCT WHERE ORIGIN_PRODUCT_ID = :ORIGIN_PRODUCT_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":ORIGIN_PRODUCT_ID\": $util.toJson($ctx.args.input.ORIGIN_PRODUCT_ID)\r\n  }\r\n}",
-        "ResponseMappingTemplate": "#if($ctx.error)\r\n  $util.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n{\r\n  \"ORIGIN_PRODUCT_ID\": $ctx.args.input.ORIGIN_PRODUCT_ID,\r\n  \"VENDOR_NAME\": \"DELETED\",\r\n  \"PRODUCT_ID\": \"DELETED\",\r\n  \"PRODUCT_DESC\": \"DELETED\",\r\n  \"PSCU_CLIENT_ID\": 0,\r\n  \"PARTNER_CODE\": null,\r\n  \"CREATED_BY_USER_ID\": 1,\r\n  \"CREATED_DATE\": \"2024-01-01\",\r\n  \"CHANGED_BY_USER_ID\": null,\r\n  \"CHANGED_DATE\": null\r\n}",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($cols = [])\n    #set($vals = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        $util.qr($cols.add($entry.key))\n        $util.qr($vals.add(\"'$entry.value'\"))\n      #end\n    #end\n    \"INSERT INTO ORIGIN_PRODUCT ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -663,123 +387,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "createREDIRECT_URL",
-        "RequestMappingTemplate": "## Authorization check\r\n#if(!$ctx.identity || !$ctx.identity.sub)\r\n  $util.unauthorized()\r\n#end\r\n\r\n## Input validation\r\n#if(!$ctx.args.input.URL || $ctx.args.input.URL.length() == 0)\r\n  $util.error(\"URL is required\", \"ValidationError\")\r\n#end\r\n#if(!$ctx.args.input.URL_TYPE_CODE.matches(\"^[EN]$\"))\r\n  $util.error(\"URL_TYPE_CODE must be E or N\", \"ValidationError\")\r\n#end\r\n\r\n{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"INSERT INTO REDIRECT_URL (ORIGIN_PRODUCT_ID, URL_TYPE_CODE, URL, RESPONSE_TEXT, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:ORIGIN_PRODUCT_ID, :URL_TYPE_CODE, :URL, :RESPONSE_TEXT, :CREATED_BY_USER_ID, :CREATED_DATE)\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":ORIGIN_PRODUCT_ID\": $util.toJson($ctx.args.input.ORIGIN_PRODUCT_ID),\r\n    \":URL_TYPE_CODE\": $util.toJson($ctx.args.input.URL_TYPE_CODE),\r\n    \":URL\": $util.toJson($ctx.args.input.URL),\r\n    \":RESPONSE_TEXT\": $util.toJson($ctx.args.input.RESPONSE_TEXT),\r\n    \":CREATED_BY_USER_ID\": $util.toJson($ctx.args.input.CREATED_BY_USER_ID),\r\n    \":CREATED_DATE\": $util.toJson($ctx.args.input.CREATED_DATE)\r\n  }\r\n}",
-        "ResponseMappingTemplate": "#if($ctx.error)\r\n  $util.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n{\r\n  \"REDIRECT_URL_ID\": 999,\r\n  \"ORIGIN_PRODUCT_ID\": $ctx.args.input.ORIGIN_PRODUCT_ID,\r\n  \"URL_TYPE_CODE\": \"$ctx.args.input.URL_TYPE_CODE\",\r\n  \"URL\": \"$ctx.args.input.URL\",\r\n  \"RESPONSE_TEXT\": \"$ctx.args.input.RESPONSE_TEXT\",\r\n  \"CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\r\n  \"CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\",\r\n  \"CHANGED_BY_USER_ID\": null,\r\n  \"CHANGED_DATE\": null\r\n}",
-        "Kind": "UNIT",
-        "DataSourceName": {
-          "Fn::GetAtt": [
-            "GraphQlDsStageDataSource",
-            "Name"
-          ]
-        }
-      }
-    },
-    "GraphQlResolverMutationupdateREDIRECTURL": {
-      "Type": "AWS::AppSync::Resolver",
-      "DependsOn": "GraphQlSchema",
-      "Properties": {
-        "ApiId": {
-          "Fn::GetAtt": [
-            "GraphQlApi",
-            "ApiId"
-          ]
-        },
-        "TypeName": "Mutation",
-        "FieldName": "updateREDIRECT_URL",
-        "RequestMappingTemplate": "## Authorization check\r\n#if(!$ctx.identity || !$ctx.identity.sub)\r\n  $util.unauthorized()\r\n#end\r\n\r\n## Input validation\r\n#if(!$ctx.args.input.URL || $ctx.args.input.URL.length() == 0)\r\n  $util.error(\"URL is required\", \"ValidationError\")\r\n#end\r\n#if(!$ctx.args.input.URL_TYPE_CODE.matches(\"^[EN]$\"))\r\n  $util.error(\"URL_TYPE_CODE must be E or N\", \"ValidationError\")\r\n#end\r\n\r\n{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"UPDATE REDIRECT_URL SET ORIGIN_PRODUCT_ID = :ORIGIN_PRODUCT_ID, URL_TYPE_CODE = :URL_TYPE_CODE, URL = :URL, RESPONSE_TEXT = :RESPONSE_TEXT, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE REDIRECT_URL_ID = :REDIRECT_URL_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":REDIRECT_URL_ID\": $util.toJson($ctx.args.input.REDIRECT_URL_ID),\r\n    \":ORIGIN_PRODUCT_ID\": $util.toJson($ctx.args.input.ORIGIN_PRODUCT_ID),\r\n    \":URL_TYPE_CODE\": $util.toJson($ctx.args.input.URL_TYPE_CODE),\r\n    \":URL\": $util.toJson($ctx.args.input.URL),\r\n    \":RESPONSE_TEXT\": $util.toJson($ctx.args.input.RESPONSE_TEXT),\r\n    \":CHANGED_BY_USER_ID\": $util.toJson($ctx.args.input.CHANGED_BY_USER_ID),\r\n    \":CHANGED_DATE\": $util.toJson($ctx.args.input.CHANGED_DATE)\r\n  }\r\n}",
-        "ResponseMappingTemplate": "#if($ctx.error)\r\n  $util.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n{\r\n  \"REDIRECT_URL_ID\": $ctx.args.input.REDIRECT_URL_ID,\r\n  \"ORIGIN_PRODUCT_ID\": $ctx.args.input.ORIGIN_PRODUCT_ID,\r\n  \"URL_TYPE_CODE\": \"$ctx.args.input.URL_TYPE_CODE\",\r\n  \"URL\": \"$ctx.args.input.URL\",\r\n  \"RESPONSE_TEXT\": \"$ctx.args.input.RESPONSE_TEXT\",\r\n  \"CREATED_BY_USER_ID\": 1,\r\n  \"CREATED_DATE\": \"2024-01-01\",\r\n  \"CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\r\n  \"CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\r\n}",
-        "Kind": "UNIT",
-        "DataSourceName": {
-          "Fn::GetAtt": [
-            "GraphQlDsStageDataSource",
-            "Name"
-          ]
-        }
-      }
-    },
-    "GraphQlResolverMutationdeleteREDIRECTURL": {
-      "Type": "AWS::AppSync::Resolver",
-      "DependsOn": "GraphQlSchema",
-      "Properties": {
-        "ApiId": {
-          "Fn::GetAtt": [
-            "GraphQlApi",
-            "ApiId"
-          ]
-        },
-        "TypeName": "Mutation",
-        "FieldName": "deleteREDIRECT_URL",
-        "RequestMappingTemplate": "## Authorization check\r\n#if(!$ctx.identity || !$ctx.identity.sub)\r\n  $util.unauthorized()\r\n#end\r\n\r\n## Additional security: Only allow deletion of own records (optional)\r\n## Uncomment to enable:\r\n## SELECT CREATED_BY_USER_ID FROM REDIRECT_URL WHERE REDIRECT_URL_ID = :REDIRECT_URL_ID AND CREATED_BY_USER_ID = :USER_ID\r\n\r\n{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"DELETE FROM REDIRECT_URL WHERE REDIRECT_URL_ID = :REDIRECT_URL_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":REDIRECT_URL_ID\": $util.toJson($ctx.args.input.REDIRECT_URL_ID)\r\n  }\r\n}",
-        "ResponseMappingTemplate": "#if($ctx.error)\r\n  $util.error($ctx.error.message, $ctx.error.type)\r\n#end\r\n\r\n{\r\n  \"REDIRECT_URL_ID\": $ctx.args.input.REDIRECT_URL_ID,\r\n  \"ORIGIN_PRODUCT_ID\": 1,\r\n  \"URL_TYPE_CODE\": \"DELETED\",\r\n  \"URL\": \"DELETED\",\r\n  \"RESPONSE_TEXT\": null,\r\n  \"CREATED_BY_USER_ID\": 1,\r\n  \"CREATED_DATE\": \"2024-01-01\",\r\n  \"CHANGED_BY_USER_ID\": null,\r\n  \"CHANGED_DATE\": null\r\n}",
-        "Kind": "UNIT",
-        "DataSourceName": {
-          "Fn::GetAtt": [
-            "GraphQlDsStageDataSource",
-            "Name"
-          ]
-        }
-      }
-    },
-    "GraphQlResolverMutationcreateSERVICEPROVIDER": {
-      "Type": "AWS::AppSync::Resolver",
-      "DependsOn": "GraphQlSchema",
-      "Properties": {
-        "ApiId": {
-          "Fn::GetAtt": [
-            "GraphQlApi",
-            "ApiId"
-          ]
-        },
-        "TypeName": "Mutation",
-        "FieldName": "createSERVICE_PROVIDER",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"INSERT INTO SERVICE_PROVIDER (SERVICE_PROVIDER_NAME, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:SERVICE_PROVIDER_NAME, :CREATED_BY_USER_ID, :CREATED_DATE)\",\r\n    \"SELECT * FROM SERVICE_PROVIDER WHERE SERVICE_PROVIDER_ID = LAST_INSERT_ID()\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":SERVICE_PROVIDER_NAME\": \"$ctx.args.input.SERVICE_PROVIDER_NAME\",\r\n    \":CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\r\n    \":CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\"\r\n  }\r\n}",
-        "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
-        "Kind": "UNIT",
-        "DataSourceName": {
-          "Fn::GetAtt": [
-            "GraphQlDsStageDataSource",
-            "Name"
-          ]
-        }
-      }
-    },
-    "GraphQlResolverMutationupdateSERVICEPROVIDER": {
-      "Type": "AWS::AppSync::Resolver",
-      "DependsOn": "GraphQlSchema",
-      "Properties": {
-        "ApiId": {
-          "Fn::GetAtt": [
-            "GraphQlApi",
-            "ApiId"
-          ]
-        },
-        "TypeName": "Mutation",
-        "FieldName": "updateSERVICE_PROVIDER",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"UPDATE SERVICE_PROVIDER SET SERVICE_PROVIDER_NAME = :SERVICE_PROVIDER_NAME, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE SERVICE_PROVIDER_ID = :SERVICE_PROVIDER_ID\",\r\n    \"SELECT * FROM SERVICE_PROVIDER WHERE SERVICE_PROVIDER_ID = :SERVICE_PROVIDER_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":SERVICE_PROVIDER_ID\": $ctx.args.input.SERVICE_PROVIDER_ID,\r\n    \":SERVICE_PROVIDER_NAME\": \"$ctx.args.input.SERVICE_PROVIDER_NAME\",\r\n    \":CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\r\n    \":CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\r\n  }\r\n}",
-        "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
-        "Kind": "UNIT",
-        "DataSourceName": {
-          "Fn::GetAtt": [
-            "GraphQlDsStageDataSource",
-            "Name"
-          ]
-        }
-      }
-    },
-    "GraphQlResolverMutationdeleteSERVICEPROVIDER": {
-      "Type": "AWS::AppSync::Resolver",
-      "DependsOn": "GraphQlSchema",
-      "Properties": {
-        "ApiId": {
-          "Fn::GetAtt": [
-            "GraphQlApi",
-            "ApiId"
-          ]
-        },
-        "TypeName": "Mutation",
-        "FieldName": "deleteSERVICE_PROVIDER",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"DELETE FROM SERVICE_PROVIDER WHERE SERVICE_PROVIDER_ID = :SERVICE_PROVIDER_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":SERVICE_PROVIDER_ID\": $ctx.args.input.SERVICE_PROVIDER_ID\r\n  }\r\n}",
-        "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($cols = [])\n    #set($vals = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        $util.qr($cols.add($entry.key))\n        $util.qr($vals.add(\"'$entry.value'\"))\n      #end\n    #end\n    \"INSERT INTO REDIRECT_URL ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -801,8 +410,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "createSERVICE",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"INSERT INTO SERVICE (SERVICE_PROVIDER_ID, URI, SECRET_NAME, REQUEST_TYPE, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:SERVICE_PROVIDER_ID, :URI, :SECRET_NAME, :REQUEST_TYPE, :CREATED_BY_USER_ID, :CREATED_DATE)\",\r\n    \"SELECT * FROM SERVICE WHERE SERVICE_ID = LAST_INSERT_ID()\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":SERVICE_PROVIDER_ID\": $ctx.args.input.SERVICE_PROVIDER_ID,\r\n    \":URI\": \"$ctx.args.input.URI\",\r\n    \":SECRET_NAME\": #if($ctx.args.input.SECRET_NAME)\"$ctx.args.input.SECRET_NAME\"#else null #end,\r\n    \":REQUEST_TYPE\": #if($ctx.args.input.REQUEST_TYPE)\"$ctx.args.input.REQUEST_TYPE\"#else null #end,\r\n    \":CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\r\n    \":CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\"\r\n  }\r\n}",
-        "ResponseMappingTemplate": "{\r\n  \"SERVICE_ID\": -1,\r\n  \"SERVICE_PROVIDER_ID\": $ctx.args.input.SERVICE_PROVIDER_ID,\r\n  \"URI\": \"$ctx.args.input.URI\",\r\n  \"SECRET_NAME\": \"$ctx.args.input.SECRET_NAME\",\r\n  \"REQUEST_TYPE\": \"$ctx.args.input.REQUEST_TYPE\",\r\n  \"CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\r\n  \"CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\"\r\n}",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($cols = [])\n    #set($vals = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        $util.qr($cols.add($entry.key))\n        $util.qr($vals.add(\"'$entry.value'\"))\n      #end\n    #end\n    \"INSERT INTO SERVICE ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -812,7 +421,7 @@
         }
       }
     },
-    "GraphQlResolverMutationupdateSERVICE": {
+    "GraphQlResolverMutationcreateSERVICEDOMAIN": {
       "Type": "AWS::AppSync::Resolver",
       "DependsOn": "GraphQlSchema",
       "Properties": {
@@ -823,170 +432,9 @@
           ]
         },
         "TypeName": "Mutation",
-        "FieldName": "updateSERVICE",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"UPDATE SERVICE SET SERVICE_PROVIDER_ID = :SERVICE_PROVIDER_ID, URI = :URI, SECRET_NAME = :SECRET_NAME, REQUEST_TYPE = :REQUEST_TYPE, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE SERVICE_ID = :SERVICE_ID\",\r\n    \"SELECT * FROM SERVICE WHERE SERVICE_ID = :SERVICE_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":SERVICE_ID\": $ctx.args.input.SERVICE_ID,\r\n    \":SERVICE_PROVIDER_ID\": $ctx.args.input.SERVICE_PROVIDER_ID,\r\n    \":URI\": \"$ctx.args.input.URI\",\r\n    \":SECRET_NAME\": #if($ctx.args.input.SECRET_NAME)\"$ctx.args.input.SECRET_NAME\"#else null #end,\r\n    \":REQUEST_TYPE\": #if($ctx.args.input.REQUEST_TYPE)\"$ctx.args.input.REQUEST_TYPE\"#else null #end,\r\n    \":CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\r\n    \":CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\r\n  }\r\n}",
-        "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
-        "Kind": "UNIT",
-        "DataSourceName": {
-          "Fn::GetAtt": [
-            "GraphQlDsStageDataSource",
-            "Name"
-          ]
-        }
-      }
-    },
-    "GraphQlResolverMutationdeleteSERVICE": {
-      "Type": "AWS::AppSync::Resolver",
-      "DependsOn": "GraphQlSchema",
-      "Properties": {
-        "ApiId": {
-          "Fn::GetAtt": [
-            "GraphQlApi",
-            "ApiId"
-          ]
-        },
-        "TypeName": "Mutation",
-        "FieldName": "deleteSERVICE",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"DELETE FROM SERVICE WHERE SERVICE_ID = :SERVICE_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":SERVICE_ID\": $util.toJson($ctx.args.input.SERVICE_ID)\r\n  }\r\n}",
-        "ResponseMappingTemplate": "{\r\n  \"SERVICE_ID\": $ctx.args.input.SERVICE_ID,\r\n  \"SERVICE_PROVIDER_ID\": 1,\r\n  \"URI\": \"deleted\",\r\n  \"CREATED_BY_USER_ID\": 1,\r\n  \"CREATED_DATE\": \"$util.time.nowISO8601()\"\r\n}",
-        "Kind": "UNIT",
-        "DataSourceName": {
-          "Fn::GetAtt": [
-            "GraphQlDsStageDataSource",
-            "Name"
-          ]
-        }
-      }
-    },
-    "GraphQlResolverMutationcreateSERVICEPARAM": {
-      "Type": "AWS::AppSync::Resolver",
-      "DependsOn": "GraphQlSchema",
-      "Properties": {
-        "ApiId": {
-          "Fn::GetAtt": [
-            "GraphQlApi",
-            "ApiId"
-          ]
-        },
-        "TypeName": "Mutation",
-        "FieldName": "createSERVICE_PARAM",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"INSERT INTO SERVICE_PARAM (SERVICE_ID, PARAM_NAME, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:SERVICE_ID, :PARAM_NAME, :CREATED_BY_USER_ID, :CREATED_DATE)\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":SERVICE_ID\": $ctx.args.input.SERVICE_ID,\r\n    \":PARAM_NAME\": \"$ctx.args.input.PARAM_NAME\",\r\n    \":CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\r\n    \":CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\"\r\n  }\r\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.generatedKeys && $ctx.result.generatedKeys.size() > 0)\r\n  #set($generatedId = $ctx.result.generatedKeys[0])\r\n#else\r\n  #set($generatedId = -1)\r\n#end\r\n\r\n{\r\n  \"SERVICE_PARAM_ID\": $generatedId,\r\n  \"SERVICE_ID\": $ctx.args.input.SERVICE_ID,\r\n  \"PARAM_NAME\": \"$ctx.args.input.PARAM_NAME\",\r\n  \"CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\r\n  \"CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\"\r\n}",
-        "Kind": "UNIT",
-        "DataSourceName": {
-          "Fn::GetAtt": [
-            "GraphQlDsStageDataSource",
-            "Name"
-          ]
-        }
-      }
-    },
-    "GraphQlResolverMutationupdateSERVICEPARAM": {
-      "Type": "AWS::AppSync::Resolver",
-      "DependsOn": "GraphQlSchema",
-      "Properties": {
-        "ApiId": {
-          "Fn::GetAtt": [
-            "GraphQlApi",
-            "ApiId"
-          ]
-        },
-        "TypeName": "Mutation",
-        "FieldName": "updateSERVICE_PARAM",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"UPDATE SERVICE_PARAM SET PARAM_NAME = :PARAM_NAME, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE SERVICE_PARAM_ID = :SERVICE_PARAM_ID\",\r\n    \"SELECT * FROM SERVICE_PARAM WHERE SERVICE_PARAM_ID = :SERVICE_PARAM_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":SERVICE_PARAM_ID\": $ctx.args.input.SERVICE_PARAM_ID,\r\n    \":PARAM_NAME\": \"$ctx.args.input.PARAM_NAME\",\r\n    \":CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\r\n    \":CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\r\n  }\r\n}",
-        "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
-        "Kind": "UNIT",
-        "DataSourceName": {
-          "Fn::GetAtt": [
-            "GraphQlDsStageDataSource",
-            "Name"
-          ]
-        }
-      }
-    },
-    "GraphQlResolverMutationdeleteSERVICEPARAM": {
-      "Type": "AWS::AppSync::Resolver",
-      "DependsOn": "GraphQlSchema",
-      "Properties": {
-        "ApiId": {
-          "Fn::GetAtt": [
-            "GraphQlApi",
-            "ApiId"
-          ]
-        },
-        "TypeName": "Mutation",
-        "FieldName": "deleteSERVICE_PARAM",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"DELETE FROM SERVICE_PARAM WHERE SERVICE_PARAM_ID = :SERVICE_PARAM_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":SERVICE_PARAM_ID\": $ctx.args.input.SERVICE_PARAM_ID\r\n  }\r\n}",
-        "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
-        "Kind": "UNIT",
-        "DataSourceName": {
-          "Fn::GetAtt": [
-            "GraphQlDsStageDataSource",
-            "Name"
-          ]
-        }
-      }
-    },
-    "GraphQlResolverMutationcreateSERVICEPARAMMAPPING": {
-      "Type": "AWS::AppSync::Resolver",
-      "DependsOn": "GraphQlSchema",
-      "Properties": {
-        "ApiId": {
-          "Fn::GetAtt": [
-            "GraphQlApi",
-            "ApiId"
-          ]
-        },
-        "TypeName": "Mutation",
-        "FieldName": "createSERVICE_PARAM_MAPPING",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"INSERT INTO SERVICE_PARAM_MAPPING (ORIGIN_PRODUCT_ID, SYSTEM_NBR, PRIN_NBR, AGENT_NBR, SOURCE_SERVICE_PARAM_ID, TARGET_SERVICE_PARAM_ID, PLASTIC_TYPE_ID, COMMENT_TEXT, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:ORIGIN_PRODUCT_ID, :SYSTEM_NBR, :PRIN_NBR, :AGENT_NBR, :SOURCE_SERVICE_PARAM_ID, :TARGET_SERVICE_PARAM_ID, :PLASTIC_TYPE_ID, :COMMENT_TEXT, :CREATED_BY_USER_ID, :CREATED_DATE)\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":ORIGIN_PRODUCT_ID\": $ctx.args.input.ORIGIN_PRODUCT_ID,\r\n    \":SYSTEM_NBR\": #if($ctx.args.input.SYSTEM_NBR)\"$ctx.args.input.SYSTEM_NBR\"#else null #end,\r\n    \":PRIN_NBR\": #if($ctx.args.input.PRIN_NBR)\"$ctx.args.input.PRIN_NBR\"#else null #end,\r\n    \":AGENT_NBR\": #if($ctx.args.input.AGENT_NBR)\"$ctx.args.input.AGENT_NBR\"#else null #end,\r\n    \":SOURCE_SERVICE_PARAM_ID\": $ctx.args.input.SOURCE_SERVICE_PARAM_ID,\r\n    \":TARGET_SERVICE_PARAM_ID\": $ctx.args.input.TARGET_SERVICE_PARAM_ID,\r\n    \":PLASTIC_TYPE_ID\": #if($ctx.args.input.PLASTIC_TYPE_ID)$ctx.args.input.PLASTIC_TYPE_ID#else null #end,\r\n    \":COMMENT_TEXT\": #if($ctx.args.input.COMMENT_TEXT)\"$ctx.args.input.COMMENT_TEXT\"#else null #end,\r\n    \":CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\r\n    \":CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\"\r\n  }\r\n}",
-        "ResponseMappingTemplate": "{\r\n  \"SERVICE_PARAM_MAPPING_ID\": -1,\r\n  \"ORIGIN_PRODUCT_ID\": $ctx.args.input.ORIGIN_PRODUCT_ID,\r\n  \"SOURCE_SERVICE_PARAM_ID\": $ctx.args.input.SOURCE_SERVICE_PARAM_ID,\r\n  \"TARGET_SERVICE_PARAM_ID\": $ctx.args.input.TARGET_SERVICE_PARAM_ID,\r\n  \"SYSTEM_NBR\": \"$ctx.args.input.SYSTEM_NBR\",\r\n  \"PRIN_NBR\": \"$ctx.args.input.PRIN_NBR\",\r\n  \"AGENT_NBR\": \"$ctx.args.input.AGENT_NBR\",\r\n  \"CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\r\n  \"CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\"\r\n}",
-        "Kind": "UNIT",
-        "DataSourceName": {
-          "Fn::GetAtt": [
-            "GraphQlDsStageDataSource",
-            "Name"
-          ]
-        }
-      }
-    },
-    "GraphQlResolverMutationupdateSERVICEPARAMMAPPING": {
-      "Type": "AWS::AppSync::Resolver",
-      "DependsOn": "GraphQlSchema",
-      "Properties": {
-        "ApiId": {
-          "Fn::GetAtt": [
-            "GraphQlApi",
-            "ApiId"
-          ]
-        },
-        "TypeName": "Mutation",
-        "FieldName": "updateSERVICE_PARAM_MAPPING",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"UPDATE SERVICE_PARAM_MAPPING SET ORIGIN_PRODUCT_ID = :ORIGIN_PRODUCT_ID, SYSTEM_NBR = :SYSTEM_NBR, PRIN_NBR = :PRIN_NBR, AGENT_NBR = :AGENT_NBR, SOURCE_SERVICE_PARAM_ID = :SOURCE_SERVICE_PARAM_ID, TARGET_SERVICE_PARAM_ID = :TARGET_SERVICE_PARAM_ID, PLASTIC_TYPE_ID = :PLASTIC_TYPE_ID, COMMENT_TEXT = :COMMENT_TEXT, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE SERVICE_PARAM_MAPPING_ID = :SERVICE_PARAM_MAPPING_ID\",\r\n    \"SELECT * FROM SERVICE_PARAM_MAPPING WHERE SERVICE_PARAM_MAPPING_ID = :SERVICE_PARAM_MAPPING_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":SERVICE_PARAM_MAPPING_ID\": $ctx.args.input.SERVICE_PARAM_MAPPING_ID,\r\n    \":ORIGIN_PRODUCT_ID\": $ctx.args.input.ORIGIN_PRODUCT_ID,\r\n    \":SYSTEM_NBR\": #if($ctx.args.input.SYSTEM_NBR)\"$ctx.args.input.SYSTEM_NBR\"#else null #end,\r\n    \":PRIN_NBR\": #if($ctx.args.input.PRIN_NBR)\"$ctx.args.input.PRIN_NBR\"#else null #end,\r\n    \":AGENT_NBR\": #if($ctx.args.input.AGENT_NBR)\"$ctx.args.input.AGENT_NBR\"#else null #end,\r\n    \":SOURCE_SERVICE_PARAM_ID\": $ctx.args.input.SOURCE_SERVICE_PARAM_ID,\r\n    \":TARGET_SERVICE_PARAM_ID\": $ctx.args.input.TARGET_SERVICE_PARAM_ID,\r\n    \":PLASTIC_TYPE_ID\": #if($ctx.args.input.PLASTIC_TYPE_ID)$ctx.args.input.PLASTIC_TYPE_ID#else null #end,\r\n    \":COMMENT_TEXT\": #if($ctx.args.input.COMMENT_TEXT)\"$ctx.args.input.COMMENT_TEXT\"#else null #end,\r\n    \":CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\r\n    \":CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\r\n  }\r\n}",
-        "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
-        "Kind": "UNIT",
-        "DataSourceName": {
-          "Fn::GetAtt": [
-            "GraphQlDsStageDataSource",
-            "Name"
-          ]
-        }
-      }
-    },
-    "GraphQlResolverMutationdeleteSERVICEPARAMMAPPING": {
-      "Type": "AWS::AppSync::Resolver",
-      "DependsOn": "GraphQlSchema",
-      "Properties": {
-        "ApiId": {
-          "Fn::GetAtt": [
-            "GraphQlApi",
-            "ApiId"
-          ]
-        },
-        "TypeName": "Mutation",
-        "FieldName": "deleteSERVICE_PARAM_MAPPING",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"DELETE FROM SERVICE_PARAM_MAPPING WHERE SERVICE_PARAM_MAPPING_ID = :SERVICE_PARAM_MAPPING_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":SERVICE_PARAM_MAPPING_ID\": $ctx.args.input.SERVICE_PARAM_MAPPING_ID\r\n  }\r\n}",
-        "ResponseMappingTemplate": "{\r\n  \"SERVICE_PARAM_MAPPING_ID\": $ctx.args.input.SERVICE_PARAM_MAPPING_ID\r\n}",
+        "FieldName": "createSERVICE_DOMAIN",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($cols = [])\n    #set($vals = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        $util.qr($cols.add($entry.key))\n        $util.qr($vals.add(\"'$entry.value'\"))\n      #end\n    #end\n    \"INSERT INTO SERVICE_DOMAIN ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -1008,8 +456,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "createSERVICE_EXPR_MAPPING",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"INSERT INTO SERVICE_EXPR_MAPPING (SERVICE_PARAM_MAPPING_ID, SOURCE_EXPR, TARGET_EXPR, COMMENT_TEXT, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:SERVICE_PARAM_MAPPING_ID, :SOURCE_EXPR, :TARGET_EXPR, :COMMENT_TEXT, :CREATED_BY_USER_ID, :CREATED_DATE)\",\r\n    \"SELECT * FROM SERVICE_EXPR_MAPPING WHERE SERVICE_EXPR_MAPPING_ID = LAST_INSERT_ID()\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":SERVICE_PARAM_MAPPING_ID\": $ctx.args.input.SERVICE_PARAM_MAPPING_ID,\r\n    \":SOURCE_EXPR\": \"$ctx.args.input.SOURCE_EXPR\",\r\n    \":TARGET_EXPR\": \"$ctx.args.input.TARGET_EXPR\",\r\n    \":COMMENT_TEXT\": #if($ctx.args.input.COMMENT_TEXT)\"$ctx.args.input.COMMENT_TEXT\"#else null #end,\r\n    \":CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\r\n    \":CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\"\r\n  }\r\n}",
-        "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($cols = [])\n    #set($vals = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        $util.qr($cols.add($entry.key))\n        $util.qr($vals.add(\"'$entry.value'\"))\n      #end\n    #end\n    \"INSERT INTO SERVICE_EXPR_MAPPING ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -1019,7 +467,7 @@
         }
       }
     },
-    "GraphQlResolverMutationupdateSERVICEEXPRMAPPING": {
+    "GraphQlResolverMutationcreateSERVICEPARAM": {
       "Type": "AWS::AppSync::Resolver",
       "DependsOn": "GraphQlSchema",
       "Properties": {
@@ -1030,9 +478,9 @@
           ]
         },
         "TypeName": "Mutation",
-        "FieldName": "updateSERVICE_EXPR_MAPPING",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"UPDATE SERVICE_EXPR_MAPPING SET SERVICE_PARAM_MAPPING_ID = :SERVICE_PARAM_MAPPING_ID, SOURCE_EXPR = :SOURCE_EXPR, TARGET_EXPR = :TARGET_EXPR, COMMENT_TEXT = :COMMENT_TEXT, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE SERVICE_EXPR_MAPPING_ID = :SERVICE_EXPR_MAPPING_ID\",\r\n    \"SELECT * FROM SERVICE_EXPR_MAPPING WHERE SERVICE_EXPR_MAPPING_ID = :SERVICE_EXPR_MAPPING_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":SERVICE_EXPR_MAPPING_ID\": $ctx.args.input.SERVICE_EXPR_MAPPING_ID,\r\n    \":SERVICE_PARAM_MAPPING_ID\": $ctx.args.input.SERVICE_PARAM_MAPPING_ID,\r\n    \":SOURCE_EXPR\": \"$ctx.args.input.SOURCE_EXPR\",\r\n    \":TARGET_EXPR\": \"$ctx.args.input.TARGET_EXPR\",\r\n    \":COMMENT_TEXT\": #if($ctx.args.input.COMMENT_TEXT)\"$ctx.args.input.COMMENT_TEXT\"#else null #end,\r\n    \":CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\r\n    \":CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\r\n  }\r\n}",
-        "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
+        "FieldName": "createSERVICE_PARAM",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($cols = [])\n    #set($vals = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        $util.qr($cols.add($entry.key))\n        $util.qr($vals.add(\"'$entry.value'\"))\n      #end\n    #end\n    \"INSERT INTO SERVICE_PARAM ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -1042,7 +490,7 @@
         }
       }
     },
-    "GraphQlResolverMutationdeleteSERVICEEXPRMAPPING": {
+    "GraphQlResolverMutationcreateSERVICEPARAMMAPPING": {
       "Type": "AWS::AppSync::Resolver",
       "DependsOn": "GraphQlSchema",
       "Properties": {
@@ -1053,9 +501,9 @@
           ]
         },
         "TypeName": "Mutation",
-        "FieldName": "deleteSERVICE_EXPR_MAPPING",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"DELETE FROM SERVICE_EXPR_MAPPING WHERE SERVICE_EXPR_MAPPING_ID = :SERVICE_EXPR_MAPPING_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":SERVICE_EXPR_MAPPING_ID\": $ctx.args.input.SERVICE_EXPR_MAPPING_ID\r\n  }\r\n}",
-        "ResponseMappingTemplate": "{\r\n  \"SERVICE_EXPR_MAPPING_ID\": $ctx.args.input.SERVICE_EXPR_MAPPING_ID\r\n}",
+        "FieldName": "createSERVICE_PARAM_MAPPING",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($cols = [])\n    #set($vals = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        $util.qr($cols.add($entry.key))\n        $util.qr($vals.add(\"'$entry.value'\"))\n      #end\n    #end\n    \"INSERT INTO SERVICE_PARAM_MAPPING ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -1065,7 +513,7 @@
         }
       }
     },
-    "GraphQlResolverMutationcreateSTEPTYPE": {
+    "GraphQlResolverMutationcreateSERVICEPROVIDER": {
       "Type": "AWS::AppSync::Resolver",
       "DependsOn": "GraphQlSchema",
       "Properties": {
@@ -1076,9 +524,9 @@
           ]
         },
         "TypeName": "Mutation",
-        "FieldName": "createSTEP_TYPE",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"INSERT INTO STEP_TYPE (STEP_TYPE_NAME, STEP_TYPE_DESC, RESOURCE_NAME, CREATED_BY_USER_ID, CREATED_DATE) VALUES (:STEP_TYPE_NAME, :STEP_TYPE_DESC, :RESOURCE_NAME, :CREATED_BY_USER_ID, :CREATED_DATE)\",\r\n    \"SELECT * FROM STEP_TYPE WHERE STEP_TYPE_ID = LAST_INSERT_ID()\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":STEP_TYPE_NAME\": \"$ctx.args.input.STEP_TYPE_NAME\",\r\n    \":STEP_TYPE_DESC\": #if($ctx.args.input.STEP_TYPE_DESC)\"$ctx.args.input.STEP_TYPE_DESC\"#else null #end,\r\n    \":RESOURCE_NAME\": #if($ctx.args.input.RESOURCE_NAME)\"$ctx.args.input.RESOURCE_NAME\"#else null #end,\r\n    \":CREATED_BY_USER_ID\": $ctx.args.input.CREATED_BY_USER_ID,\r\n    \":CREATED_DATE\": \"$ctx.args.input.CREATED_DATE\"\r\n  }\r\n}",
-        "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
+        "FieldName": "createSERVICE_PROVIDER",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($cols = [])\n    #set($vals = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        $util.qr($cols.add($entry.key))\n        $util.qr($vals.add(\"'$entry.value'\"))\n      #end\n    #end\n    \"INSERT INTO SERVICE_PROVIDER ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -1088,7 +536,7 @@
         }
       }
     },
-    "GraphQlResolverMutationupdateSTEPTYPE": {
+    "GraphQlResolverMutationcreateSORTCRITERIA": {
       "Type": "AWS::AppSync::Resolver",
       "DependsOn": "GraphQlSchema",
       "Properties": {
@@ -1099,32 +547,9 @@
           ]
         },
         "TypeName": "Mutation",
-        "FieldName": "updateSTEP_TYPE",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"UPDATE STEP_TYPE SET STEP_TYPE_NAME = :STEP_TYPE_NAME, STEP_TYPE_DESC = :STEP_TYPE_DESC, RESOURCE_NAME = :RESOURCE_NAME, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE STEP_TYPE_ID = :STEP_TYPE_ID\",\r\n    \"SELECT * FROM STEP_TYPE WHERE STEP_TYPE_ID = :STEP_TYPE_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":STEP_TYPE_ID\": $ctx.args.input.STEP_TYPE_ID,\r\n    \":STEP_TYPE_NAME\": \"$ctx.args.input.STEP_TYPE_NAME\",\r\n    \":STEP_TYPE_DESC\": #if($ctx.args.input.STEP_TYPE_DESC)\"$ctx.args.input.STEP_TYPE_DESC\"#else null #end,\r\n    \":RESOURCE_NAME\": #if($ctx.args.input.RESOURCE_NAME)\"$ctx.args.input.RESOURCE_NAME\"#else null #end,\r\n    \":CHANGED_BY_USER_ID\": $ctx.args.input.CHANGED_BY_USER_ID,\r\n    \":CHANGED_DATE\": \"$ctx.args.input.CHANGED_DATE\"\r\n  }\r\n}",
-        "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
-        "Kind": "UNIT",
-        "DataSourceName": {
-          "Fn::GetAtt": [
-            "GraphQlDsStageDataSource",
-            "Name"
-          ]
-        }
-      }
-    },
-    "GraphQlResolverMutationdeleteSTEPTYPE": {
-      "Type": "AWS::AppSync::Resolver",
-      "DependsOn": "GraphQlSchema",
-      "Properties": {
-        "ApiId": {
-          "Fn::GetAtt": [
-            "GraphQlApi",
-            "ApiId"
-          ]
-        },
-        "TypeName": "Mutation",
-        "FieldName": "deleteSTEP_TYPE",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"DELETE FROM STEP_TYPE WHERE STEP_TYPE_ID = :STEP_TYPE_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":STEP_TYPE_ID\": $ctx.args.input.STEP_TYPE_ID\r\n  }\r\n}",
-        "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
+        "FieldName": "createSORT_CRITERIA",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($cols = [])\n    #set($vals = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        $util.qr($cols.add($entry.key))\n        $util.qr($vals.add(\"'$entry.value'\"))\n      #end\n    #end\n    \"INSERT INTO SORT_CRITERIA ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -1146,8 +571,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "createSTEP_SERVICE_MAPPING",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"INSERT INTO STEP_SERVICE_MAPPING (STEP_TYPE_ID, SERVICE_ID, SEQUENCE_NBR) VALUES (:STEP_TYPE_ID, :SERVICE_ID, :SEQUENCE_NBR)\",\r\n    \"SELECT * FROM STEP_SERVICE_MAPPING WHERE STEP_SERVICE_MAPPING_ID = LAST_INSERT_ID()\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":STEP_TYPE_ID\": $ctx.args.input.STEP_TYPE_ID,\r\n    \":SERVICE_ID\": $ctx.args.input.SERVICE_ID,\r\n    \":SEQUENCE_NBR\": $ctx.args.input.SEQUENCE_NBR\r\n  }\r\n}",
-        "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($cols = [])\n    #set($vals = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        $util.qr($cols.add($entry.key))\n        $util.qr($vals.add(\"'$entry.value'\"))\n      #end\n    #end\n    \"INSERT INTO STEP_SERVICE_MAPPING ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -1157,7 +582,7 @@
         }
       }
     },
-    "GraphQlResolverMutationupdateSTEPSERVICEMAPPING": {
+    "GraphQlResolverMutationcreateSTEPTYPE": {
       "Type": "AWS::AppSync::Resolver",
       "DependsOn": "GraphQlSchema",
       "Properties": {
@@ -1168,9 +593,285 @@
           ]
         },
         "TypeName": "Mutation",
-        "FieldName": "updateSTEP_SERVICE_MAPPING",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"UPDATE STEP_SERVICE_MAPPING SET STEP_TYPE_ID = :STEP_TYPE_ID, SERVICE_ID = :SERVICE_ID, SEQUENCE_NBR = :SEQUENCE_NBR WHERE STEP_SERVICE_MAPPING_ID = :STEP_SERVICE_MAPPING_ID\",\r\n    \"SELECT * FROM STEP_SERVICE_MAPPING WHERE STEP_SERVICE_MAPPING_ID = :STEP_SERVICE_MAPPING_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":STEP_SERVICE_MAPPING_ID\": $ctx.args.input.STEP_SERVICE_MAPPING_ID,\r\n    \":STEP_TYPE_ID\": $ctx.args.input.STEP_TYPE_ID,\r\n    \":SERVICE_ID\": $ctx.args.input.SERVICE_ID,\r\n    \":SEQUENCE_NBR\": $ctx.args.input.SEQUENCE_NBR\r\n  }\r\n}",
-        "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
+        "FieldName": "createSTEP_TYPE",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($cols = [])\n    #set($vals = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        $util.qr($cols.add($entry.key))\n        $util.qr($vals.add(\"'$entry.value'\"))\n      #end\n    #end\n    \"INSERT INTO STEP_TYPE ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationcreateSTEPTYPEPARAMMAP": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "createSTEP_TYPE_PARAM_MAP",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($cols = [])\n    #set($vals = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        $util.qr($cols.add($entry.key))\n        $util.qr($vals.add(\"'$entry.value'\"))\n      #end\n    #end\n    \"INSERT INTO STEP_TYPE_PARAM_MAP ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationdeleteCONFIGPARAM": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "deleteCONFIG_PARAM",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM CONFIG_PARAM WHERE CONFIG_PARAM_ID = '$ctx.args.input.CONFIG_PARAM_ID'\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationdeleteFILTERCRITERIA": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "deleteFILTER_CRITERIA",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM FILTER_CRITERIA WHERE FILTER_CRITERIA_ID = '$ctx.args.input.FILTER_CRITERIA_ID'\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationdeleteORIGINPRODUCT": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "deleteORIGIN_PRODUCT",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM ORIGIN_PRODUCT WHERE ORIGIN_PRODUCT_ID = '$ctx.args.input.ORIGIN_PRODUCT_ID'\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationdeleteREDIRECTURL": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "deleteREDIRECT_URL",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM REDIRECT_URL WHERE REDIRECT_URL_ID = '$ctx.args.input.REDIRECT_URL_ID'\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationdeleteSERVICE": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "deleteSERVICE",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM SERVICE WHERE SERVICE_ID = '$ctx.args.input.SERVICE_ID'\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationdeleteSERVICEDOMAIN": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "deleteSERVICE_DOMAIN",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM SERVICE_DOMAIN WHERE SERVICE_DOMAIN_ID = '$ctx.args.input.SERVICE_DOMAIN_ID'\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationdeleteSERVICEEXPRMAPPING": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "deleteSERVICE_EXPR_MAPPING",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM SERVICE_EXPR_MAPPING WHERE SERVICE_EXPR_MAPPING_ID = '$ctx.args.input.SERVICE_EXPR_MAPPING_ID'\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationdeleteSERVICEPARAM": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "deleteSERVICE_PARAM",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM SERVICE_PARAM WHERE SERVICE_PARAM_ID = '$ctx.args.input.SERVICE_PARAM_ID'\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationdeleteSERVICEPARAMMAPPING": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "deleteSERVICE_PARAM_MAPPING",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM SERVICE_PARAM_MAPPING WHERE SERVICE_PARAM_MAPPING_ID = '$ctx.args.input.SERVICE_PARAM_MAPPING_ID'\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationdeleteSERVICEPROVIDER": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "deleteSERVICE_PROVIDER",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM SERVICE_PROVIDER WHERE SERVICE_PROVIDER_ID = '$ctx.args.input.SERVICE_PROVIDER_ID'\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationdeleteSORTCRITERIA": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "deleteSORT_CRITERIA",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM SORT_CRITERIA WHERE SORT_CRITERIA_ID = '$ctx.args.input.SORT_CRITERIA_ID'\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -1192,8 +893,790 @@
         },
         "TypeName": "Mutation",
         "FieldName": "deleteSTEP_SERVICE_MAPPING",
-        "RequestMappingTemplate": "{\r\n  \"version\": \"2018-05-29\",\r\n  \"statements\": [\r\n    \"DELETE FROM STEP_SERVICE_MAPPING WHERE STEP_SERVICE_MAPPING_ID = :STEP_SERVICE_MAPPING_ID\"\r\n  ],\r\n  \"variableMap\": {\r\n    \":STEP_SERVICE_MAPPING_ID\": $ctx.args.input.STEP_SERVICE_MAPPING_ID\r\n  }\r\n}",
-        "ResponseMappingTemplate": "$util.toJson($ctx.result.records[0])",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM STEP_SERVICE_MAPPING WHERE STEP_SERVICE_MAPPING_ID = '$ctx.args.input.STEP_SERVICE_MAPPING_ID'\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationdeleteSTEPTYPE": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "deleteSTEP_TYPE",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM STEP_TYPE WHERE STEP_TYPE_ID = '$ctx.args.input.STEP_TYPE_ID'\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationdeleteSTEPTYPEPARAMMAP": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "deleteSTEP_TYPE_PARAM_MAP",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM STEP_TYPE_PARAM_MAP WHERE STEP_TYPE_PARAM_MAP_ID = '$ctx.args.input.STEP_TYPE_PARAM_MAP_ID'\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationupdateCONFIGPARAM": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "updateCONFIG_PARAM",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updates = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"CONFIG_PARAM_ID\" && $entry.value)\n        $util.qr($updates.add(\"$entry.key = '$entry.value'\"))\n      #end\n    #end\n    \"UPDATE CONFIG_PARAM SET $util.str.join($updates, ', ') WHERE CONFIG_PARAM_ID = '$ctx.args.input.CONFIG_PARAM_ID'\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationupdateFILTERCRITERIA": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "updateFILTER_CRITERIA",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updates = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"FILTER_CRITERIA_ID\" && $entry.value)\n        $util.qr($updates.add(\"$entry.key = '$entry.value'\"))\n      #end\n    #end\n    \"UPDATE FILTER_CRITERIA SET $util.str.join($updates, ', ') WHERE FILTER_CRITERIA_ID = '$ctx.args.input.FILTER_CRITERIA_ID'\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationupdateORIGINPRODUCT": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "updateORIGIN_PRODUCT",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updates = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"ORIGIN_PRODUCT_ID\" && $entry.value)\n        $util.qr($updates.add(\"$entry.key = '$entry.value'\"))\n      #end\n    #end\n    \"UPDATE ORIGIN_PRODUCT SET $util.str.join($updates, ', ') WHERE ORIGIN_PRODUCT_ID = '$ctx.args.input.ORIGIN_PRODUCT_ID'\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationupdateREDIRECTURL": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "updateREDIRECT_URL",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updates = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"REDIRECT_URL_ID\" && $entry.value)\n        $util.qr($updates.add(\"$entry.key = '$entry.value'\"))\n      #end\n    #end\n    \"UPDATE REDIRECT_URL SET $util.str.join($updates, ', ') WHERE REDIRECT_URL_ID = '$ctx.args.input.REDIRECT_URL_ID'\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationupdateSERVICE": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "updateSERVICE",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updates = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"SERVICE_ID\" && $entry.value)\n        $util.qr($updates.add(\"$entry.key = '$entry.value'\"))\n      #end\n    #end\n    \"UPDATE SERVICE SET $util.str.join($updates, ', ') WHERE SERVICE_ID = '$ctx.args.input.SERVICE_ID'\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationupdateSERVICEDOMAIN": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "updateSERVICE_DOMAIN",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updates = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"SERVICE_DOMAIN_ID\" && $entry.value)\n        $util.qr($updates.add(\"$entry.key = '$entry.value'\"))\n      #end\n    #end\n    \"UPDATE SERVICE_DOMAIN SET $util.str.join($updates, ', ') WHERE SERVICE_DOMAIN_ID = '$ctx.args.input.SERVICE_DOMAIN_ID'\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationupdateSERVICEEXPRMAPPING": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "updateSERVICE_EXPR_MAPPING",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updates = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"SERVICE_EXPR_MAPPING_ID\" && $entry.value)\n        $util.qr($updates.add(\"$entry.key = '$entry.value'\"))\n      #end\n    #end\n    \"UPDATE SERVICE_EXPR_MAPPING SET $util.str.join($updates, ', ') WHERE SERVICE_EXPR_MAPPING_ID = '$ctx.args.input.SERVICE_EXPR_MAPPING_ID'\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationupdateSERVICEPARAM": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "updateSERVICE_PARAM",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updates = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"SERVICE_PARAM_ID\" && $entry.value)\n        $util.qr($updates.add(\"$entry.key = '$entry.value'\"))\n      #end\n    #end\n    \"UPDATE SERVICE_PARAM SET $util.str.join($updates, ', ') WHERE SERVICE_PARAM_ID = '$ctx.args.input.SERVICE_PARAM_ID'\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationupdateSERVICEPARAMMAPPING": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "updateSERVICE_PARAM_MAPPING",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updates = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"SERVICE_PARAM_MAPPING_ID\" && $entry.value)\n        $util.qr($updates.add(\"$entry.key = '$entry.value'\"))\n      #end\n    #end\n    \"UPDATE SERVICE_PARAM_MAPPING SET $util.str.join($updates, ', ') WHERE SERVICE_PARAM_MAPPING_ID = '$ctx.args.input.SERVICE_PARAM_MAPPING_ID'\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationupdateSERVICEPROVIDER": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "updateSERVICE_PROVIDER",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updates = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"SERVICE_PROVIDER_ID\" && $entry.value)\n        $util.qr($updates.add(\"$entry.key = '$entry.value'\"))\n      #end\n    #end\n    \"UPDATE SERVICE_PROVIDER SET $util.str.join($updates, ', ') WHERE SERVICE_PROVIDER_ID = '$ctx.args.input.SERVICE_PROVIDER_ID'\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationupdateSORTCRITERIA": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "updateSORT_CRITERIA",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updates = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"SORT_CRITERIA_ID\" && $entry.value)\n        $util.qr($updates.add(\"$entry.key = '$entry.value'\"))\n      #end\n    #end\n    \"UPDATE SORT_CRITERIA SET $util.str.join($updates, ', ') WHERE SORT_CRITERIA_ID = '$ctx.args.input.SORT_CRITERIA_ID'\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationupdateSTEPSERVICEMAPPING": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "updateSTEP_SERVICE_MAPPING",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updates = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"STEP_SERVICE_MAPPING_ID\" && $entry.value)\n        $util.qr($updates.add(\"$entry.key = '$entry.value'\"))\n      #end\n    #end\n    \"UPDATE STEP_SERVICE_MAPPING SET $util.str.join($updates, ', ') WHERE STEP_SERVICE_MAPPING_ID = '$ctx.args.input.STEP_SERVICE_MAPPING_ID'\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationupdateSTEPTYPE": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "updateSTEP_TYPE",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updates = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"STEP_TYPE_ID\" && $entry.value)\n        $util.qr($updates.add(\"$entry.key = '$entry.value'\"))\n      #end\n    #end\n    \"UPDATE STEP_TYPE SET $util.str.join($updates, ', ') WHERE STEP_TYPE_ID = '$ctx.args.input.STEP_TYPE_ID'\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverMutationupdateSTEPTYPEPARAMMAP": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Mutation",
+        "FieldName": "updateSTEP_TYPE_PARAM_MAP",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updates = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"STEP_TYPE_PARAM_MAP_ID\" && $entry.value)\n        $util.qr($updates.add(\"$entry.key = '$entry.value'\"))\n      #end\n    #end\n    \"UPDATE STEP_TYPE_PARAM_MAP SET $util.str.join($updates, ', ') WHERE STEP_TYPE_PARAM_MAP_ID = '$ctx.args.input.STEP_TYPE_PARAM_MAP_ID'\"\n  ]\n}",
+        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistCONFIGPARAMS": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listCONFIG_PARAMS",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM CONFIG_PARAM ORDER BY CONFIG_PARAM_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n#set($result = $utils.rds.toJsonObject($ctx.result)[0])\n#set($items = $result)\n#set($hasNextToken = false)\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\n  #set($hasNextToken = true)\n  #set($nextTokenValue = $ctx.args.nextToken)\n  #if(!$nextTokenValue)\n    #set($nextTokenValue = 0)\n  #end\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\n#end\n{\n  \"items\": $util.toJson($items),\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\n}",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistFILTERCRITERIAS": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listFILTER_CRITERIAS",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM FILTER_CRITERIA ORDER BY FILTER_CRITERIA_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n#set($result = $utils.rds.toJsonObject($ctx.result)[0])\n#set($items = $result)\n#set($hasNextToken = false)\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\n  #set($hasNextToken = true)\n  #set($nextTokenValue = $ctx.args.nextToken)\n  #if(!$nextTokenValue)\n    #set($nextTokenValue = 0)\n  #end\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\n#end\n{\n  \"items\": $util.toJson($items),\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\n}",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistLOANAPPS": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listLOAN_APPS",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM LOAN_APP ORDER BY LOAN_APP_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n#set($result = $utils.rds.toJsonObject($ctx.result)[0])\n#set($items = $result)\n#set($hasNextToken = false)\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\n  #set($hasNextToken = true)\n  #set($nextTokenValue = $ctx.args.nextToken)\n  #if(!$nextTokenValue)\n    #set($nextTokenValue = 0)\n  #end\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\n#end\n{\n  \"items\": $util.toJson($items),\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\n}",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistLOANAPPEXECSS": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listLOAN_APP_EXECSS",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM LOAN_APP_EXECS ORDER BY LOAN_APP_EXECS_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n#set($result = $utils.rds.toJsonObject($ctx.result)[0])\n#set($items = $result)\n#set($hasNextToken = false)\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\n  #set($hasNextToken = true)\n  #set($nextTokenValue = $ctx.args.nextToken)\n  #if(!$nextTokenValue)\n    #set($nextTokenValue = 0)\n  #end\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\n#end\n{\n  \"items\": $util.toJson($items),\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\n}",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistLOANAPPSTEPSTATUSS": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listLOAN_APP_STEP_STATUSS",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM LOAN_APP_STEP_STATUS ORDER BY LOAN_APP_STEP_STATUS_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n#set($result = $utils.rds.toJsonObject($ctx.result)[0])\n#set($items = $result)\n#set($hasNextToken = false)\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\n  #set($hasNextToken = true)\n  #set($nextTokenValue = $ctx.args.nextToken)\n  #if(!$nextTokenValue)\n    #set($nextTokenValue = 0)\n  #end\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\n#end\n{\n  \"items\": $util.toJson($items),\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\n}",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistNEWMEMBERTOKENS": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listNEW_MEMBER_TOKENS",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM NEW_MEMBER_TOKEN ORDER BY NEW_MEMBER_TOKEN_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n#set($result = $utils.rds.toJsonObject($ctx.result)[0])\n#set($items = $result)\n#set($hasNextToken = false)\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\n  #set($hasNextToken = true)\n  #set($nextTokenValue = $ctx.args.nextToken)\n  #if(!$nextTokenValue)\n    #set($nextTokenValue = 0)\n  #end\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\n#end\n{\n  \"items\": $util.toJson($items),\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\n}",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistORIGINPRODUCTS": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listORIGIN_PRODUCTS",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM ORIGIN_PRODUCT ORDER BY ORIGIN_PRODUCT_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n#set($result = $utils.rds.toJsonObject($ctx.result)[0])\n#set($items = $result)\n#set($hasNextToken = false)\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\n  #set($hasNextToken = true)\n  #set($nextTokenValue = $ctx.args.nextToken)\n  #if(!$nextTokenValue)\n    #set($nextTokenValue = 0)\n  #end\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\n#end\n{\n  \"items\": $util.toJson($items),\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\n}",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistREDIRECTURLS": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listREDIRECT_URLS",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM REDIRECT_URL ORDER BY REDIRECT_URL_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n#set($result = $utils.rds.toJsonObject($ctx.result)[0])\n#set($items = $result)\n#set($hasNextToken = false)\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\n  #set($hasNextToken = true)\n  #set($nextTokenValue = $ctx.args.nextToken)\n  #if(!$nextTokenValue)\n    #set($nextTokenValue = 0)\n  #end\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\n#end\n{\n  \"items\": $util.toJson($items),\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\n}",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistSERVICES": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listSERVICES",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM SERVICE ORDER BY SERVICE_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n#set($result = $utils.rds.toJsonObject($ctx.result)[0])\n#set($items = $result)\n#set($hasNextToken = false)\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\n  #set($hasNextToken = true)\n  #set($nextTokenValue = $ctx.args.nextToken)\n  #if(!$nextTokenValue)\n    #set($nextTokenValue = 0)\n  #end\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\n#end\n{\n  \"items\": $util.toJson($items),\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\n}",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistSERVICEDOMAINS": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listSERVICE_DOMAINS",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM SERVICE_DOMAIN ORDER BY SERVICE_DOMAIN_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n#set($result = $utils.rds.toJsonObject($ctx.result)[0])\n#set($items = $result)\n#set($hasNextToken = false)\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\n  #set($hasNextToken = true)\n  #set($nextTokenValue = $ctx.args.nextToken)\n  #if(!$nextTokenValue)\n    #set($nextTokenValue = 0)\n  #end\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\n#end\n{\n  \"items\": $util.toJson($items),\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\n}",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistSERVICEEXPRMAPPINGS": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listSERVICE_EXPR_MAPPINGS",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM SERVICE_EXPR_MAPPING ORDER BY SERVICE_EXPR_MAPPING_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n#set($result = $utils.rds.toJsonObject($ctx.result)[0])\n#set($items = $result)\n#set($hasNextToken = false)\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\n  #set($hasNextToken = true)\n  #set($nextTokenValue = $ctx.args.nextToken)\n  #if(!$nextTokenValue)\n    #set($nextTokenValue = 0)\n  #end\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\n#end\n{\n  \"items\": $util.toJson($items),\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\n}",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistSERVICEPARAMS": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listSERVICE_PARAMS",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM SERVICE_PARAM ORDER BY SERVICE_PARAM_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n#set($result = $utils.rds.toJsonObject($ctx.result)[0])\n#set($items = $result)\n#set($hasNextToken = false)\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\n  #set($hasNextToken = true)\n  #set($nextTokenValue = $ctx.args.nextToken)\n  #if(!$nextTokenValue)\n    #set($nextTokenValue = 0)\n  #end\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\n#end\n{\n  \"items\": $util.toJson($items),\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\n}",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistSERVICEPARAMMAPPINGS": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listSERVICE_PARAM_MAPPINGS",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM SERVICE_PARAM_MAPPING ORDER BY SERVICE_PARAM_MAPPING_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n#set($result = $utils.rds.toJsonObject($ctx.result)[0])\n#set($items = $result)\n#set($hasNextToken = false)\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\n  #set($hasNextToken = true)\n  #set($nextTokenValue = $ctx.args.nextToken)\n  #if(!$nextTokenValue)\n    #set($nextTokenValue = 0)\n  #end\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\n#end\n{\n  \"items\": $util.toJson($items),\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\n}",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistSERVICEPROVIDERS": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listSERVICE_PROVIDERS",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM SERVICE_PROVIDER ORDER BY SERVICE_PROVIDER_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n#set($result = $utils.rds.toJsonObject($ctx.result)[0])\n#set($items = $result)\n#set($hasNextToken = false)\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\n  #set($hasNextToken = true)\n  #set($nextTokenValue = $ctx.args.nextToken)\n  #if(!$nextTokenValue)\n    #set($nextTokenValue = 0)\n  #end\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\n#end\n{\n  \"items\": $util.toJson($items),\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\n}",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistSORTCRITERIAS": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listSORT_CRITERIAS",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM SORT_CRITERIA ORDER BY SORT_CRITERIA_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n#set($result = $utils.rds.toJsonObject($ctx.result)[0])\n#set($items = $result)\n#set($hasNextToken = false)\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\n  #set($hasNextToken = true)\n  #set($nextTokenValue = $ctx.args.nextToken)\n  #if(!$nextTokenValue)\n    #set($nextTokenValue = 0)\n  #end\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\n#end\n{\n  \"items\": $util.toJson($items),\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\n}",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistSTEPSERVICEMAPPINGS": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listSTEP_SERVICE_MAPPINGS",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM STEP_SERVICE_MAPPING ORDER BY STEP_SERVICE_MAPPING_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n#set($result = $utils.rds.toJsonObject($ctx.result)[0])\n#set($items = $result)\n#set($hasNextToken = false)\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\n  #set($hasNextToken = true)\n  #set($nextTokenValue = $ctx.args.nextToken)\n  #if(!$nextTokenValue)\n    #set($nextTokenValue = 0)\n  #end\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\n#end\n{\n  \"items\": $util.toJson($items),\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\n}",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistSTEPTYPES": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listSTEP_TYPES",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM STEP_TYPE ORDER BY STEP_TYPE_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n#set($result = $utils.rds.toJsonObject($ctx.result)[0])\n#set($items = $result)\n#set($hasNextToken = false)\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\n  #set($hasNextToken = true)\n  #set($nextTokenValue = $ctx.args.nextToken)\n  #if(!$nextTokenValue)\n    #set($nextTokenValue = 0)\n  #end\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\n#end\n{\n  \"items\": $util.toJson($items),\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\n}",
+        "Kind": "UNIT",
+        "DataSourceName": {
+          "Fn::GetAtt": [
+            "GraphQlDsStageDataSource",
+            "Name"
+          ]
+        }
+      }
+    },
+    "GraphQlResolverQuerylistSTEPTYPEPARAMMAPS": {
+      "Type": "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQlSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "GraphQlApi",
+            "ApiId"
+          ]
+        },
+        "TypeName": "Query",
+        "FieldName": "listSTEP_TYPE_PARAM_MAPS",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"SELECT * FROM STEP_TYPE_PARAM_MAP ORDER BY STEP_TYPE_PARAM_MAP_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Raise a GraphQL field error in case of a datasource invocation error\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n#set($result = $utils.rds.toJsonObject($ctx.result)[0])\n#set($items = $result)\n#set($hasNextToken = false)\n#if($ctx.args.limit && $items.size() == $ctx.args.limit)\n  #set($hasNextToken = true)\n  #set($nextTokenValue = $ctx.args.nextToken)\n  #if(!$nextTokenValue)\n    #set($nextTokenValue = 0)\n  #end\n  #set($nextTokenValue = $nextTokenValue + $ctx.args.limit)\n#end\n{\n  \"items\": $util.toJson($items),\n  #if($hasNextToken)\"nextToken\": \"$nextTokenValue\"#else\"nextToken\": null#end\n}",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -1208,7 +1691,7 @@
     "ServerlessDeploymentBucketName": {
       "Value": "hazel-mapping-serverless-deployment-bucket",
       "Export": {
-        "Name": "sls-vue-appsync-api-live-ServerlessDeploymentBucketName"
+        "Name": "sls-vue-appsync-api-dev-ServerlessDeploymentBucketName"
       }
     },
     "GraphQlApiKeyDefault": {

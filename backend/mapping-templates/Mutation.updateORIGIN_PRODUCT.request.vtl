@@ -1,16 +1,12 @@
 {
   "version": "2018-05-29",
   "statements": [
-    "UPDATE ORIGIN_PRODUCT SET VENDOR_NAME = :VENDOR_NAME, PRODUCT_ID = :PRODUCT_ID, PRODUCT_DESC = :PRODUCT_DESC, PSCU_CLIENT_ID = :PSCU_CLIENT_ID, PARTNER_CODE = :PARTNER_CODE, CHANGED_BY_USER_ID = :CHANGED_BY_USER_ID, CHANGED_DATE = :CHANGED_DATE WHERE ORIGIN_PRODUCT_ID = :ORIGIN_PRODUCT_ID"
-  ],
-  "variableMap": {
-    ":ORIGIN_PRODUCT_ID": $ctx.args.input.ORIGIN_PRODUCT_ID,
-    ":VENDOR_NAME": "$ctx.args.input.VENDOR_NAME",
-    ":PRODUCT_ID": "$ctx.args.input.PRODUCT_ID",
-    ":PRODUCT_DESC": "$ctx.args.input.PRODUCT_DESC",
-    ":PSCU_CLIENT_ID": $ctx.args.input.PSCU_CLIENT_ID,
-    ":PARTNER_CODE": #if($ctx.args.input.PARTNER_CODE)"$ctx.args.input.PARTNER_CODE"#else null #end,
-    ":CHANGED_BY_USER_ID": $ctx.args.input.CHANGED_BY_USER_ID,
-    ":CHANGED_DATE": "$ctx.args.input.CHANGED_DATE"
-  }
+    #set($updates = [])
+    #foreach($entry in $ctx.args.input.entrySet())
+      #if($entry.key != "ORIGIN_PRODUCT_ID" && $entry.value)
+        $util.qr($updates.add("$entry.key = '$entry.value'"))
+      #end
+    #end
+    "UPDATE ORIGIN_PRODUCT SET $util.str.join($updates, ', ') WHERE ORIGIN_PRODUCT_ID = '$ctx.args.input.ORIGIN_PRODUCT_ID'"
+  ]
 }

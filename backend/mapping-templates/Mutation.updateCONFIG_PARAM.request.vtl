@@ -1,0 +1,12 @@
+{
+  "version": "2018-05-29",
+  "statements": [
+    #set($updates = [])
+    #foreach($entry in $ctx.args.input.entrySet())
+      #if($entry.key != "CONFIG_PARAM_ID" && $entry.value)
+        $util.qr($updates.add("$entry.key = '$entry.value'"))
+      #end
+    #end
+    "UPDATE CONFIG_PARAM SET $util.str.join($updates, ', ') WHERE CONFIG_PARAM_ID = '$ctx.args.input.CONFIG_PARAM_ID'"
+  ]
+}

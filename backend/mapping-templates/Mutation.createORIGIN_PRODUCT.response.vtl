@@ -1,16 +1,5 @@
-#if($ctx.error)
-  $util.error($ctx.error.message, $ctx.error.type)
+#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)
+  $util.toJson($ctx.result.sqlStatementResults[0].records[0])
+#else
+  $util.toJson($ctx.args.input)
 #end
-
-{
-  "ORIGIN_PRODUCT_ID": 999,
-  "VENDOR_NAME": "$ctx.args.input.VENDOR_NAME",
-  "PRODUCT_ID": "$ctx.args.input.PRODUCT_ID",
-  "PRODUCT_DESC": "$ctx.args.input.PRODUCT_DESC",
-  "PSCU_CLIENT_ID": $ctx.args.input.PSCU_CLIENT_ID,
-  "PARTNER_CODE": "$ctx.args.input.PARTNER_CODE",
-  "CREATED_BY_USER_ID": $ctx.args.input.CREATED_BY_USER_ID,
-  "CREATED_DATE": "$ctx.args.input.CREATED_DATE",
-  "CHANGED_BY_USER_ID": null,
-  "CHANGED_DATE": null
-}

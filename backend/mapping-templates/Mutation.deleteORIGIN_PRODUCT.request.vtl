@@ -1,9 +1,6 @@
 {
   "version": "2018-05-29",
   "statements": [
-    "DELETE FROM ORIGIN_PRODUCT WHERE ORIGIN_PRODUCT_ID = :ORIGIN_PRODUCT_ID"
-  ],
-  "variableMap": {
-    ":ORIGIN_PRODUCT_ID": $util.toJson($ctx.args.input.ORIGIN_PRODUCT_ID)
-  }
+    "DELETE FROM ORIGIN_PRODUCT WHERE ORIGIN_PRODUCT_ID = '$ctx.args.input.ORIGIN_PRODUCT_ID'"
+  ]
 }
