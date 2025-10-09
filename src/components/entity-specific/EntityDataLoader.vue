@@ -26,6 +26,11 @@ const vendorNames = ref([]);
 const loadEntitySpecificData = async () => {
   const config = props.config;
   
+  // Load foreign key options
+  if (config.foreignKeys) {
+    await loadForeignKeyOptions();
+  }
+  
   if (config.loadServiceOptions || props.entityName === 'SERVICE_PARAM') {
     await loadServiceOptions();
   }
@@ -44,6 +49,34 @@ const loadEntitySpecificData = async () => {
   
   if (config.loadProductOptions) {
     await loadProductOptions();
+  }
+};
+
+const loadForeignKeyOptions = async () => {
+  const config = props.config;
+  
+  for (const [fieldName, fkConfig] of Object.entries(config.foreignKeys)) {
+    try {
+      const queryName = `list${fkConfig.table.split('_').map(word => word.charAt(0) + word.slice(1).toLowerCase()).join('')}s`;
+      const listName = `list${fkConfig.table}S`;
+      
+      if (queries[queryName]) {
+        const result = await getClient().graphql({ query: queries[queryName] });
+        const items = result.data[listName]?.items || [];
+        
+        const options = items.map(item => ({
+          value: item[fkConfig.valueField],
+          label: `${item[fkConfig.valueField]}: ${item[fkConfig.displayField]}`
+        }));
+        
+        const formField = props.formFields.find(f => f.name === fieldName);
+        if (formField) {
+          formField.options = options;
+        }
+      }
+    } catch (error) {
+      console.error(`Failed to load options for ${fieldName}:`, error);
+    }
   }
 };
 

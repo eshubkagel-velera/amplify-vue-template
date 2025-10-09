@@ -17,5 +17,5 @@ export const getEntityConfig = (entityName) => {
 };
 
 export const getAllEntityConfigs = () => {
-  return Object.values(entityConfigs);
+  return entityConfigs;
 };

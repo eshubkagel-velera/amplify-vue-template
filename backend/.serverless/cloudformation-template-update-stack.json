@@ -248,7 +248,7 @@
           ]
         },
         "Description": "Auto-generated api key",
-        "Expires": 1791482400
+        "Expires": 1791493200
       }
     },
     "GraphQlSchema": {
@@ -318,8 +318,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "createCONFIG_PARAM",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($cols = [])\n    #set($vals = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        $util.qr($cols.add($entry.key))\n        $util.qr($vals.add(\"'$entry.value'\"))\n      #end\n    #end\n    \"INSERT INTO CONFIG_PARAM ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($insertStatement = \"INSERT INTO CONFIG_PARAM (\")\n    #set($valuesStatement = \" VALUES (\")\n    #set($first = true)\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        #if(!$first)\n          #set($insertStatement = \"$insertStatement, \")\n          #set($valuesStatement = \"$valuesStatement, \")\n        #end\n        #set($insertStatement = \"$insertStatement$entry.key\")\n        #set($valuesStatement = \"$valuesStatement'$entry.value'\")\n        #set($first = false)\n      #end\n    #end\n    #set($insertStatement = \"$insertStatement)$valuesStatement)\")\n    \"$insertStatement\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -341,8 +341,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "createFILTER_CRITERIA",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($cols = [])\n    #set($vals = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        $util.qr($cols.add($entry.key))\n        $util.qr($vals.add(\"'$entry.value'\"))\n      #end\n    #end\n    \"INSERT INTO FILTER_CRITERIA ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($insertStatement = \"INSERT INTO FILTER_CRITERIA (\")\n    #set($valuesStatement = \" VALUES (\")\n    #set($first = true)\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        #if(!$first)\n          #set($insertStatement = \"$insertStatement, \")\n          #set($valuesStatement = \"$valuesStatement, \")\n        #end\n        #set($insertStatement = \"$insertStatement$entry.key\")\n        #set($valuesStatement = \"$valuesStatement'$entry.value'\")\n        #set($first = false)\n      #end\n    #end\n    #set($insertStatement = \"$insertStatement)$valuesStatement)\")\n    \"$insertStatement\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -364,8 +364,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "createORIGIN_PRODUCT",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($cols = [])\n    #set($vals = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        $util.qr($cols.add($entry.key))\n        $util.qr($vals.add(\"'$entry.value'\"))\n      #end\n    #end\n    \"INSERT INTO ORIGIN_PRODUCT ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($insertStatement = \"INSERT INTO ORIGIN_PRODUCT (\")\n    #set($valuesStatement = \" VALUES (\")\n    #set($first = true)\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        #if(!$first)\n          #set($insertStatement = \"$insertStatement, \")\n          #set($valuesStatement = \"$valuesStatement, \")\n        #end\n        #set($insertStatement = \"$insertStatement$entry.key\")\n        #set($valuesStatement = \"$valuesStatement'$entry.value'\")\n        #set($first = false)\n      #end\n    #end\n    #set($insertStatement = \"$insertStatement)$valuesStatement)\")\n    \"$insertStatement\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -387,8 +387,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "createREDIRECT_URL",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($cols = [])\n    #set($vals = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        $util.qr($cols.add($entry.key))\n        $util.qr($vals.add(\"'$entry.value'\"))\n      #end\n    #end\n    \"INSERT INTO REDIRECT_URL ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($insertStatement = \"INSERT INTO REDIRECT_URL (\")\n    #set($valuesStatement = \" VALUES (\")\n    #set($first = true)\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        #if(!$first)\n          #set($insertStatement = \"$insertStatement, \")\n          #set($valuesStatement = \"$valuesStatement, \")\n        #end\n        #set($insertStatement = \"$insertStatement$entry.key\")\n        #set($valuesStatement = \"$valuesStatement'$entry.value'\")\n        #set($first = false)\n      #end\n    #end\n    #set($insertStatement = \"$insertStatement)$valuesStatement)\")\n    \"$insertStatement\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -410,8 +410,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "createSERVICE",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($cols = [])\n    #set($vals = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        $util.qr($cols.add($entry.key))\n        $util.qr($vals.add(\"'$entry.value'\"))\n      #end\n    #end\n    \"INSERT INTO SERVICE ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($insertStatement = \"INSERT INTO SERVICE (\")\n    #set($valuesStatement = \" VALUES (\")\n    #set($first = true)\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        #if(!$first)\n          #set($insertStatement = \"$insertStatement, \")\n          #set($valuesStatement = \"$valuesStatement, \")\n        #end\n        #set($insertStatement = \"$insertStatement$entry.key\")\n        #set($valuesStatement = \"$valuesStatement'$entry.value'\")\n        #set($first = false)\n      #end\n    #end\n    #set($insertStatement = \"$insertStatement)$valuesStatement)\")\n    \"$insertStatement\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -433,8 +433,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "createSERVICE_DOMAIN",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($cols = [])\n    #set($vals = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        $util.qr($cols.add($entry.key))\n        $util.qr($vals.add(\"'$entry.value'\"))\n      #end\n    #end\n    \"INSERT INTO SERVICE_DOMAIN ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($insertStatement = \"INSERT INTO SERVICE_DOMAIN (\")\n    #set($valuesStatement = \" VALUES (\")\n    #set($first = true)\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        #if(!$first)\n          #set($insertStatement = \"$insertStatement, \")\n          #set($valuesStatement = \"$valuesStatement, \")\n        #end\n        #set($insertStatement = \"$insertStatement$entry.key\")\n        #set($valuesStatement = \"$valuesStatement'$entry.value'\")\n        #set($first = false)\n      #end\n    #end\n    #set($insertStatement = \"$insertStatement)$valuesStatement)\")\n    \"$insertStatement\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -456,8 +456,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "createSERVICE_EXPR_MAPPING",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($cols = [])\n    #set($vals = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        $util.qr($cols.add($entry.key))\n        $util.qr($vals.add(\"'$entry.value'\"))\n      #end\n    #end\n    \"INSERT INTO SERVICE_EXPR_MAPPING ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($insertStatement = \"INSERT INTO SERVICE_EXPR_MAPPING (\")\n    #set($valuesStatement = \" VALUES (\")\n    #set($first = true)\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        #if(!$first)\n          #set($insertStatement = \"$insertStatement, \")\n          #set($valuesStatement = \"$valuesStatement, \")\n        #end\n        #set($insertStatement = \"$insertStatement$entry.key\")\n        #set($valuesStatement = \"$valuesStatement'$entry.value'\")\n        #set($first = false)\n      #end\n    #end\n    #set($insertStatement = \"$insertStatement)$valuesStatement)\")\n    \"$insertStatement\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -479,8 +479,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "createSERVICE_PARAM",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($cols = [])\n    #set($vals = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        $util.qr($cols.add($entry.key))\n        $util.qr($vals.add(\"'$entry.value'\"))\n      #end\n    #end\n    \"INSERT INTO SERVICE_PARAM ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($insertStatement = \"INSERT INTO SERVICE_PARAM (\")\n    #set($valuesStatement = \" VALUES (\")\n    #set($first = true)\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        #if(!$first)\n          #set($insertStatement = \"$insertStatement, \")\n          #set($valuesStatement = \"$valuesStatement, \")\n        #end\n        #set($insertStatement = \"$insertStatement$entry.key\")\n        #set($valuesStatement = \"$valuesStatement'$entry.value'\")\n        #set($first = false)\n      #end\n    #end\n    #set($insertStatement = \"$insertStatement)$valuesStatement)\")\n    \"$insertStatement\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -502,8 +502,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "createSERVICE_PARAM_MAPPING",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($cols = [])\n    #set($vals = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        $util.qr($cols.add($entry.key))\n        $util.qr($vals.add(\"'$entry.value'\"))\n      #end\n    #end\n    \"INSERT INTO SERVICE_PARAM_MAPPING ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($insertStatement = \"INSERT INTO SERVICE_PARAM_MAPPING (\")\n    #set($valuesStatement = \" VALUES (\")\n    #set($first = true)\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        #if(!$first)\n          #set($insertStatement = \"$insertStatement, \")\n          #set($valuesStatement = \"$valuesStatement, \")\n        #end\n        #set($insertStatement = \"$insertStatement$entry.key\")\n        #set($valuesStatement = \"$valuesStatement'$entry.value'\")\n        #set($first = false)\n      #end\n    #end\n    #set($insertStatement = \"$insertStatement)$valuesStatement)\")\n    \"$insertStatement\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -525,8 +525,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "createSERVICE_PROVIDER",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($cols = [])\n    #set($vals = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        $util.qr($cols.add($entry.key))\n        $util.qr($vals.add(\"'$entry.value'\"))\n      #end\n    #end\n    \"INSERT INTO SERVICE_PROVIDER ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($insertStatement = \"INSERT INTO SERVICE_PROVIDER (\")\n    #set($valuesStatement = \" VALUES (\")\n    #set($first = true)\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        #if(!$first)\n          #set($insertStatement = \"$insertStatement, \")\n          #set($valuesStatement = \"$valuesStatement, \")\n        #end\n        #set($insertStatement = \"$insertStatement$entry.key\")\n        #set($valuesStatement = \"$valuesStatement'$entry.value'\")\n        #set($first = false)\n      #end\n    #end\n    #set($insertStatement = \"$insertStatement)$valuesStatement)\")\n    \"$insertStatement\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -548,8 +548,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "createSORT_CRITERIA",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($cols = [])\n    #set($vals = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        $util.qr($cols.add($entry.key))\n        $util.qr($vals.add(\"'$entry.value'\"))\n      #end\n    #end\n    \"INSERT INTO SORT_CRITERIA ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($insertStatement = \"INSERT INTO SORT_CRITERIA (\")\n    #set($valuesStatement = \" VALUES (\")\n    #set($first = true)\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        #if(!$first)\n          #set($insertStatement = \"$insertStatement, \")\n          #set($valuesStatement = \"$valuesStatement, \")\n        #end\n        #set($insertStatement = \"$insertStatement$entry.key\")\n        #set($valuesStatement = \"$valuesStatement'$entry.value'\")\n        #set($first = false)\n      #end\n    #end\n    #set($insertStatement = \"$insertStatement)$valuesStatement)\")\n    \"$insertStatement\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -571,8 +571,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "createSTEP_SERVICE_MAPPING",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($cols = [])\n    #set($vals = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        $util.qr($cols.add($entry.key))\n        $util.qr($vals.add(\"'$entry.value'\"))\n      #end\n    #end\n    \"INSERT INTO STEP_SERVICE_MAPPING ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($insertStatement = \"INSERT INTO STEP_SERVICE_MAPPING (\")\n    #set($valuesStatement = \" VALUES (\")\n    #set($first = true)\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        #if(!$first)\n          #set($insertStatement = \"$insertStatement, \")\n          #set($valuesStatement = \"$valuesStatement, \")\n        #end\n        #set($insertStatement = \"$insertStatement$entry.key\")\n        #set($valuesStatement = \"$valuesStatement'$entry.value'\")\n        #set($first = false)\n      #end\n    #end\n    #set($insertStatement = \"$insertStatement)$valuesStatement)\")\n    \"$insertStatement\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -594,8 +594,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "createSTEP_TYPE",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($cols = [])\n    #set($vals = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        $util.qr($cols.add($entry.key))\n        $util.qr($vals.add(\"'$entry.value'\"))\n      #end\n    #end\n    \"INSERT INTO STEP_TYPE ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($insertStatement = \"INSERT INTO STEP_TYPE (\")\n    #set($valuesStatement = \" VALUES (\")\n    #set($first = true)\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        #if(!$first)\n          #set($insertStatement = \"$insertStatement, \")\n          #set($valuesStatement = \"$valuesStatement, \")\n        #end\n        #set($insertStatement = \"$insertStatement$entry.key\")\n        #set($valuesStatement = \"$valuesStatement'$entry.value'\")\n        #set($first = false)\n      #end\n    #end\n    #set($insertStatement = \"$insertStatement)$valuesStatement)\")\n    \"$insertStatement\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -617,8 +617,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "createSTEP_TYPE_PARAM_MAP",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($cols = [])\n    #set($vals = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        $util.qr($cols.add($entry.key))\n        $util.qr($vals.add(\"'$entry.value'\"))\n      #end\n    #end\n    \"INSERT INTO STEP_TYPE_PARAM_MAP ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($insertStatement = \"INSERT INTO STEP_TYPE_PARAM_MAP (\")\n    #set($valuesStatement = \" VALUES (\")\n    #set($first = true)\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.value)\n        #if(!$first)\n          #set($insertStatement = \"$insertStatement, \")\n          #set($valuesStatement = \"$valuesStatement, \")\n        #end\n        #set($insertStatement = \"$insertStatement$entry.key\")\n        #set($valuesStatement = \"$valuesStatement'$entry.value'\")\n        #set($first = false)\n      #end\n    #end\n    #set($insertStatement = \"$insertStatement)$valuesStatement)\")\n    \"$insertStatement\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -641,7 +641,7 @@
         "TypeName": "Mutation",
         "FieldName": "deleteCONFIG_PARAM",
         "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM CONFIG_PARAM WHERE CONFIG_PARAM_ID = '$ctx.args.input.CONFIG_PARAM_ID'\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -664,7 +664,7 @@
         "TypeName": "Mutation",
         "FieldName": "deleteFILTER_CRITERIA",
         "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM FILTER_CRITERIA WHERE FILTER_CRITERIA_ID = '$ctx.args.input.FILTER_CRITERIA_ID'\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -687,7 +687,7 @@
         "TypeName": "Mutation",
         "FieldName": "deleteORIGIN_PRODUCT",
         "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM ORIGIN_PRODUCT WHERE ORIGIN_PRODUCT_ID = '$ctx.args.input.ORIGIN_PRODUCT_ID'\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -710,7 +710,7 @@
         "TypeName": "Mutation",
         "FieldName": "deleteREDIRECT_URL",
         "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM REDIRECT_URL WHERE REDIRECT_URL_ID = '$ctx.args.input.REDIRECT_URL_ID'\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -733,7 +733,7 @@
         "TypeName": "Mutation",
         "FieldName": "deleteSERVICE",
         "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM SERVICE WHERE SERVICE_ID = '$ctx.args.input.SERVICE_ID'\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -756,7 +756,7 @@
         "TypeName": "Mutation",
         "FieldName": "deleteSERVICE_DOMAIN",
         "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM SERVICE_DOMAIN WHERE SERVICE_DOMAIN_ID = '$ctx.args.input.SERVICE_DOMAIN_ID'\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -779,7 +779,7 @@
         "TypeName": "Mutation",
         "FieldName": "deleteSERVICE_EXPR_MAPPING",
         "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM SERVICE_EXPR_MAPPING WHERE SERVICE_EXPR_MAPPING_ID = '$ctx.args.input.SERVICE_EXPR_MAPPING_ID'\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -802,7 +802,7 @@
         "TypeName": "Mutation",
         "FieldName": "deleteSERVICE_PARAM",
         "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM SERVICE_PARAM WHERE SERVICE_PARAM_ID = '$ctx.args.input.SERVICE_PARAM_ID'\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -825,7 +825,7 @@
         "TypeName": "Mutation",
         "FieldName": "deleteSERVICE_PARAM_MAPPING",
         "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM SERVICE_PARAM_MAPPING WHERE SERVICE_PARAM_MAPPING_ID = '$ctx.args.input.SERVICE_PARAM_MAPPING_ID'\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -848,7 +848,7 @@
         "TypeName": "Mutation",
         "FieldName": "deleteSERVICE_PROVIDER",
         "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM SERVICE_PROVIDER WHERE SERVICE_PROVIDER_ID = '$ctx.args.input.SERVICE_PROVIDER_ID'\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -871,7 +871,7 @@
         "TypeName": "Mutation",
         "FieldName": "deleteSORT_CRITERIA",
         "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM SORT_CRITERIA WHERE SORT_CRITERIA_ID = '$ctx.args.input.SORT_CRITERIA_ID'\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -894,7 +894,7 @@
         "TypeName": "Mutation",
         "FieldName": "deleteSTEP_SERVICE_MAPPING",
         "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM STEP_SERVICE_MAPPING WHERE STEP_SERVICE_MAPPING_ID = '$ctx.args.input.STEP_SERVICE_MAPPING_ID'\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -917,7 +917,7 @@
         "TypeName": "Mutation",
         "FieldName": "deleteSTEP_TYPE",
         "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM STEP_TYPE WHERE STEP_TYPE_ID = '$ctx.args.input.STEP_TYPE_ID'\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -940,7 +940,7 @@
         "TypeName": "Mutation",
         "FieldName": "deleteSTEP_TYPE_PARAM_MAP",
         "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    \"DELETE FROM STEP_TYPE_PARAM_MAP WHERE STEP_TYPE_PARAM_MAP_ID = '$ctx.args.input.STEP_TYPE_PARAM_MAP_ID'\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -962,8 +962,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "updateCONFIG_PARAM",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updates = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"CONFIG_PARAM_ID\" && $entry.value)\n        $util.qr($updates.add(\"$entry.key = '$entry.value'\"))\n      #end\n    #end\n    \"UPDATE CONFIG_PARAM SET $util.str.join($updates, ', ') WHERE CONFIG_PARAM_ID = '$ctx.args.input.CONFIG_PARAM_ID'\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updateStatement = \"UPDATE CONFIG_PARAM SET \")\n    #set($first = true)\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"CONFIG_PARAM_ID\" && $entry.value)\n        #if(!$first)\n          #set($updateStatement = \"$updateStatement, \")\n        #end\n        #set($updateStatement = \"$updateStatement$entry.key = '$entry.value'\")\n        #set($first = false)\n      #end\n    #end\n    #set($updateStatement = \"$updateStatement WHERE CONFIG_PARAM_ID = '$ctx.args.input.CONFIG_PARAM_ID'\")\n    \"$updateStatement\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -985,8 +985,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "updateFILTER_CRITERIA",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updates = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"FILTER_CRITERIA_ID\" && $entry.value)\n        $util.qr($updates.add(\"$entry.key = '$entry.value'\"))\n      #end\n    #end\n    \"UPDATE FILTER_CRITERIA SET $util.str.join($updates, ', ') WHERE FILTER_CRITERIA_ID = '$ctx.args.input.FILTER_CRITERIA_ID'\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updateStatement = \"UPDATE FILTER_CRITERIA SET \")\n    #set($first = true)\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"FILTER_CRITERIA_ID\" && $entry.value)\n        #if(!$first)\n          #set($updateStatement = \"$updateStatement, \")\n        #end\n        #set($updateStatement = \"$updateStatement$entry.key = '$entry.value'\")\n        #set($first = false)\n      #end\n    #end\n    #set($updateStatement = \"$updateStatement WHERE FILTER_CRITERIA_ID = '$ctx.args.input.FILTER_CRITERIA_ID'\")\n    \"$updateStatement\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -1008,8 +1008,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "updateORIGIN_PRODUCT",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updates = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"ORIGIN_PRODUCT_ID\" && $entry.value)\n        $util.qr($updates.add(\"$entry.key = '$entry.value'\"))\n      #end\n    #end\n    \"UPDATE ORIGIN_PRODUCT SET $util.str.join($updates, ', ') WHERE ORIGIN_PRODUCT_ID = '$ctx.args.input.ORIGIN_PRODUCT_ID'\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updateStatement = \"UPDATE ORIGIN_PRODUCT SET \")\n    #set($first = true)\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"ORIGIN_PRODUCT_ID\" && $entry.value)\n        #if(!$first)\n          #set($updateStatement = \"$updateStatement, \")\n        #end\n        #set($updateStatement = \"$updateStatement$entry.key = '$entry.value'\")\n        #set($first = false)\n      #end\n    #end\n    #set($updateStatement = \"$updateStatement WHERE ORIGIN_PRODUCT_ID = '$ctx.args.input.ORIGIN_PRODUCT_ID'\")\n    \"$updateStatement\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -1031,8 +1031,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "updateREDIRECT_URL",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updates = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"REDIRECT_URL_ID\" && $entry.value)\n        $util.qr($updates.add(\"$entry.key = '$entry.value'\"))\n      #end\n    #end\n    \"UPDATE REDIRECT_URL SET $util.str.join($updates, ', ') WHERE REDIRECT_URL_ID = '$ctx.args.input.REDIRECT_URL_ID'\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updateStatement = \"UPDATE REDIRECT_URL SET \")\n    #set($first = true)\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"REDIRECT_URL_ID\" && $entry.value)\n        #if(!$first)\n          #set($updateStatement = \"$updateStatement, \")\n        #end\n        #set($updateStatement = \"$updateStatement$entry.key = '$entry.value'\")\n        #set($first = false)\n      #end\n    #end\n    #set($updateStatement = \"$updateStatement WHERE REDIRECT_URL_ID = '$ctx.args.input.REDIRECT_URL_ID'\")\n    \"$updateStatement\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -1054,8 +1054,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "updateSERVICE",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updates = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"SERVICE_ID\" && $entry.value)\n        $util.qr($updates.add(\"$entry.key = '$entry.value'\"))\n      #end\n    #end\n    \"UPDATE SERVICE SET $util.str.join($updates, ', ') WHERE SERVICE_ID = '$ctx.args.input.SERVICE_ID'\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updateStatement = \"UPDATE SERVICE SET \")\n    #set($first = true)\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"SERVICE_ID\" && $entry.value)\n        #if(!$first)\n          #set($updateStatement = \"$updateStatement, \")\n        #end\n        #set($updateStatement = \"$updateStatement$entry.key = '$entry.value'\")\n        #set($first = false)\n      #end\n    #end\n    #set($updateStatement = \"$updateStatement WHERE SERVICE_ID = '$ctx.args.input.SERVICE_ID'\")\n    \"$updateStatement\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -1077,8 +1077,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "updateSERVICE_DOMAIN",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updates = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"SERVICE_DOMAIN_ID\" && $entry.value)\n        $util.qr($updates.add(\"$entry.key = '$entry.value'\"))\n      #end\n    #end\n    \"UPDATE SERVICE_DOMAIN SET $util.str.join($updates, ', ') WHERE SERVICE_DOMAIN_ID = '$ctx.args.input.SERVICE_DOMAIN_ID'\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updateStatement = \"UPDATE SERVICE_DOMAIN SET \")\n    #set($first = true)\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"SERVICE_DOMAIN_ID\" && $entry.value)\n        #if(!$first)\n          #set($updateStatement = \"$updateStatement, \")\n        #end\n        #set($updateStatement = \"$updateStatement$entry.key = '$entry.value'\")\n        #set($first = false)\n      #end\n    #end\n    #set($updateStatement = \"$updateStatement WHERE SERVICE_DOMAIN_ID = '$ctx.args.input.SERVICE_DOMAIN_ID'\")\n    \"$updateStatement\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -1100,8 +1100,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "updateSERVICE_EXPR_MAPPING",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updates = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"SERVICE_EXPR_MAPPING_ID\" && $entry.value)\n        $util.qr($updates.add(\"$entry.key = '$entry.value'\"))\n      #end\n    #end\n    \"UPDATE SERVICE_EXPR_MAPPING SET $util.str.join($updates, ', ') WHERE SERVICE_EXPR_MAPPING_ID = '$ctx.args.input.SERVICE_EXPR_MAPPING_ID'\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updateStatement = \"UPDATE SERVICE_EXPR_MAPPING SET \")\n    #set($first = true)\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"SERVICE_EXPR_MAPPING_ID\" && $entry.value)\n        #if(!$first)\n          #set($updateStatement = \"$updateStatement, \")\n        #end\n        #set($updateStatement = \"$updateStatement$entry.key = '$entry.value'\")\n        #set($first = false)\n      #end\n    #end\n    #set($updateStatement = \"$updateStatement WHERE SERVICE_EXPR_MAPPING_ID = '$ctx.args.input.SERVICE_EXPR_MAPPING_ID'\")\n    \"$updateStatement\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -1123,8 +1123,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "updateSERVICE_PARAM",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updates = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"SERVICE_PARAM_ID\" && $entry.value)\n        $util.qr($updates.add(\"$entry.key = '$entry.value'\"))\n      #end\n    #end\n    \"UPDATE SERVICE_PARAM SET $util.str.join($updates, ', ') WHERE SERVICE_PARAM_ID = '$ctx.args.input.SERVICE_PARAM_ID'\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updateStatement = \"UPDATE SERVICE_PARAM SET \")\n    #set($first = true)\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"SERVICE_PARAM_ID\" && $entry.value)\n        #if(!$first)\n          #set($updateStatement = \"$updateStatement, \")\n        #end\n        #set($updateStatement = \"$updateStatement$entry.key = '$entry.value'\")\n        #set($first = false)\n      #end\n    #end\n    #set($updateStatement = \"$updateStatement WHERE SERVICE_PARAM_ID = '$ctx.args.input.SERVICE_PARAM_ID'\")\n    \"$updateStatement\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -1146,8 +1146,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "updateSERVICE_PARAM_MAPPING",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updates = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"SERVICE_PARAM_MAPPING_ID\" && $entry.value)\n        $util.qr($updates.add(\"$entry.key = '$entry.value'\"))\n      #end\n    #end\n    \"UPDATE SERVICE_PARAM_MAPPING SET $util.str.join($updates, ', ') WHERE SERVICE_PARAM_MAPPING_ID = '$ctx.args.input.SERVICE_PARAM_MAPPING_ID'\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updateStatement = \"UPDATE SERVICE_PARAM_MAPPING SET \")\n    #set($first = true)\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"SERVICE_PARAM_MAPPING_ID\" && $entry.value)\n        #if(!$first)\n          #set($updateStatement = \"$updateStatement, \")\n        #end\n        #set($updateStatement = \"$updateStatement$entry.key = '$entry.value'\")\n        #set($first = false)\n      #end\n    #end\n    #set($updateStatement = \"$updateStatement WHERE SERVICE_PARAM_MAPPING_ID = '$ctx.args.input.SERVICE_PARAM_MAPPING_ID'\")\n    \"$updateStatement\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -1169,8 +1169,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "updateSERVICE_PROVIDER",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updates = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"SERVICE_PROVIDER_ID\" && $entry.value)\n        $util.qr($updates.add(\"$entry.key = '$entry.value'\"))\n      #end\n    #end\n    \"UPDATE SERVICE_PROVIDER SET $util.str.join($updates, ', ') WHERE SERVICE_PROVIDER_ID = '$ctx.args.input.SERVICE_PROVIDER_ID'\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updateStatement = \"UPDATE SERVICE_PROVIDER SET \")\n    #set($first = true)\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"SERVICE_PROVIDER_ID\" && $entry.value)\n        #if(!$first)\n          #set($updateStatement = \"$updateStatement, \")\n        #end\n        #set($updateStatement = \"$updateStatement$entry.key = '$entry.value'\")\n        #set($first = false)\n      #end\n    #end\n    #set($updateStatement = \"$updateStatement WHERE SERVICE_PROVIDER_ID = '$ctx.args.input.SERVICE_PROVIDER_ID'\")\n    \"$updateStatement\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -1192,8 +1192,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "updateSORT_CRITERIA",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updates = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"SORT_CRITERIA_ID\" && $entry.value)\n        $util.qr($updates.add(\"$entry.key = '$entry.value'\"))\n      #end\n    #end\n    \"UPDATE SORT_CRITERIA SET $util.str.join($updates, ', ') WHERE SORT_CRITERIA_ID = '$ctx.args.input.SORT_CRITERIA_ID'\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updateStatement = \"UPDATE SORT_CRITERIA SET \")\n    #set($first = true)\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"SORT_CRITERIA_ID\" && $entry.value)\n        #if(!$first)\n          #set($updateStatement = \"$updateStatement, \")\n        #end\n        #set($updateStatement = \"$updateStatement$entry.key = '$entry.value'\")\n        #set($first = false)\n      #end\n    #end\n    #set($updateStatement = \"$updateStatement WHERE SORT_CRITERIA_ID = '$ctx.args.input.SORT_CRITERIA_ID'\")\n    \"$updateStatement\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -1215,8 +1215,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "updateSTEP_SERVICE_MAPPING",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updates = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"STEP_SERVICE_MAPPING_ID\" && $entry.value)\n        $util.qr($updates.add(\"$entry.key = '$entry.value'\"))\n      #end\n    #end\n    \"UPDATE STEP_SERVICE_MAPPING SET $util.str.join($updates, ', ') WHERE STEP_SERVICE_MAPPING_ID = '$ctx.args.input.STEP_SERVICE_MAPPING_ID'\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updateStatement = \"UPDATE STEP_SERVICE_MAPPING SET \")\n    #set($first = true)\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"STEP_SERVICE_MAPPING_ID\" && $entry.value)\n        #if(!$first)\n          #set($updateStatement = \"$updateStatement, \")\n        #end\n        #set($updateStatement = \"$updateStatement$entry.key = '$entry.value'\")\n        #set($first = false)\n      #end\n    #end\n    #set($updateStatement = \"$updateStatement WHERE STEP_SERVICE_MAPPING_ID = '$ctx.args.input.STEP_SERVICE_MAPPING_ID'\")\n    \"$updateStatement\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -1238,8 +1238,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "updateSTEP_TYPE",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updates = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"STEP_TYPE_ID\" && $entry.value)\n        $util.qr($updates.add(\"$entry.key = '$entry.value'\"))\n      #end\n    #end\n    \"UPDATE STEP_TYPE SET $util.str.join($updates, ', ') WHERE STEP_TYPE_ID = '$ctx.args.input.STEP_TYPE_ID'\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updateStatement = \"UPDATE STEP_TYPE SET \")\n    #set($first = true)\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"STEP_TYPE_ID\" && $entry.value)\n        #if(!$first)\n          #set($updateStatement = \"$updateStatement, \")\n        #end\n        #set($updateStatement = \"$updateStatement$entry.key = '$entry.value'\")\n        #set($first = false)\n      #end\n    #end\n    #set($updateStatement = \"$updateStatement WHERE STEP_TYPE_ID = '$ctx.args.input.STEP_TYPE_ID'\")\n    \"$updateStatement\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [
@@ -1261,8 +1261,8 @@
         },
         "TypeName": "Mutation",
         "FieldName": "updateSTEP_TYPE_PARAM_MAP",
-        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updates = [])\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"STEP_TYPE_PARAM_MAP_ID\" && $entry.value)\n        $util.qr($updates.add(\"$entry.key = '$entry.value'\"))\n      #end\n    #end\n    \"UPDATE STEP_TYPE_PARAM_MAP SET $util.str.join($updates, ', ') WHERE STEP_TYPE_PARAM_MAP_ID = '$ctx.args.input.STEP_TYPE_PARAM_MAP_ID'\"\n  ]\n}",
-        "ResponseMappingTemplate": "#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)\n  $util.toJson($ctx.result.sqlStatementResults[0].records[0])\n#else\n  $util.toJson($ctx.args.input)\n#end",
+        "RequestMappingTemplate": "{\n  \"version\": \"2018-05-29\",\n  \"statements\": [\n    #set($updateStatement = \"UPDATE STEP_TYPE_PARAM_MAP SET \")\n    #set($first = true)\n    #foreach($entry in $ctx.args.input.entrySet())\n      #if($entry.key != \"STEP_TYPE_PARAM_MAP_ID\" && $entry.value)\n        #if(!$first)\n          #set($updateStatement = \"$updateStatement, \")\n        #end\n        #set($updateStatement = \"$updateStatement$entry.key = '$entry.value'\")\n        #set($first = false)\n      #end\n    #end\n    #set($updateStatement = \"$updateStatement WHERE STEP_TYPE_PARAM_MAP_ID = '$ctx.args.input.STEP_TYPE_PARAM_MAP_ID'\")\n    \"$updateStatement\"\n  ]\n}",
+        "ResponseMappingTemplate": "## Handle RDS Data API response for MySQL (no RETURNING clause)\n#if($ctx.error)\n    $utils.error($ctx.error.message, $ctx.error.type)\n#end\n\n## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator\n$util.toJson($ctx.args.input)",
         "Kind": "UNIT",
         "DataSourceName": {
           "Fn::GetAtt": [

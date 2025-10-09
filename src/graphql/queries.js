@@ -1,17 +1,128 @@
+export const listConfigParams = `
+  query ListConfigParams {
+    listCONFIG_PARAMS {
+      items {
+        CONFIG_PARAM_ID
+        CONFIG_NAME
+        CONFIG_VALUE
+        DESCRIPTION
+        CREATED_DATE
+        CHANGED_DATE
+      }
+      nextToken
+    }
+  }
+`;
+
+export const listFilterCriterias = `
+  query ListFilterCriterias {
+    listFILTER_CRITERIAS {
+      items {
+        FILTER_CRITERIA_ID
+        ORIGIN_PRODUCT_ID
+        STEP_TYPE_ID
+        CRITERIA
+        SEQUENCE_NBR
+        CREATED_DATE
+        CHANGED_DATE
+      }
+      nextToken
+    }
+  }
+`;
+
+export const listLoanApps = `
+  query ListLoanApps {
+    listLOAN_APPS {
+      items {
+        LOAN_APP_ID
+        ORIGIN_LOAN_APP_ID
+        ORIGIN_PRODUCT_ID
+        PROCESS_FLAG
+        EXEC_ID
+        CREATED_DATE
+        CHANGED_DATE
+      }
+      nextToken
+    }
+  }
+`;
+
+export const listLoanAppExecss = `
+  query ListLoanAppExecss {
+    listLOAN_APP_EXECSS {
+      items {
+        LOAN_APP_EXEC_ID
+        LOAN_APP_ID
+        AWS_EXEC_ID
+        CREATED_DATE
+      }
+      nextToken
+    }
+  }
+`;
+
+export const listLoanAppStepStatuss = `
+  query ListLoanAppStepStatuss {
+    listLOAN_APP_STEP_STATUSS {
+      items {
+        LOAN_APP_STEP_STATUS_ID
+        LOAN_APP_ID
+        LOAN_APP_EXEC_ID
+        STEP_TYPE_ID
+        COMPLETE_FLAG
+        SEQUENCE_NBR
+        IDX_JSON_PATH
+        RESPONSE_TEXT
+        OUTPUT_JSON
+        CREATED_DATE
+      }
+      nextToken
+    }
+  }
+`;
+
+export const listNewMemberTokens = `
+  query ListNewMemberTokens {
+    listNEW_MEMBER_TOKENS {
+      items {
+        NEW_MEMBER_TOKEN_ID
+        MEMBER_NBR
+        CARD_NBR
+        PERSON_NBR
+        LOAN_APP_ID
+        FIRST_NAME
+        LAST_NAME
+        DOB
+        TAX_ID
+        EMAIL_ADDRESS_TEXT
+        ZIP_CODE
+        HOME_PHONE_NBR
+        MOBILE_PHONE_NBR
+        TOKEN_VALUE
+        TOKEN_USED_FLAG
+        CREATED_DATE
+        CHANGED_DATE
+      }
+      nextToken
+    }
+  }
+`;
+
 export const listOriginProducts = `
   query ListOriginProducts {
     listORIGIN_PRODUCTS {
       items {
         ORIGIN_PRODUCT_ID
         VENDOR_NAME
-        PSCU_CLIENT_ID
         PRODUCT_ID
+        PSCU_CLIENT_ID
         PRODUCT_DESC
         PARTNER_CODE
-        CREATED_DATE
         CREATED_BY_USER_ID
-        CHANGED_DATE
+        CREATED_DATE
         CHANGED_BY_USER_ID
+        CHANGED_DATE
       }
       nextToken
     }
@@ -37,12 +148,15 @@ export const listRedirectUrls = `
   }
 `;
 
-export const listServiceProviders = `
-  query ListServiceProviders {
-    listSERVICE_PROVIDERS {
+export const listServices = `
+  query ListServices {
+    listSERVICES {
       items {
+        SERVICE_ID
         SERVICE_PROVIDER_ID
-        SERVICE_PROVIDER_NAME
+        URI
+        SECRET_NAME
+        REQUEST_TYPE
         CREATED_BY_USER_ID
         CREATED_DATE
         CHANGED_BY_USER_ID
@@ -53,15 +167,30 @@ export const listServiceProviders = `
   }
 `;
 
-export const listServices = `
-  query ListServices {
-    listSERVICES {
+export const listServiceDomains = `
+  query ListServiceDomains {
+    listSERVICE_DOMAINS {
       items {
-        SERVICE_ID
+        SERVICE_DOMAIN_ID
+        DOMAIN_URL
         SERVICE_PROVIDER_ID
-        URI
-        SECRET_NAME
-        REQUEST_TYPE
+        CREATED_DATE
+        CHANGED_DATE
+      }
+      nextToken
+    }
+  }
+`;
+
+export const listServiceExprMappings = `
+  query ListServiceExprMappings {
+    listSERVICE_EXPR_MAPPINGS {
+      items {
+        SERVICE_EXPR_MAPPING_ID
+        SERVICE_PARAM_MAPPING_ID
+        SOURCE_EXPR
+        TARGET_EXPR
+        COMMENT_TEXT
         CREATED_BY_USER_ID
         CREATED_DATE
         CHANGED_BY_USER_ID
@@ -112,19 +241,49 @@ export const listServiceParamMappings = `
   }
 `;
 
-export const listServiceExprMappings = `
-  query ListServiceExprMappings {
-    listSERVICE_EXPR_MAPPINGS {
+export const listServiceProviders = `
+  query ListServiceProviders {
+    listSERVICE_PROVIDERS {
       items {
-        SERVICE_EXPR_MAPPING_ID
-        SERVICE_PARAM_MAPPING_ID
-        SOURCE_EXPR
-        TARGET_EXPR
-        COMMENT_TEXT
+        SERVICE_PROVIDER_ID
+        SERVICE_PROVIDER_NAME
         CREATED_BY_USER_ID
         CREATED_DATE
         CHANGED_BY_USER_ID
         CHANGED_DATE
+      }
+      nextToken
+    }
+  }
+`;
+
+export const listSortCriterias = `
+  query ListSortCriterias {
+    listSORT_CRITERIAS {
+      items {
+        SORT_CRITERIA_ID
+        ORIGIN_PRODUCT_ID
+        STEP_TYPE_ID
+        JSON_PATH
+        SORT_ORDER
+        SORT_PRIORITY
+        SEQUENCE_NBR
+        CREATED_DATE
+        CHANGED_DATE
+      }
+      nextToken
+    }
+  }
+`;
+
+export const listStepServiceMappings = `
+  query ListStepServiceMappings {
+    listSTEP_SERVICE_MAPPINGS {
+      items {
+        STEP_SERVICE_MAPPING_ID
+        STEP_TYPE_ID
+        SERVICE_ID
+        SEQUENCE_NBR
       }
       nextToken
     }
@@ -149,75 +308,18 @@ export const listStepTypes = `
   }
 `;
 
-export const listStepServiceMappings = `
-  query ListStepServiceMappings {
-    listSTEP_SERVICE_MAPPINGS {
+export const listStepTypeParamMaps = `
+  query ListStepTypeParamMaps {
+    listSTEP_TYPE_PARAM_MAPS {
       items {
-        STEP_SERVICE_MAPPING_ID
+        STEP_TYPE_PARAM_MAP_ID
         STEP_TYPE_ID
-        SERVICE_ID
-        SEQUENCE_NBR
-      }
-      nextToken
-    }
-  }
-`;
-
-export const listServiceParamMappingsView = `
-  query ListServiceParamMappingsView($filter: TableService_param_mappingsFilterInput, $limit: Int, $nextToken: String) {
-    listService_param_mappings(filter: $filter, limit: $limit, nextToken: $nextToken) {
-      items {
         SERVICE_PARAM_MAPPING_ID
-        ORIGIN_PRODUCT_ID
-        VENDOR_NAME
-        PRODUCT_ID
-        PSCU_CLIENT_ID
-        PRODUCT_DESC
-        PARTNER_CODE
-        SOURCE_PROVIDER_ID
-        SOURCE_PROVIDER_NAME
-        SOURCE_SERVICE_ID
-        SOURCE_SERVICE_URI
-        SOURCE_PARAM_ID
-        SOURCE_PARAM_NAME
-        SOURCE_EXPR
-        TARGET_PROVIDER_ID
-        TARGET_PROVIDER_NAME
-        TARGET_SERVICE_ID
-        TARGET_SERVICE_URI
-        TARGET_EXPR
-        TARGET_PARAM_ID
-        TARGET_PARAM_NAME
-        SYSTEM_NBR
-        PRIN_NBR
-        AGENT_NBR
-        SERVICE_EXPR_MAPPING_ID
+        CREATED_BY_USER_ID
+        CREATED_DATE
       }
       nextToken
     }
   }
 `;
 
-export const introspectionQuery = `
-  query IntrospectionQuery {
-    __schema {
-      types {
-        name
-        kind
-        description
-        fields {
-          name
-          type {
-            name
-            kind
-            ofType {
-              name
-              kind
-            }
-          }
-          description
-        }
-      }
-    }
-  }
-`;

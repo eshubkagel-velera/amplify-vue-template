@@ -102,14 +102,38 @@ const processGenericEntity = (data, isUpdate) => {
       delete cleaned.CREATED_BY_USER_ID;
       delete cleaned.CREATED_DATE;
     }
-    cleaned.CHANGED_DATE = getCurrentDateString();
-    cleaned.CHANGED_BY_USER_ID = props.userProfileId || 1;
+    // Only set audit fields if they exist in formFields
+    if (props.formFields.some(field => field.name === 'CHANGED_DATE')) {
+      cleaned.CHANGED_DATE = getCurrentDateString();
+    }
+    if (props.formFields.some(field => field.name === 'CHANGED_BY_USER_ID')) {
+      cleaned.CHANGED_BY_USER_ID = props.userProfileId || 1;
+    }
+    // Remove audit fields that don't exist in this entity's schema
+    if (!props.formFields.some(field => field.name === 'CHANGED_BY_USER_ID')) {
+      delete cleaned.CHANGED_BY_USER_ID;
+    }
+    if (!props.formFields.some(field => field.name === 'CREATED_BY_USER_ID')) {
+      delete cleaned.CREATED_BY_USER_ID;
+    }
   } else {
     delete cleaned[props.config.idField];
     delete cleaned.CHANGED_BY_USER_ID;
     delete cleaned.CHANGED_DATE;
-    cleaned.CREATED_DATE = getCurrentDateString();
-    cleaned.CREATED_BY_USER_ID = props.userProfileId || 1;
+    // Only set audit fields if they exist in formFields
+    if (props.formFields.some(field => field.name === 'CREATED_DATE')) {
+      cleaned.CREATED_DATE = getCurrentDateString();
+    }
+    if (props.formFields.some(field => field.name === 'CREATED_BY_USER_ID')) {
+      cleaned.CREATED_BY_USER_ID = props.userProfileId || 1;
+    }
+    // Remove audit fields that don't exist in this entity's schema
+    if (!props.formFields.some(field => field.name === 'CREATED_BY_USER_ID')) {
+      delete cleaned.CREATED_BY_USER_ID;
+    }
+    if (!props.formFields.some(field => field.name === 'CREATED_DATE')) {
+      delete cleaned.CREATED_DATE;
+    }
   }
   
   return cleaned;

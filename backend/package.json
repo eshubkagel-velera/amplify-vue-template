@@ -9,6 +9,7 @@
     "db:uat": "node scripts/run-dml-via-rds-data.js uat",
     "db:live": "node scripts/run-dml-via-rds-data.js live",
     "schema": "node scripts/generate-schema-from-sql.js",
+    "validate-vtl": "node scripts/validate-vtl-templates.js",
     "deploy": "serverless deploy",
     "deploy:dev": "serverless deploy --stage dev",
     "deploy:test": "serverless deploy --stage test",

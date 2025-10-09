@@ -68,6 +68,12 @@ async function getCurrentTableStructure(tableName) {
     return { exists: true, columns };
   } catch (error) {
     // If we can't query the database, assume table doesn't exist
+    if (process.argv.includes('--verbose')) {
+      console.error(`⚠️  Database query failed for table ${tableName}:`, error.message);
+      console.error(`   Cluster ARN: ${clusterArn}`);
+      console.error(`   Secret ARN: ${secretArn}`);
+      console.error(`   Database: ${database}`);
+    }
     return { exists: false };
   }
 }

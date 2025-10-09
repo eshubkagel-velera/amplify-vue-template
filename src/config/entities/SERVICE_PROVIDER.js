@@ -16,12 +16,46 @@ export default {
   },
   
   // Fields configuration
-  fields: ['SERVICE_PROVIDER_ID', 'SERVICE_PROVIDER_NAME', 'CREATED_BY_USER_ID', 'CREATED_DATE', 'CHANGED_BY_USER_ID', 'CHANGED_DATE'],
+  fields: [
+    "SERVICE_PROVIDER_ID",
+    "SERVICE_PROVIDER_NAME",
+    "CREATED_BY_USER_ID",
+    "CREATED_DATE",
+    "CHANGED_BY_USER_ID",
+    "CHANGED_DATE"
+  ],
   
   // Form fields configuration
   formFields: [
-    { name: 'SERVICE_PROVIDER_NAME', type: 'text', required: true, disabled: false },
-    { name: 'CREATED_BY_USER_ID', type: 'number', required: true, disabled: false },
-    { name: 'CREATED_DATE', type: 'date', required: true, disabled: true }
+    {
+      "name": "SERVICE_PROVIDER_NAME",
+      "type": "text",
+      "required": true,
+      "disabled": false
+    },
+    {
+      "name": "CREATED_BY_USER_ID",
+      "type": "number",
+      "required": false,
+      "disabled": false
+    },
+    {
+      "name": "CREATED_DATE",
+      "type": "text",
+      "required": false,
+      "disabled": true
+    },
+    {
+      "name": "CHANGED_BY_USER_ID",
+      "type": "number",
+      "required": false,
+      "disabled": false
+    },
+    {
+      "name": "CHANGED_DATE",
+      "type": "text",
+      "required": false,
+      "disabled": true
+    }
   ]
 };

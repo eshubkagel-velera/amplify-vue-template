@@ -6,12 +6,14 @@ const sanitizeForLog = (input: string): string => {
 
 export const useErrorHandler = () => {
   const error = ref('');
+  const errorAction = ref('');
   const showErrorModal = ref(false);
 
   const handleError = (err: Error | { message: string; errors?: any[] }, context = '') => {
     const message = err.message || err.errors?.[0]?.message || 'An unexpected error occurred';
     console.error(`Error in ${sanitizeForLog(context)}:`, sanitizeForLog(message));
     error.value = message;
+    errorAction.value = context;
     showErrorModal.value = true;
   };
 
@@ -25,16 +27,19 @@ export const useErrorHandler = () => {
       console.error(`GraphQL error in ${sanitizeForLog(context)}:`, message);
       error.value = message;
     }
+    errorAction.value = context;
     showErrorModal.value = true;
   };
 
   const clearError = () => {
     error.value = '';
+    errorAction.value = '';
     showErrorModal.value = false;
   };
 
   return {
     error,
+    errorAction,
     showErrorModal,
     handleError,
     handleGraphQLError,

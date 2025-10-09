@@ -1,14 +1,21 @@
 {
   "version": "2018-05-29",
   "statements": [
-    #set($cols = [])
-    #set($vals = [])
+    #set($insertStatement = "INSERT INTO SERVICE_DOMAIN (")
+    #set($valuesStatement = " VALUES (")
+    #set($first = true)
     #foreach($entry in $ctx.args.input.entrySet())
       #if($entry.value)
-        $util.qr($cols.add($entry.key))
-        $util.qr($vals.add("'$entry.value'"))
+        #if(!$first)
+          #set($insertStatement = "$insertStatement, ")
+          #set($valuesStatement = "$valuesStatement, ")
+        #end
+        #set($insertStatement = "$insertStatement$entry.key")
+        #set($valuesStatement = "$valuesStatement'$entry.value'")
+        #set($first = false)
       #end
     #end
-    "INSERT INTO SERVICE_DOMAIN ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))"
+    #set($insertStatement = "$insertStatement)$valuesStatement)")
+    "$insertStatement"
   ]
 }

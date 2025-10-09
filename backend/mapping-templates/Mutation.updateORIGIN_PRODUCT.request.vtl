@@ -1,12 +1,18 @@
 {
   "version": "2018-05-29",
   "statements": [
-    #set($updates = [])
+    #set($updateStatement = "UPDATE ORIGIN_PRODUCT SET ")
+    #set($first = true)
     #foreach($entry in $ctx.args.input.entrySet())
       #if($entry.key != "ORIGIN_PRODUCT_ID" && $entry.value)
-        $util.qr($updates.add("$entry.key = '$entry.value'"))
+        #if(!$first)
+          #set($updateStatement = "$updateStatement, ")
+        #end
+        #set($updateStatement = "$updateStatement$entry.key = '$entry.value'")
+        #set($first = false)
       #end
     #end
-    "UPDATE ORIGIN_PRODUCT SET $util.str.join($updates, ', ') WHERE ORIGIN_PRODUCT_ID = '$ctx.args.input.ORIGIN_PRODUCT_ID'"
+    #set($updateStatement = "$updateStatement WHERE ORIGIN_PRODUCT_ID = '$ctx.args.input.ORIGIN_PRODUCT_ID'")
+    "$updateStatement"
   ]
 }

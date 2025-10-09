@@ -1,4 +1,10 @@
 {
+  "foreignKeyDisplayFields": {
+    "ORIGIN_PRODUCT": "PRODUCT_ID",
+    "STEP_TYPE": "STEP_TYPE_NAME",
+    "SERVICE_PROVIDER": "SERVICE_PROVIDER_NAME",
+    "SERVICE": "URI"
+  },
   "tables": {
     "CONFIG_PARAM": { "includeInGraphQL": true, "includeInApp": true, "allowQuery": true, "allowCreate": true, "allowUpdate": true, "allowDelete": true },
     "LOAN_APP": { "includeInGraphQL": true, "includeInApp": true, "allowQuery": true, "allowCreate": false, "allowUpdate": false, "allowDelete": false },

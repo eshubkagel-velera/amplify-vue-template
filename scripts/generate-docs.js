@@ -88,6 +88,58 @@ For detailed component documentation including props, events, and usage examples
   console.log('Updated COMPONENT_GUIDE_AUTO.md');
 }
 
+// Scan backend documentation
+function scanBackendDocs() {
+  const backendDir = path.join(__dirname, '../backend');
+  const docs = [];
+  
+  // Recursively find .md files in backend
+  function findMdFiles(dir) {
+    if (!fs.existsSync(dir)) return;
+    
+    const items = fs.readdirSync(dir);
+    items.forEach(item => {
+      const fullPath = path.join(dir, item);
+      const stat = fs.statSync(fullPath);
+      
+      if (stat.isDirectory()) {
+        findMdFiles(fullPath);
+      } else if (item.endsWith('.md')) {
+        const relativePath = path.relative(path.join(__dirname, '..'), fullPath);
+        docs.push({
+          name: item,
+          path: relativePath,
+          lastModified: stat.mtime.toISOString().split('T')[0]
+        });
+      }
+    });
+  }
+  
+  findMdFiles(backendDir);
+  return docs;
+}
+
+// Update backend documentation index
+function updateBackendDocsIndex() {
+  const backendDocs = scanBackendDocs();
+  const timestamp = new Date().toISOString().split('T')[0];
+  
+  let content = `# Backend Documentation Index\n\n*Auto-generated on ${timestamp}*\n\n`;
+  
+  if (backendDocs.length > 0) {
+    content += `## Available Documentation\n\n`;
+    backendDocs.forEach(doc => {
+      content += `- [${doc.name}](../${doc.path}) - Last modified: ${doc.lastModified}\n`;
+    });
+  } else {
+    content += `No backend documentation found.\n`;
+  }
+  
+  const indexPath = path.join(__dirname, '../docs/BACKEND_DOCS_INDEX.md');
+  fs.writeFileSync(indexPath, content);
+  console.log('Updated BACKEND_DOCS_INDEX.md');
+}
+
 // Update last modified timestamp in main docs
 function updateTimestamps() {
   const docsDir = path.join(__dirname, '../docs');
@@ -115,6 +167,7 @@ function updateTimestamps() {
 // Main execution
 try {
   updateComponentGuide();
+  updateBackendDocsIndex();
   updateTimestamps();
   console.log('Documentation generation completed successfully');
 } catch (error) {

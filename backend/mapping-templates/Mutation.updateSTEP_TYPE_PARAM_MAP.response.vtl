@@ -1,5 +1,7 @@
-#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)
-  $util.toJson($ctx.result.sqlStatementResults[0].records[0])
-#else
-  $util.toJson($ctx.args.input)
+## Handle RDS Data API response for MySQL (no RETURNING clause)
+#if($ctx.error)
+    $utils.error($ctx.error.message, $ctx.error.type)
 #end
+
+## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator
+$util.toJson($ctx.args.input)

@@ -370,28 +370,41 @@ function generateMappingTemplates() {
     const createRequestTemplate = `{
   "version": "2018-05-29",
   "statements": [
-    #set($cols = [])
-    #set($vals = [])
+    #set($insertStatement = "INSERT INTO ${tableName} (")
+    #set($valuesStatement = " VALUES (")
+    #set($first = true)
     #foreach($entry in $ctx.args.input.entrySet())
       #if($entry.value)
-        $util.qr($cols.add($entry.key))
-        $util.qr($vals.add("'$entry.value'"))
+        #if(!$first)
+          #set($insertStatement = "$insertStatement, ")
+          #set($valuesStatement = "$valuesStatement, ")
+        #end
+        #set($insertStatement = "$insertStatement$entry.key")
+        #set($valuesStatement = "$valuesStatement'$entry.value'")
+        #set($first = false)
       #end
     #end
-    "INSERT INTO ${tableName} ($util.str.join($cols, ', ')) VALUES ($util.str.join($vals, ', '))"
+    #set($insertStatement = "$insertStatement)$valuesStatement)")
+    "$insertStatement"
   ]
 }`;
 
     const updateRequestTemplate = `{
   "version": "2018-05-29",
   "statements": [
-    #set($updates = [])
+    #set($updateStatement = "UPDATE ${tableName} SET ")
+    #set($first = true)
     #foreach($entry in $ctx.args.input.entrySet())
       #if($entry.key != "${primaryKey}" && $entry.value)
-        $util.qr($updates.add("$entry.key = '$entry.value'"))
+        #if(!$first)
+          #set($updateStatement = "$updateStatement, ")
+        #end
+        #set($updateStatement = "$updateStatement$entry.key = '$entry.value'")
+        #set($first = false)
       #end
     #end
-    "UPDATE ${tableName} SET $util.str.join($updates, ', ') WHERE ${primaryKey} = '$ctx.args.input.${primaryKey}'"
+    #set($updateStatement = "$updateStatement WHERE ${primaryKey} = '$ctx.args.input.${primaryKey}'")
+    "$updateStatement"
   ]
 }`;
 
@@ -402,11 +415,13 @@ function generateMappingTemplates() {
   ]
 }`;
 
-    const mutationResponseTemplate = `#if($ctx.result.sqlStatementResults[0].records && $ctx.result.sqlStatementResults[0].records.size() > 0)
-  $util.toJson($ctx.result.sqlStatementResults[0].records[0])
-#else
-  $util.toJson($ctx.args.input)
-#end`;
+    const mutationResponseTemplate = `## Handle RDS Data API response for MySQL (no RETURNING clause)
+#if($ctx.error)
+    $utils.error($ctx.error.message, $ctx.error.type)
+#end
+
+## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator
+$util.toJson($ctx.args.input)`;
 
     const operations = [
       { name: 'create', allowed: tablePerms.allowCreate },
@@ -470,15 +485,16 @@ function generateEntityConfigs() {
         // Read existing config and update only the fields array
         let existingConfig = fs.readFileSync(entityConfigPath, 'utf8');
         
-        // Update fields array while preserving everything else
+        // Update only fields array to preserve custom formFields and foreignKeys
         const fieldsRegex = /fields:\s*\[[^\]]*\]/s;
         const newFieldsString = `fields: ${JSON.stringify(newFields, null, 2).replace(/\n/g, '\n  ')}`;
         
         if (fieldsRegex.test(existingConfig)) {
           existingConfig = existingConfig.replace(fieldsRegex, newFieldsString);
-          fs.writeFileSync(entityConfigPath, existingConfig);
-          console.log(`Updated fields array for ${tableName}`);
         }
+        
+        fs.writeFileSync(entityConfigPath, existingConfig);
+        console.log(`Updated fields and formFields arrays for ${tableName}`);
       }
       return;
     }
@@ -492,14 +508,39 @@ function generateEntityConfigs() {
     if (!parsed) return;
     
     const fields = parsed.columns.map(col => col.name);
-    const formFields = parsed.columns
-      .filter(col => !col.name.includes('CHANGED_') && !col.name.includes('CREATED_'))
+    let formFields = parsed.columns
+      .filter(col => {
+        // Exclude auto-increment primary key fields
+        if (col.name === parsed.primaryKey) {
+          const sql = fs.readFileSync(path.join(scriptsDir, file), 'utf8');
+          return !sql.includes('AUTO_INCREMENT');
+        }
+        return true;
+      })
       .map(col => ({
         name: col.name,
         type: getFormFieldType(col.type),
-        required: col.required,
-        disabled: col.name === parsed.primaryKey || col.name.includes('CREATED_')
+        required: col.required && !col.name.includes('CHANGED_') && !col.name.includes('CREATED_'),
+        disabled: col.name.includes('CHANGED_DATE') || col.name.includes('CREATED_DATE')
       }));
+    
+    // Update form fields for foreign keys
+    formFields = updateFormFieldsForForeignKeys(formFields, foreignKeys);
+    
+    const foreignKeys = detectForeignKeys(parsed.columns, tableName);
+    const fieldLookups = generateFieldLookups(foreignKeys);
+    
+    const foreignKeysString = Object.keys(foreignKeys).length > 0 
+      ? `\n  
+  // Foreign key lookups
+  foreignKeys: ${JSON.stringify(foreignKeys, null, 2).replace(/\n/g, '\n  ')},`
+      : '';
+    
+    const fieldLookupsString = Object.keys(fieldLookups).length > 0
+      ? `\n  
+  // Field lookups for display enhancement
+  fieldLookups: ${JSON.stringify(fieldLookups, null, 2).replace(/\n/g, '\n  ')},`
+      : '';
     
     const entityConfig = `export default {
   name: '${tableName}',
@@ -516,7 +557,7 @@ function generateEntityConfigs() {
     matchingFields: ['${getMainIdentifierField(parsed.columns)}'],
     stringMatchFields: ['${getMainIdentifierField(parsed.columns)}'],
     stringMatchThreshold: 0.50
-  },
+  },${foreignKeysString}${fieldLookupsString}
   
   // Fields configuration
   fields: ${JSON.stringify(fields, null, 2).replace(/\n/g, '\n  ')},
@@ -622,6 +663,14 @@ ${fieldsList}
   fs.writeFileSync(path.join(frontendGraphQLDir, 'mutations.js'), mutations);
   
   console.log('✅ Generated frontend GraphQL queries and mutations');
+  
+  // Validate generated VTL templates
+  console.log('\n🔍 Validating VTL templates...');
+  try {
+    require('child_process').execSync('npm run validate-vtl', { stdio: 'inherit' });
+  } catch (error) {
+    console.log('⚠️  VTL validation failed - templates may have issues');
+  }
 }
 
 function getFormFieldType(graphqlType) {
@@ -630,6 +679,56 @@ function getFormFieldType(graphqlType) {
     case 'string': return 'text';
     default: return 'text';
   }
+}
+
+function detectForeignKeys(columns, tableName) {
+  const foreignKeys = {};
+  
+  columns.forEach(col => {
+    // Detect foreign key pattern: ends with _ID and not the table's own primary key
+    if (col.name.endsWith('_ID') && col.name !== `${tableName}_ID`) {
+      const referencedTable = col.name.replace('_ID', '');
+      
+      // Get display field from table_config.json or use default pattern
+      let displayField = tableConfig.foreignKeyDisplayFields?.[referencedTable] || `${referencedTable}_NAME`;
+      
+      foreignKeys[col.name] = {
+        table: referencedTable,
+        valueField: col.name,
+        displayField: displayField
+      };
+    }
+  });
+  
+  return foreignKeys;
+}
+
+function generateFieldLookups(foreignKeys) {
+  const fieldLookups = {};
+  
+  Object.entries(foreignKeys).forEach(([fieldName, fkConfig]) => {
+    fieldLookups[fieldName] = {
+      lookupTable: fkConfig.table,
+      foreignKey: fieldName,
+      displayField: fkConfig.displayField,
+      displayFormat: `{${fieldName}}: {${fkConfig.displayField}}`
+    };
+  });
+  
+  return fieldLookups;
+}
+
+function updateFormFieldsForForeignKeys(formFields, foreignKeys) {
+  return formFields.map(field => {
+    if (foreignKeys[field.name]) {
+      return {
+        ...field,
+        type: 'select',
+        options: []
+      };
+    }
+    return field;
+  });
 }
 
 function getMainIdentifierField(columns) {

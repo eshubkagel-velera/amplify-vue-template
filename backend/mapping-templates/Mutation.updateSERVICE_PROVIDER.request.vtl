@@ -1,12 +1,18 @@
 {
   "version": "2018-05-29",
   "statements": [
-    #set($updates = [])
+    #set($updateStatement = "UPDATE SERVICE_PROVIDER SET ")
+    #set($first = true)
     #foreach($entry in $ctx.args.input.entrySet())
       #if($entry.key != "SERVICE_PROVIDER_ID" && $entry.value)
-        $util.qr($updates.add("$entry.key = '$entry.value'"))
+        #if(!$first)
+          #set($updateStatement = "$updateStatement, ")
+        #end
+        #set($updateStatement = "$updateStatement$entry.key = '$entry.value'")
+        #set($first = false)
       #end
     #end
-    "UPDATE SERVICE_PROVIDER SET $util.str.join($updates, ', ') WHERE SERVICE_PROVIDER_ID = '$ctx.args.input.SERVICE_PROVIDER_ID'"
+    #set($updateStatement = "$updateStatement WHERE SERVICE_PROVIDER_ID = '$ctx.args.input.SERVICE_PROVIDER_ID'")
+    "$updateStatement"
   ]
 }

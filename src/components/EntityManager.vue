@@ -152,7 +152,7 @@
       @cancel="cancelForm"
     >
       <form @submit.prevent="submitForm">
-        <div v-for="field in formFields" :key="field.name" class="form-group">
+        <div v-for="field in createFormFields" :key="field.name" class="form-group">
           <label :for="field.name">{{ field.name }}</label>
           <select 
             v-if="field.type === 'select'"
@@ -188,7 +188,7 @@
       @cancel="cancelForm"
     >
       <form @submit.prevent="submitForm">
-        <div v-for="field in formFields" :key="field.name" class="form-group">
+        <div v-for="field in editFormFields" :key="field.name" class="form-group">
           <label :for="field.name">{{ field.name }}</label>
           <select 
             v-if="field.type === 'select'"
@@ -233,6 +233,20 @@
       <template #actions>
         <button @click="showSuccessModal = false" class="btn-primary">OK</button>
       </template>
+    </BaseModal>
+
+    <BaseModal
+      :show="showErrorModal"
+      title="Error"
+      confirm-text="OK"
+      confirm-class="btn-primary"
+      @confirm="clearError"
+      @cancel="clearError"
+    >
+      <div>
+        <p><strong>Action:</strong> {{ errorAction }}</p>
+        <p><strong>Error:</strong> {{ error }}</p>
+      </div>
     </BaseModal>
   </div>
 </template>
@@ -326,7 +340,7 @@ const formProcessor = ref(null);
 const entityConfig = computed(() => getEntityConfig(props.entityName));
 
 // Composables
-const { handleError } = useErrorHandler();
+const { handleError, error, errorAction, showErrorModal, clearError } = useErrorHandler();
 const { canDelete } = useAuth();
 
 // Computed
@@ -428,6 +442,14 @@ const displayEntities = computed(() => {
 
 const canAddToOtherEnvironment = computed(() => props.comparisonMode && props.canAddToOther);
 
+const createFormFields = computed(() => {
+  return props.formFields.filter(field => field.name !== 'CHANGED_DATE' && field.name !== 'CHANGED_BY_USER_ID');
+});
+
+const editFormFields = computed(() => {
+  return props.formFields.filter(field => field.name !== 'CREATED_DATE' && field.name !== 'CREATED_BY_USER_ID');
+});
+
 // Emits
 const emit = defineEmits([
   'scroll', 'entityCountChanged', 'selectedCountChanged', 'filterChanged', 
@@ -525,9 +547,20 @@ const editEntity = (entity) => {
     }
   });
   
+  // Ensure foreign key fields match dropdown option values (convert to numbers)
+  if (entityConfig.value.foreignKeys) {
+    Object.keys(entityConfig.value.foreignKeys).forEach(fieldName => {
+      if (formattedEntity[fieldName] !== undefined && formattedEntity[fieldName] !== null) {
+        formattedEntity[fieldName] = parseInt(formattedEntity[fieldName]);
+      }
+    });
+  }
+  
   // Set current date and user ID for modifications
   formattedEntity.CHANGED_DATE = getCurrentDateString();
-  formattedEntity.CHANGED_BY_USER_ID = userProfileId.value || 1;
+  if (props.formFields.some(field => field.name === 'CHANGED_BY_USER_ID')) {
+    formattedEntity.CHANGED_BY_USER_ID = userProfileId.value || 1;
+  }
   
   formData.value = formattedEntity;
   showEditModal.value = true;
@@ -991,11 +1024,24 @@ watch(showCreateModal, (newVal) => {
   if (newVal) {
     const today = getCurrentDateString();
     
-    formData.value = {
-      ...formData.value,
-      CREATED_DATE: today,
-      CREATED_BY_USER_ID: userProfileId.value || 1
-    };
+    // Only set fields that exist in the entity's formFields configuration
+    const defaultData = { ...formData.value };
+    
+    // Check if entity has CREATED_DATE field
+    if (props.formFields.some(field => field.name === 'CREATED_DATE')) {
+      defaultData.CREATED_DATE = today;
+    }
+    
+    // Check if entity has CREATED_BY_USER_ID field
+    if (props.formFields.some(field => field.name === 'CREATED_BY_USER_ID')) {
+      defaultData.CREATED_BY_USER_ID = userProfileId.value || 1;
+    }
+    
+    // Ensure CHANGED fields are not set on CREATE
+    delete defaultData.CHANGED_DATE;
+    delete defaultData.CHANGED_BY_USER_ID;
+    
+    formData.value = defaultData;
     
     // Set parent ID if provided
     if (props.parentId && props.parentField) {
