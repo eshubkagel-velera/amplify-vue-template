@@ -1,6 +1,20 @@
+#set($preimage = "
+  SELECT ORIGIN_PRODUCT_ID, VENDOR_NAME, PRODUCT_ID, PSCU_CLIENT_ID, PRODUCT_DESC, PARTNER_CODE, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE
+  FROM ORIGIN_PRODUCT
+  WHERE ORIGIN_PRODUCT_ID = :ORIGIN_PRODUCT_ID
+  LIMIT 1
+")
+#set($delete = "
+  DELETE FROM ORIGIN_PRODUCT
+  WHERE ORIGIN_PRODUCT_ID = :ORIGIN_PRODUCT_ID
+")
 {
   "version": "2018-05-29",
   "statements": [
-    "DELETE FROM ORIGIN_PRODUCT WHERE ORIGIN_PRODUCT_ID = '$ctx.args.input.ORIGIN_PRODUCT_ID'"
-  ]
+    "$util.escapeJavaScript($preimage)",
+    "$util.escapeJavaScript($delete)"
+  ],
+  "variableMap": {
+    ":ORIGIN_PRODUCT_ID": $util.toJson($ctx.args.input.ORIGIN_PRODUCT_ID)
+  }
 }

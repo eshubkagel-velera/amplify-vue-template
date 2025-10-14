@@ -1,21 +1,30 @@
+#set($insert = "
+  INSERT INTO STEP_TYPE
+    (STEP_TYPE_NAME, STEP_TYPE_DESC, RESOURCE_NAME, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE)
+  VALUES
+    (:STEP_TYPE_NAME, :STEP_TYPE_DESC, :RESOURCE_NAME, :CREATED_BY_USER_ID, COALESCE(:CREATED_DATE, NOW()), :CHANGED_BY_USER_ID, :CHANGED_DATE)
+")
+#set($select = "
+  SELECT
+    STEP_TYPE_ID, STEP_TYPE_NAME, STEP_TYPE_DESC, RESOURCE_NAME, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE
+  FROM STEP_TYPE
+  WHERE STEP_TYPE_NAME = :STEP_TYPE_NAME
+  ORDER BY STEP_TYPE_ID DESC
+  LIMIT 1
+")
 {
   "version": "2018-05-29",
   "statements": [
-    #set($insertStatement = "INSERT INTO STEP_TYPE (")
-    #set($valuesStatement = " VALUES (")
-    #set($first = true)
-    #foreach($entry in $ctx.args.input.entrySet())
-      #if($entry.value)
-        #if(!$first)
-          #set($insertStatement = "$insertStatement, ")
-          #set($valuesStatement = "$valuesStatement, ")
-        #end
-        #set($insertStatement = "$insertStatement$entry.key")
-        #set($valuesStatement = "$valuesStatement'$entry.value'")
-        #set($first = false)
-      #end
-    #end
-    #set($insertStatement = "$insertStatement)$valuesStatement)")
-    "$insertStatement"
-  ]
+    "$util.escapeJavaScript($insert)",
+    "$util.escapeJavaScript($select)"
+  ],
+  "variableMap": {
+    ":STEP_TYPE_NAME": $util.toJson($ctx.args.input.STEP_TYPE_NAME),
+    ":STEP_TYPE_DESC": $util.toJson($util.defaultIfNull($ctx.args.input.STEP_TYPE_DESC, null)),
+    ":RESOURCE_NAME": $util.toJson($ctx.args.input.RESOURCE_NAME),
+    ":CREATED_BY_USER_ID": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_BY_USER_ID, null)),
+    ":CREATED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_DATE, null)),
+    ":CHANGED_BY_USER_ID": $util.toJson($util.defaultIfNull($ctx.args.input.CHANGED_BY_USER_ID, null)),
+    ":CHANGED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CHANGED_DATE, null))
+  }
 }

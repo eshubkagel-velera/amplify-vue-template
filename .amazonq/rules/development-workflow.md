@@ -2,13 +2,13 @@
 
 ## Before Making Changes
 - **Check Entity Config Location**: Entity-specific settings are in `/src/config/entities/[ENTITY_NAME].js`, not in centralized files
-- **Verify Table Config**: Check `/backend/dml_scripts/table_config.json` for table inclusion and operation permissions
+- **Verify Table Config**: Check `/config/table_config.json` for table inclusion and operation permissions
 - **Use Generation Scripts**: Always use `npm run schema` instead of manually editing schema.graphql or VTL templates
 - **Review Operation Permissions**: Ensure table_config.json has correct allowQuery/allowCreate/allowUpdate/allowDelete settings
 
 ## Database Changes Workflow
 1. Update SQL files in `/backend/dml_scripts/individual_tables/`
-2. Update `/backend/dml_scripts/table_config.json` if adding/removing tables
+2. Update `/config/table_config.json` if adding/removing tables
 3. Run `npm run schema` to regenerate all dependent files
 4. Test changes locally before deployment
 5. Use `npm run db:dev -- --dry-run` to preview database changes

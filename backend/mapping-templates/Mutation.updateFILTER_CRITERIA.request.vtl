@@ -1,18 +1,26 @@
+#set($update = "
+  UPDATE FILTER_CRITERIA
+  SET ORIGIN_PRODUCT_ID = COALESCE(:ORIGIN_PRODUCT_ID, ORIGIN_PRODUCT_ID), STEP_TYPE_ID = COALESCE(:STEP_TYPE_ID, STEP_TYPE_ID), CRITERIA = COALESCE(:CRITERIA, CRITERIA), SEQUENCE_NBR = COALESCE(:SEQUENCE_NBR, SEQUENCE_NBR), CREATED_DATE = COALESCE(:CREATED_DATE, CREATED_DATE), CHANGED_DATE = COALESCE(:CHANGED_DATE, NOW())
+  WHERE FILTER_CRITERIA_ID = :FILTER_CRITERIA_ID
+")
+#set($select = "
+  SELECT FILTER_CRITERIA_ID, ORIGIN_PRODUCT_ID, STEP_TYPE_ID, CRITERIA, SEQUENCE_NBR, CREATED_DATE, CHANGED_DATE
+  FROM FILTER_CRITERIA
+  WHERE FILTER_CRITERIA_ID = :FILTER_CRITERIA_ID
+")
 {
   "version": "2018-05-29",
   "statements": [
-    #set($updateStatement = "UPDATE FILTER_CRITERIA SET ")
-    #set($first = true)
-    #foreach($entry in $ctx.args.input.entrySet())
-      #if($entry.key != "FILTER_CRITERIA_ID" && $entry.value)
-        #if(!$first)
-          #set($updateStatement = "$updateStatement, ")
-        #end
-        #set($updateStatement = "$updateStatement$entry.key = '$entry.value'")
-        #set($first = false)
-      #end
-    #end
-    #set($updateStatement = "$updateStatement WHERE FILTER_CRITERIA_ID = '$ctx.args.input.FILTER_CRITERIA_ID'")
-    "$updateStatement"
-  ]
+    "$util.escapeJavaScript($update)",
+    "$util.escapeJavaScript($select)"
+  ],
+  "variableMap": {
+    ":FILTER_CRITERIA_ID": $util.toJson($ctx.args.input.FILTER_CRITERIA_ID),
+    ":ORIGIN_PRODUCT_ID": $util.toJson($util.defaultIfNull($ctx.args.input.ORIGIN_PRODUCT_ID, null)),
+    ":STEP_TYPE_ID": $util.toJson($util.defaultIfNull($ctx.args.input.STEP_TYPE_ID, null)),
+    ":CRITERIA": $util.toJson($util.defaultIfNull($ctx.args.input.CRITERIA, null)),
+    ":SEQUENCE_NBR": $util.toJson($util.defaultIfNull($ctx.args.input.SEQUENCE_NBR, null)),
+    ":CREATED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_DATE, null)),
+    ":CHANGED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CHANGED_DATE, null))
+  }
 }

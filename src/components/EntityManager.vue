@@ -52,10 +52,20 @@
     <div v-if="!hideActionButtons && !parentId" class="fixed-action-buttons">
       <div class="action-buttons">
         <button @click="loadEntities" class="btn-primary">Refresh</button>
-        <button @click="showCreateModal = true" class="btn-success" :disabled="readonly">
+        <button 
+          v-if="canCreateEntity" 
+          @click="showCreateModal = true" 
+          class="btn-success" 
+          :disabled="readonly"
+        >
           {{ readonly ? 'View Only Mode' : 'Add New' }}
         </button>
-        <button @click="confirmBulkDelete" :disabled="selectedEntities.length === 0" class="btn-danger">
+        <button 
+          v-if="canDeleteEntity" 
+          @click="confirmBulkDelete" 
+          :disabled="selectedEntities.length === 0" 
+          class="btn-danger"
+        >
           Delete Selected ({{ selectedEntities.length }})
         </button>
         <span class="record-count">{{ entities.length }} records</span>
@@ -273,6 +283,7 @@ import { getEntityConfig } from '../config/entityConfigLoader.js';
 import { fetchUserAttributes } from 'aws-amplify/auth';
 import * as queries from '../graphql/queries.js';
 import { onUnmounted } from 'vue';
+import tableConfig from '../../config/table_config.json';
 
 const props = defineProps({
   entityName: { type: String, required: true },
@@ -335,9 +346,21 @@ const vendorNames = ref([]);
 const paramMappings = ref(new Map());
 const userProfileId = ref(null);
 const formProcessor = ref(null);
+const foreignKeyLookups = ref(new Map());
 
 // Entity configuration
 const entityConfig = computed(() => getEntityConfig(props.entityName));
+
+// Table permissions
+const canCreateEntity = computed(() => {
+  const tablePerms = tableConfig.tables[props.entityName];
+  return tablePerms?.allowCreate !== false;
+});
+
+const canDeleteEntity = computed(() => {
+  const tablePerms = tableConfig.tables[props.entityName];
+  return tablePerms?.allowDelete !== false;
+});
 
 // Composables
 const { handleError, error, errorAction, showErrorModal, clearError } = useErrorHandler();
@@ -477,6 +500,11 @@ const loadEntities = async () => {
           console.warn('Service enhancement failed:', error);
         }
         await checkParameterMappings();
+      }
+      
+      // Enhance with foreign key display values
+      if (entityConfig.value.foreignKeys) {
+        items = await enhanceWithForeignKeys(items);
       }
       
       allEntities.value = items;
@@ -769,6 +797,56 @@ const loadUserProfile = async () => {
     }
   } catch (error) {
     console.error('Failed to load user profile:', error);
+  }
+};
+
+const enhanceWithForeignKeys = async (items) => {
+  const config = entityConfig.value;
+  if (!config.foreignKeys) return items;
+  
+  try {
+    const { getClient } = await import('../client.js');
+    
+    // Load foreign key data for each configured relationship
+    for (const [fieldName, fkConfig] of Object.entries(config.foreignKeys)) {
+      const queryName = `list${fkConfig.table.split('_').map(word => word.charAt(0) + word.slice(1).toLowerCase()).join('')}s`;
+      const listName = `list${fkConfig.table}S`;
+      
+      if (queries[queryName]) {
+        const result = await getClient().graphql({ query: queries[queryName] });
+        const foreignItems = result.data[listName]?.items || [];
+        
+        // Create lookup map
+        const lookupMap = new Map();
+        foreignItems.forEach(item => {
+          lookupMap.set(item[fkConfig.valueField], item[fkConfig.displayField]);
+        });
+        
+        foreignKeyLookups.value.set(fieldName, lookupMap);
+      }
+    }
+    
+    // Enhance items with foreign key display values
+    return items.map(item => {
+      const enhancedItem = { ...item };
+      
+      Object.keys(config.foreignKeys).forEach(fieldName => {
+        const fkConfig = config.foreignKeys[fieldName];
+        const lookupMap = foreignKeyLookups.value.get(fieldName);
+        
+        if (lookupMap && enhancedItem[fieldName]) {
+          const displayValue = lookupMap.get(enhancedItem[fieldName]);
+          if (displayValue) {
+            enhancedItem[`${fieldName}_DISPLAY`] = `${enhancedItem[fieldName]}: ${displayValue}`;
+          }
+        }
+      });
+      
+      return enhancedItem;
+    });
+  } catch (error) {
+    console.error('Failed to enhance with foreign keys:', error);
+    return items;
   }
 };
 

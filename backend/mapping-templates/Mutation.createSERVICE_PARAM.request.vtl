@@ -1,21 +1,29 @@
+#set($insert = "
+  INSERT INTO SERVICE_PARAM
+    (SERVICE_ID, PARAM_NAME, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE)
+  VALUES
+    (:SERVICE_ID, :PARAM_NAME, :CREATED_BY_USER_ID, COALESCE(:CREATED_DATE, NOW()), :CHANGED_BY_USER_ID, :CHANGED_DATE)
+")
+#set($select = "
+  SELECT
+    SERVICE_PARAM_ID, SERVICE_ID, PARAM_NAME, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE
+  FROM SERVICE_PARAM
+  WHERE PARAM_NAME = :PARAM_NAME
+  ORDER BY SERVICE_PARAM_ID DESC
+  LIMIT 1
+")
 {
   "version": "2018-05-29",
   "statements": [
-    #set($insertStatement = "INSERT INTO SERVICE_PARAM (")
-    #set($valuesStatement = " VALUES (")
-    #set($first = true)
-    #foreach($entry in $ctx.args.input.entrySet())
-      #if($entry.value)
-        #if(!$first)
-          #set($insertStatement = "$insertStatement, ")
-          #set($valuesStatement = "$valuesStatement, ")
-        #end
-        #set($insertStatement = "$insertStatement$entry.key")
-        #set($valuesStatement = "$valuesStatement'$entry.value'")
-        #set($first = false)
-      #end
-    #end
-    #set($insertStatement = "$insertStatement)$valuesStatement)")
-    "$insertStatement"
-  ]
+    "$util.escapeJavaScript($insert)",
+    "$util.escapeJavaScript($select)"
+  ],
+  "variableMap": {
+    ":SERVICE_ID": $util.toJson($ctx.args.input.SERVICE_ID),
+    ":PARAM_NAME": $util.toJson($ctx.args.input.PARAM_NAME),
+    ":CREATED_BY_USER_ID": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_BY_USER_ID, null)),
+    ":CREATED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_DATE, null)),
+    ":CHANGED_BY_USER_ID": $util.toJson($util.defaultIfNull($ctx.args.input.CHANGED_BY_USER_ID, null)),
+    ":CHANGED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CHANGED_DATE, null))
+  }
 }

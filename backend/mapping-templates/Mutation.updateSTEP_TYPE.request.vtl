@@ -1,18 +1,27 @@
+#set($update = "
+  UPDATE STEP_TYPE
+  SET STEP_TYPE_NAME = COALESCE(:STEP_TYPE_NAME, STEP_TYPE_NAME), STEP_TYPE_DESC = COALESCE(:STEP_TYPE_DESC, STEP_TYPE_DESC), RESOURCE_NAME = COALESCE(:RESOURCE_NAME, RESOURCE_NAME), CREATED_BY_USER_ID = COALESCE(:CREATED_BY_USER_ID, CREATED_BY_USER_ID), CREATED_DATE = COALESCE(:CREATED_DATE, CREATED_DATE), CHANGED_BY_USER_ID = COALESCE(:CHANGED_BY_USER_ID, CHANGED_BY_USER_ID), CHANGED_DATE = COALESCE(:CHANGED_DATE, NOW())
+  WHERE STEP_TYPE_ID = :STEP_TYPE_ID
+")
+#set($select = "
+  SELECT STEP_TYPE_ID, STEP_TYPE_NAME, STEP_TYPE_DESC, RESOURCE_NAME, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE
+  FROM STEP_TYPE
+  WHERE STEP_TYPE_ID = :STEP_TYPE_ID
+")
 {
   "version": "2018-05-29",
   "statements": [
-    #set($updateStatement = "UPDATE STEP_TYPE SET ")
-    #set($first = true)
-    #foreach($entry in $ctx.args.input.entrySet())
-      #if($entry.key != "STEP_TYPE_ID" && $entry.value)
-        #if(!$first)
-          #set($updateStatement = "$updateStatement, ")
-        #end
-        #set($updateStatement = "$updateStatement$entry.key = '$entry.value'")
-        #set($first = false)
-      #end
-    #end
-    #set($updateStatement = "$updateStatement WHERE STEP_TYPE_ID = '$ctx.args.input.STEP_TYPE_ID'")
-    "$updateStatement"
-  ]
+    "$util.escapeJavaScript($update)",
+    "$util.escapeJavaScript($select)"
+  ],
+  "variableMap": {
+    ":STEP_TYPE_ID": $util.toJson($ctx.args.input.STEP_TYPE_ID),
+    ":STEP_TYPE_NAME": $util.toJson($util.defaultIfNull($ctx.args.input.STEP_TYPE_NAME, null)),
+    ":STEP_TYPE_DESC": $util.toJson($util.defaultIfNull($ctx.args.input.STEP_TYPE_DESC, null)),
+    ":RESOURCE_NAME": $util.toJson($util.defaultIfNull($ctx.args.input.RESOURCE_NAME, null)),
+    ":CREATED_BY_USER_ID": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_BY_USER_ID, null)),
+    ":CREATED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_DATE, null)),
+    ":CHANGED_BY_USER_ID": $util.toJson($util.defaultIfNull($ctx.args.input.CHANGED_BY_USER_ID, null)),
+    ":CHANGED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CHANGED_DATE, null))
+  }
 }

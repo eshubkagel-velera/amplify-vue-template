@@ -60,7 +60,7 @@
           <td v-for="field in fields" :key="field" :class="getCellClass(entity, field)">
             <slot name="cell" :entity="entity" :field="field" :value="entity[field]">
               <span v-if="!entity.__isBlank" class="read-only-text">
-                {{ formatCellValue(entity[field], field) }}
+                {{ formatCellValue(entity[field], field, entity) }}
               </span>
               <span v-else class="blank-cell">—</span>
             </slot>
@@ -93,8 +93,15 @@ defineEmits(['scroll', 'toggle-select-all', 'sort', 'start-resize', 'clear-filte
 const getEntityId = (entity) => entity[props.idField];
 const getEntityKey = (entity, index) => entity.__isBlank ? `blank-${index}` : getEntityId(entity);
 
-const formatCellValue = (value, field) => {
+const formatCellValue = (value, field, entity) => {
   if (field.includes('DATE')) return formatDate(value);
+  
+  // Check if there's a foreign key display value
+  const displayField = `${field}_DISPLAY`;
+  if (entity && entity[displayField]) {
+    return entity[displayField];
+  }
+  
   return value;
 };
 

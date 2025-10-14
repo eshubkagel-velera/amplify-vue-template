@@ -1,7 +1,10 @@
-## Handle RDS Data API response for MySQL (no RETURNING clause)
 #if($ctx.error)
-    $utils.error($ctx.error.message, $ctx.error.type)
+  $util.error($ctx.error.message, $ctx.error.type)
 #end
 
-## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator
-$util.toJson($ctx.args.input)
+#set($rows = $util.rds.toJsonObject($ctx.result))
+#if($rows.size() < 2 || $rows[1].size() == 0)
+  $util.error("No row found for STEP_TYPE_ID.", "NotFound")
+#end
+
+$util.toJson($rows[1][0])

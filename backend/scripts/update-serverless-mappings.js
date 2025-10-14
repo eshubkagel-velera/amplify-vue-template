@@ -6,7 +6,7 @@ const path = require('path');
 function updateServerlessMappings() {
   const templatesDir = path.join(__dirname, '../mapping-templates');
   const serverlessPath = path.join(__dirname, '../serverless.yml');
-  const tableConfigPath = path.join(__dirname, '../dml_scripts/table_config.json');
+  const tableConfigPath = path.join(__dirname, '../../config/table_config.json');
   
   if (!fs.existsSync(templatesDir)) {
     console.error('Mapping templates directory not found');

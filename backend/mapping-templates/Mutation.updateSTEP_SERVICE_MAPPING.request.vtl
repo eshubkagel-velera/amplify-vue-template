@@ -1,18 +1,23 @@
+#set($update = "
+  UPDATE STEP_SERVICE_MAPPING
+  SET STEP_TYPE_ID = COALESCE(:STEP_TYPE_ID, STEP_TYPE_ID), SERVICE_ID = COALESCE(:SERVICE_ID, SERVICE_ID), SEQUENCE_NBR = COALESCE(:SEQUENCE_NBR, SEQUENCE_NBR)
+  WHERE STEP_SERVICE_MAPPING_ID = :STEP_SERVICE_MAPPING_ID
+")
+#set($select = "
+  SELECT STEP_SERVICE_MAPPING_ID, STEP_TYPE_ID, SERVICE_ID, SEQUENCE_NBR
+  FROM STEP_SERVICE_MAPPING
+  WHERE STEP_SERVICE_MAPPING_ID = :STEP_SERVICE_MAPPING_ID
+")
 {
   "version": "2018-05-29",
   "statements": [
-    #set($updateStatement = "UPDATE STEP_SERVICE_MAPPING SET ")
-    #set($first = true)
-    #foreach($entry in $ctx.args.input.entrySet())
-      #if($entry.key != "STEP_SERVICE_MAPPING_ID" && $entry.value)
-        #if(!$first)
-          #set($updateStatement = "$updateStatement, ")
-        #end
-        #set($updateStatement = "$updateStatement$entry.key = '$entry.value'")
-        #set($first = false)
-      #end
-    #end
-    #set($updateStatement = "$updateStatement WHERE STEP_SERVICE_MAPPING_ID = '$ctx.args.input.STEP_SERVICE_MAPPING_ID'")
-    "$updateStatement"
-  ]
+    "$util.escapeJavaScript($update)",
+    "$util.escapeJavaScript($select)"
+  ],
+  "variableMap": {
+    ":STEP_SERVICE_MAPPING_ID": $util.toJson($ctx.args.input.STEP_SERVICE_MAPPING_ID),
+    ":STEP_TYPE_ID": $util.toJson($util.defaultIfNull($ctx.args.input.STEP_TYPE_ID, null)),
+    ":SERVICE_ID": $util.toJson($util.defaultIfNull($ctx.args.input.SERVICE_ID, null)),
+    ":SEQUENCE_NBR": $util.toJson($util.defaultIfNull($ctx.args.input.SEQUENCE_NBR, null))
+  }
 }

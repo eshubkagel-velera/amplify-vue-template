@@ -1,6 +1,20 @@
+#set($preimage = "
+  SELECT STEP_TYPE_ID, STEP_TYPE_NAME, STEP_TYPE_DESC, RESOURCE_NAME, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE
+  FROM STEP_TYPE
+  WHERE STEP_TYPE_ID = :STEP_TYPE_ID
+  LIMIT 1
+")
+#set($delete = "
+  DELETE FROM STEP_TYPE
+  WHERE STEP_TYPE_ID = :STEP_TYPE_ID
+")
 {
   "version": "2018-05-29",
   "statements": [
-    "DELETE FROM STEP_TYPE WHERE STEP_TYPE_ID = '$ctx.args.input.STEP_TYPE_ID'"
-  ]
+    "$util.escapeJavaScript($preimage)",
+    "$util.escapeJavaScript($delete)"
+  ],
+  "variableMap": {
+    ":STEP_TYPE_ID": $util.toJson($ctx.args.input.STEP_TYPE_ID)
+  }
 }

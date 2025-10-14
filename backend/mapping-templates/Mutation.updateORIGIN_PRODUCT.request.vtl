@@ -1,18 +1,29 @@
+#set($update = "
+  UPDATE ORIGIN_PRODUCT
+  SET VENDOR_NAME = COALESCE(:VENDOR_NAME, VENDOR_NAME), PRODUCT_ID = COALESCE(:PRODUCT_ID, PRODUCT_ID), PSCU_CLIENT_ID = COALESCE(:PSCU_CLIENT_ID, PSCU_CLIENT_ID), PRODUCT_DESC = COALESCE(:PRODUCT_DESC, PRODUCT_DESC), PARTNER_CODE = COALESCE(:PARTNER_CODE, PARTNER_CODE), CREATED_BY_USER_ID = COALESCE(:CREATED_BY_USER_ID, CREATED_BY_USER_ID), CREATED_DATE = COALESCE(:CREATED_DATE, CREATED_DATE), CHANGED_BY_USER_ID = COALESCE(:CHANGED_BY_USER_ID, CHANGED_BY_USER_ID), CHANGED_DATE = COALESCE(:CHANGED_DATE, NOW())
+  WHERE ORIGIN_PRODUCT_ID = :ORIGIN_PRODUCT_ID
+")
+#set($select = "
+  SELECT ORIGIN_PRODUCT_ID, VENDOR_NAME, PRODUCT_ID, PSCU_CLIENT_ID, PRODUCT_DESC, PARTNER_CODE, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE
+  FROM ORIGIN_PRODUCT
+  WHERE ORIGIN_PRODUCT_ID = :ORIGIN_PRODUCT_ID
+")
 {
   "version": "2018-05-29",
   "statements": [
-    #set($updateStatement = "UPDATE ORIGIN_PRODUCT SET ")
-    #set($first = true)
-    #foreach($entry in $ctx.args.input.entrySet())
-      #if($entry.key != "ORIGIN_PRODUCT_ID" && $entry.value)
-        #if(!$first)
-          #set($updateStatement = "$updateStatement, ")
-        #end
-        #set($updateStatement = "$updateStatement$entry.key = '$entry.value'")
-        #set($first = false)
-      #end
-    #end
-    #set($updateStatement = "$updateStatement WHERE ORIGIN_PRODUCT_ID = '$ctx.args.input.ORIGIN_PRODUCT_ID'")
-    "$updateStatement"
-  ]
+    "$util.escapeJavaScript($update)",
+    "$util.escapeJavaScript($select)"
+  ],
+  "variableMap": {
+    ":ORIGIN_PRODUCT_ID": $util.toJson($ctx.args.input.ORIGIN_PRODUCT_ID),
+    ":VENDOR_NAME": $util.toJson($util.defaultIfNull($ctx.args.input.VENDOR_NAME, null)),
+    ":PRODUCT_ID": $util.toJson($util.defaultIfNull($ctx.args.input.PRODUCT_ID, null)),
+    ":PSCU_CLIENT_ID": $util.toJson($util.defaultIfNull($ctx.args.input.PSCU_CLIENT_ID, null)),
+    ":PRODUCT_DESC": $util.toJson($util.defaultIfNull($ctx.args.input.PRODUCT_DESC, null)),
+    ":PARTNER_CODE": $util.toJson($util.defaultIfNull($ctx.args.input.PARTNER_CODE, null)),
+    ":CREATED_BY_USER_ID": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_BY_USER_ID, null)),
+    ":CREATED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_DATE, null)),
+    ":CHANGED_BY_USER_ID": $util.toJson($util.defaultIfNull($ctx.args.input.CHANGED_BY_USER_ID, null)),
+    ":CHANGED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CHANGED_DATE, null))
+  }
 }

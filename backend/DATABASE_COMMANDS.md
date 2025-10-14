@@ -62,4 +62,4 @@ npm run db dev -- --remove-extra
 
 ### Environment Configuration
 
-Database connections are configured in `/backend/database-config.yml` with stage-specific settings for cluster ARNs, secret ARNs, and database names.
+Database connections are configured in `/config/database-config.yml` with stage-specific settings for cluster ARNs, secret ARNs, and database names.

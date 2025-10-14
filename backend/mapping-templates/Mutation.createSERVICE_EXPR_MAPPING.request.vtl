@@ -1,21 +1,31 @@
+#set($insert = "
+  INSERT INTO SERVICE_EXPR_MAPPING
+    (SERVICE_PARAM_MAPPING_ID, SOURCE_EXPR, TARGET_EXPR, COMMENT_TEXT, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE)
+  VALUES
+    (:SERVICE_PARAM_MAPPING_ID, :SOURCE_EXPR, :TARGET_EXPR, :COMMENT_TEXT, :CREATED_BY_USER_ID, COALESCE(:CREATED_DATE, NOW()), :CHANGED_BY_USER_ID, :CHANGED_DATE)
+")
+#set($select = "
+  SELECT
+    SERVICE_EXPR_MAPPING_ID, SERVICE_PARAM_MAPPING_ID, SOURCE_EXPR, TARGET_EXPR, COMMENT_TEXT, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE
+  FROM SERVICE_EXPR_MAPPING
+  WHERE SOURCE_EXPR = :SOURCE_EXPR
+  ORDER BY SERVICE_EXPR_MAPPING_ID DESC
+  LIMIT 1
+")
 {
   "version": "2018-05-29",
   "statements": [
-    #set($insertStatement = "INSERT INTO SERVICE_EXPR_MAPPING (")
-    #set($valuesStatement = " VALUES (")
-    #set($first = true)
-    #foreach($entry in $ctx.args.input.entrySet())
-      #if($entry.value)
-        #if(!$first)
-          #set($insertStatement = "$insertStatement, ")
-          #set($valuesStatement = "$valuesStatement, ")
-        #end
-        #set($insertStatement = "$insertStatement$entry.key")
-        #set($valuesStatement = "$valuesStatement'$entry.value'")
-        #set($first = false)
-      #end
-    #end
-    #set($insertStatement = "$insertStatement)$valuesStatement)")
-    "$insertStatement"
-  ]
+    "$util.escapeJavaScript($insert)",
+    "$util.escapeJavaScript($select)"
+  ],
+  "variableMap": {
+    ":SERVICE_PARAM_MAPPING_ID": $util.toJson($ctx.args.input.SERVICE_PARAM_MAPPING_ID),
+    ":SOURCE_EXPR": $util.toJson($util.defaultIfNull($ctx.args.input.SOURCE_EXPR, null)),
+    ":TARGET_EXPR": $util.toJson($util.defaultIfNull($ctx.args.input.TARGET_EXPR, null)),
+    ":COMMENT_TEXT": $util.toJson($util.defaultIfNull($ctx.args.input.COMMENT_TEXT, null)),
+    ":CREATED_BY_USER_ID": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_BY_USER_ID, null)),
+    ":CREATED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_DATE, null)),
+    ":CHANGED_BY_USER_ID": $util.toJson($util.defaultIfNull($ctx.args.input.CHANGED_BY_USER_ID, null)),
+    ":CHANGED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CHANGED_DATE, null))
+  }
 }

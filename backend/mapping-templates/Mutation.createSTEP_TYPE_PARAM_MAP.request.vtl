@@ -1,21 +1,27 @@
+#set($insert = "
+  INSERT INTO STEP_TYPE_PARAM_MAP
+    (STEP_TYPE_ID, SERVICE_PARAM_MAPPING_ID, CREATED_BY_USER_ID, CREATED_DATE)
+  VALUES
+    (:STEP_TYPE_ID, :SERVICE_PARAM_MAPPING_ID, :CREATED_BY_USER_ID, COALESCE(:CREATED_DATE, NOW()))
+")
+#set($select = "
+  SELECT
+    STEP_TYPE_PARAM_MAP_ID, STEP_TYPE_ID, SERVICE_PARAM_MAPPING_ID, CREATED_BY_USER_ID, CREATED_DATE
+  FROM STEP_TYPE_PARAM_MAP
+  WHERE STEP_TYPE_ID = :STEP_TYPE_ID AND SERVICE_PARAM_MAPPING_ID = :SERVICE_PARAM_MAPPING_ID
+  ORDER BY STEP_TYPE_PARAM_MAP_ID DESC
+  LIMIT 1
+")
 {
   "version": "2018-05-29",
   "statements": [
-    #set($insertStatement = "INSERT INTO STEP_TYPE_PARAM_MAP (")
-    #set($valuesStatement = " VALUES (")
-    #set($first = true)
-    #foreach($entry in $ctx.args.input.entrySet())
-      #if($entry.value)
-        #if(!$first)
-          #set($insertStatement = "$insertStatement, ")
-          #set($valuesStatement = "$valuesStatement, ")
-        #end
-        #set($insertStatement = "$insertStatement$entry.key")
-        #set($valuesStatement = "$valuesStatement'$entry.value'")
-        #set($first = false)
-      #end
-    #end
-    #set($insertStatement = "$insertStatement)$valuesStatement)")
-    "$insertStatement"
-  ]
+    "$util.escapeJavaScript($insert)",
+    "$util.escapeJavaScript($select)"
+  ],
+  "variableMap": {
+    ":STEP_TYPE_ID": $util.toJson($util.defaultIfNull($ctx.args.input.STEP_TYPE_ID, null)),
+    ":SERVICE_PARAM_MAPPING_ID": $util.toJson($ctx.args.input.SERVICE_PARAM_MAPPING_ID),
+    ":CREATED_BY_USER_ID": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_BY_USER_ID, null)),
+    ":CREATED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_DATE, null))
+  }
 }

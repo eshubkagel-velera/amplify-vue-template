@@ -1,21 +1,28 @@
+#set($insert = "
+  INSERT INTO CONFIG_PARAM
+    (CONFIG_NAME, CONFIG_VALUE, DESCRIPTION, CREATED_DATE, CHANGED_DATE)
+  VALUES
+    (:CONFIG_NAME, :CONFIG_VALUE, :DESCRIPTION, COALESCE(:CREATED_DATE, NOW()), :CHANGED_DATE)
+")
+#set($select = "
+  SELECT
+    CONFIG_PARAM_ID, CONFIG_NAME, CONFIG_VALUE, DESCRIPTION, CREATED_DATE, CHANGED_DATE
+  FROM CONFIG_PARAM
+  WHERE CONFIG_NAME = :CONFIG_NAME
+  ORDER BY CONFIG_PARAM_ID DESC
+  LIMIT 1
+")
 {
   "version": "2018-05-29",
   "statements": [
-    #set($insertStatement = "INSERT INTO CONFIG_PARAM (")
-    #set($valuesStatement = " VALUES (")
-    #set($first = true)
-    #foreach($entry in $ctx.args.input.entrySet())
-      #if($entry.value)
-        #if(!$first)
-          #set($insertStatement = "$insertStatement, ")
-          #set($valuesStatement = "$valuesStatement, ")
-        #end
-        #set($insertStatement = "$insertStatement$entry.key")
-        #set($valuesStatement = "$valuesStatement'$entry.value'")
-        #set($first = false)
-      #end
-    #end
-    #set($insertStatement = "$insertStatement)$valuesStatement)")
-    "$insertStatement"
-  ]
+    "$util.escapeJavaScript($insert)",
+    "$util.escapeJavaScript($select)"
+  ],
+  "variableMap": {
+    ":CONFIG_NAME": $util.toJson($ctx.args.input.CONFIG_NAME),
+    ":CONFIG_VALUE": $util.toJson($ctx.args.input.CONFIG_VALUE),
+    ":DESCRIPTION": $util.toJson($util.defaultIfNull($ctx.args.input.DESCRIPTION, null)),
+    ":CREATED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_DATE, null)),
+    ":CHANGED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CHANGED_DATE, null))
+  }
 }

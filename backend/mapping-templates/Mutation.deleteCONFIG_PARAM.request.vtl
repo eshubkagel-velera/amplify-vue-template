@@ -1,6 +1,20 @@
+#set($preimage = "
+  SELECT CONFIG_PARAM_ID, CONFIG_NAME, CONFIG_VALUE, DESCRIPTION, CREATED_DATE, CHANGED_DATE
+  FROM CONFIG_PARAM
+  WHERE CONFIG_PARAM_ID = :CONFIG_PARAM_ID
+  LIMIT 1
+")
+#set($delete = "
+  DELETE FROM CONFIG_PARAM
+  WHERE CONFIG_PARAM_ID = :CONFIG_PARAM_ID
+")
 {
   "version": "2018-05-29",
   "statements": [
-    "DELETE FROM CONFIG_PARAM WHERE CONFIG_PARAM_ID = '$ctx.args.input.CONFIG_PARAM_ID'"
-  ]
+    "$util.escapeJavaScript($preimage)",
+    "$util.escapeJavaScript($delete)"
+  ],
+  "variableMap": {
+    ":CONFIG_PARAM_ID": $util.toJson($ctx.args.input.CONFIG_PARAM_ID)
+  }
 }

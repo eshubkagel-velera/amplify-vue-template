@@ -48,9 +48,9 @@ export const listLoanApps = `
   }
 `;
 
-export const listLoanAppExecss = `
-  query ListLoanAppExecss {
-    listLOAN_APP_EXECSS {
+export const listLoanAppExecs = `
+  query ListLoanAppExecs {
+    listLOAN_APP_EXECS {
       items {
         LOAN_APP_EXEC_ID
         LOAN_APP_ID
@@ -62,9 +62,9 @@ export const listLoanAppExecss = `
   }
 `;
 
-export const listLoanAppStepStatuss = `
-  query ListLoanAppStepStatuss {
-    listLOAN_APP_STEP_STATUSS {
+export const listLoanAppStepStatus = `
+  query ListLoanAppStepStatus {
+    listLOAN_APP_STEP_STATUS {
       items {
         LOAN_APP_STEP_STATUS_ID
         LOAN_APP_ID

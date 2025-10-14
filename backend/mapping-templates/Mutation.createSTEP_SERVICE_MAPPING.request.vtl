@@ -1,21 +1,26 @@
+#set($insert = "
+  INSERT INTO STEP_SERVICE_MAPPING
+    (STEP_TYPE_ID, SERVICE_ID, SEQUENCE_NBR)
+  VALUES
+    (:STEP_TYPE_ID, :SERVICE_ID, :SEQUENCE_NBR)
+")
+#set($select = "
+  SELECT
+    STEP_SERVICE_MAPPING_ID, STEP_TYPE_ID, SERVICE_ID, SEQUENCE_NBR
+  FROM STEP_SERVICE_MAPPING
+  WHERE SEQUENCE_NBR = :SEQUENCE_NBR
+  ORDER BY STEP_SERVICE_MAPPING_ID DESC
+  LIMIT 1
+")
 {
   "version": "2018-05-29",
   "statements": [
-    #set($insertStatement = "INSERT INTO STEP_SERVICE_MAPPING (")
-    #set($valuesStatement = " VALUES (")
-    #set($first = true)
-    #foreach($entry in $ctx.args.input.entrySet())
-      #if($entry.value)
-        #if(!$first)
-          #set($insertStatement = "$insertStatement, ")
-          #set($valuesStatement = "$valuesStatement, ")
-        #end
-        #set($insertStatement = "$insertStatement$entry.key")
-        #set($valuesStatement = "$valuesStatement'$entry.value'")
-        #set($first = false)
-      #end
-    #end
-    #set($insertStatement = "$insertStatement)$valuesStatement)")
-    "$insertStatement"
-  ]
+    "$util.escapeJavaScript($insert)",
+    "$util.escapeJavaScript($select)"
+  ],
+  "variableMap": {
+    ":STEP_TYPE_ID": $util.toJson($ctx.args.input.STEP_TYPE_ID),
+    ":SERVICE_ID": $util.toJson($ctx.args.input.SERVICE_ID),
+    ":SEQUENCE_NBR": $util.toJson($util.defaultIfNull($ctx.args.input.SEQUENCE_NBR, null))
+  }
 }

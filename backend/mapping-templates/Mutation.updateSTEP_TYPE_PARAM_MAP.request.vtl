@@ -1,18 +1,24 @@
+#set($update = "
+  UPDATE STEP_TYPE_PARAM_MAP
+  SET STEP_TYPE_ID = COALESCE(:STEP_TYPE_ID, STEP_TYPE_ID), SERVICE_PARAM_MAPPING_ID = COALESCE(:SERVICE_PARAM_MAPPING_ID, SERVICE_PARAM_MAPPING_ID), CREATED_BY_USER_ID = COALESCE(:CREATED_BY_USER_ID, CREATED_BY_USER_ID), CREATED_DATE = COALESCE(:CREATED_DATE, CREATED_DATE)
+  WHERE STEP_TYPE_PARAM_MAP_ID = :STEP_TYPE_PARAM_MAP_ID
+")
+#set($select = "
+  SELECT STEP_TYPE_PARAM_MAP_ID, STEP_TYPE_ID, SERVICE_PARAM_MAPPING_ID, CREATED_BY_USER_ID, CREATED_DATE
+  FROM STEP_TYPE_PARAM_MAP
+  WHERE STEP_TYPE_PARAM_MAP_ID = :STEP_TYPE_PARAM_MAP_ID
+")
 {
   "version": "2018-05-29",
   "statements": [
-    #set($updateStatement = "UPDATE STEP_TYPE_PARAM_MAP SET ")
-    #set($first = true)
-    #foreach($entry in $ctx.args.input.entrySet())
-      #if($entry.key != "STEP_TYPE_PARAM_MAP_ID" && $entry.value)
-        #if(!$first)
-          #set($updateStatement = "$updateStatement, ")
-        #end
-        #set($updateStatement = "$updateStatement$entry.key = '$entry.value'")
-        #set($first = false)
-      #end
-    #end
-    #set($updateStatement = "$updateStatement WHERE STEP_TYPE_PARAM_MAP_ID = '$ctx.args.input.STEP_TYPE_PARAM_MAP_ID'")
-    "$updateStatement"
-  ]
+    "$util.escapeJavaScript($update)",
+    "$util.escapeJavaScript($select)"
+  ],
+  "variableMap": {
+    ":STEP_TYPE_PARAM_MAP_ID": $util.toJson($ctx.args.input.STEP_TYPE_PARAM_MAP_ID),
+    ":STEP_TYPE_ID": $util.toJson($util.defaultIfNull($ctx.args.input.STEP_TYPE_ID, null)),
+    ":SERVICE_PARAM_MAPPING_ID": $util.toJson($util.defaultIfNull($ctx.args.input.SERVICE_PARAM_MAPPING_ID, null)),
+    ":CREATED_BY_USER_ID": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_BY_USER_ID, null)),
+    ":CREATED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_DATE, null))
+  }
 }

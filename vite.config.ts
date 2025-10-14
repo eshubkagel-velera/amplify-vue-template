@@ -11,14 +11,21 @@ export default defineConfig({
     'process.env': {},
     process: { env: {} }
   },
+  build: {
+    rollupOptions: {
+      external: ['fs']
+    }
+  },
   resolve: {
     alias: {
       path: 'path-browserify',
       util: 'util',
-      buffer: 'buffer'
+      buffer: 'buffer',
+      stream: 'stream-browserify',
+      os: 'os-browserify/browser'
     }
   },
   optimizeDeps: {
-    include: ['buffer', 'path-browserify', 'util', 'process']
+    include: ['buffer', 'path-browserify', 'util', 'process', 'stream-browserify']
   }
 });

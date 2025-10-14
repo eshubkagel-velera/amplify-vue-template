@@ -1,21 +1,27 @@
+#set($insert = "
+  INSERT INTO SERVICE_DOMAIN
+    (DOMAIN_URL, SERVICE_PROVIDER_ID, CREATED_DATE, CHANGED_DATE)
+  VALUES
+    (:DOMAIN_URL, :SERVICE_PROVIDER_ID, COALESCE(:CREATED_DATE, NOW()), :CHANGED_DATE)
+")
+#set($select = "
+  SELECT
+    SERVICE_DOMAIN_ID, DOMAIN_URL, SERVICE_PROVIDER_ID, CREATED_DATE, CHANGED_DATE
+  FROM SERVICE_DOMAIN
+  WHERE DOMAIN_URL = :DOMAIN_URL
+  ORDER BY SERVICE_DOMAIN_ID DESC
+  LIMIT 1
+")
 {
   "version": "2018-05-29",
   "statements": [
-    #set($insertStatement = "INSERT INTO SERVICE_DOMAIN (")
-    #set($valuesStatement = " VALUES (")
-    #set($first = true)
-    #foreach($entry in $ctx.args.input.entrySet())
-      #if($entry.value)
-        #if(!$first)
-          #set($insertStatement = "$insertStatement, ")
-          #set($valuesStatement = "$valuesStatement, ")
-        #end
-        #set($insertStatement = "$insertStatement$entry.key")
-        #set($valuesStatement = "$valuesStatement'$entry.value'")
-        #set($first = false)
-      #end
-    #end
-    #set($insertStatement = "$insertStatement)$valuesStatement)")
-    "$insertStatement"
-  ]
+    "$util.escapeJavaScript($insert)",
+    "$util.escapeJavaScript($select)"
+  ],
+  "variableMap": {
+    ":DOMAIN_URL": $util.toJson($util.defaultIfNull($ctx.args.input.DOMAIN_URL, null)),
+    ":SERVICE_PROVIDER_ID": $util.toJson($ctx.args.input.SERVICE_PROVIDER_ID),
+    ":CREATED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_DATE, null)),
+    ":CHANGED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CHANGED_DATE, null))
+  }
 }

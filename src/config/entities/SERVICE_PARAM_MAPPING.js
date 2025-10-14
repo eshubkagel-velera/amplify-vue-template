@@ -8,6 +8,31 @@ export default {
   // Environment copy configuration
   preserveOnCopy: ['SERVICE_PARAM_MAPPING_ID'],
   
+  // Data loading configuration
+  loadProductOptions: true,
+  
+  // Foreign key configuration for table display
+  foreignKeys: {
+    ORIGIN_PRODUCT_ID: {
+      table: 'ORIGIN_PRODUCT',
+      valueField: 'ORIGIN_PRODUCT_ID',
+      displayField: 'PRODUCT_NAME'
+    },
+    SOURCE_SERVICE_PARAM_ID: {
+      table: 'SERVICE_PARAM',
+      valueField: 'SERVICE_PARAM_ID',
+      displayField: 'PARAM_NAME'
+    },
+    TARGET_SERVICE_PARAM_ID: {
+      table: 'SERVICE_PARAM',
+      valueField: 'SERVICE_PARAM_ID',
+      displayField: 'PARAM_NAME'
+    }
+  },
+  
+  // Fields to remove before GraphQL mutations
+  fieldsToRemove: ['ORIGIN_PRODUCT_ID_DISPLAY', 'SOURCE_SERVICE_PARAM_ID_DISPLAY', 'TARGET_SERVICE_PARAM_ID_DISPLAY'],
+  
   // Environment comparison configuration
   comparisonConfig: {
     matchingFields: ['ORIGIN_PRODUCT_ID'],
@@ -36,7 +61,7 @@ export default {
   formFields: [
     {
       "name": "ORIGIN_PRODUCT_ID",
-      "type": "number",
+      "type": "select",
       "required": true,
       "disabled": false
     },
@@ -60,13 +85,13 @@ export default {
     },
     {
       "name": "SOURCE_SERVICE_PARAM_ID",
-      "type": "number",
+      "type": "select",
       "required": true,
       "disabled": false
     },
     {
       "name": "TARGET_SERVICE_PARAM_ID",
-      "type": "number",
+      "type": "select",
       "required": true,
       "disabled": false
     },

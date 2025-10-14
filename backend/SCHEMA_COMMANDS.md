@@ -13,7 +13,7 @@ npm run schema
 
 1. **Reads SQL files** from `/backend/dml_scripts/individual_tables/`
 2. **Auto-updates table_config.json** with new/removed SQL files
-3. **Checks operation permissions** in `/backend/dml_scripts/table_config.json`
+3. **Checks operation permissions** in `/config/table_config.json`
 4. **Generates GraphQL schema** (`schema.graphql`) with only allowed operations
 5. **Creates VTL mapping templates** (`/backend/mapping-templates/`) for allowed operations only
 6. **Updates entity configurations** (`/src/config/entities/`) preserving custom settings

@@ -56,9 +56,9 @@ npm run full-deploy:dev          # Schema + Database + API deployment
 
 ### Backend (AWS AppSync + RDS)
 - **SQL Files**: Database structure in `/backend/dml_scripts/individual_tables/`
-- **Table Config**: Operation permissions in `/backend/dml_scripts/table_config.json`
+- **Table Config**: Operation permissions in `/config/table_config.json`
 - **VTL Templates**: Auto-generated resolvers in `/backend/mapping-templates/`
-- **Database Config**: Centralized in `/backend/database-config.yml`
+- **Database Config**: Centralized in `/config/database-config.yml`
 
 ## Key Features
 

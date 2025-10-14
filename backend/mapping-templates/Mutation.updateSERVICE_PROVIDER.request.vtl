@@ -1,18 +1,25 @@
+#set($update = "
+  UPDATE SERVICE_PROVIDER
+  SET SERVICE_PROVIDER_NAME = COALESCE(:SERVICE_PROVIDER_NAME, SERVICE_PROVIDER_NAME), CREATED_BY_USER_ID = COALESCE(:CREATED_BY_USER_ID, CREATED_BY_USER_ID), CREATED_DATE = COALESCE(:CREATED_DATE, CREATED_DATE), CHANGED_BY_USER_ID = COALESCE(:CHANGED_BY_USER_ID, CHANGED_BY_USER_ID), CHANGED_DATE = COALESCE(:CHANGED_DATE, NOW())
+  WHERE SERVICE_PROVIDER_ID = :SERVICE_PROVIDER_ID
+")
+#set($select = "
+  SELECT SERVICE_PROVIDER_ID, SERVICE_PROVIDER_NAME, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE
+  FROM SERVICE_PROVIDER
+  WHERE SERVICE_PROVIDER_ID = :SERVICE_PROVIDER_ID
+")
 {
   "version": "2018-05-29",
   "statements": [
-    #set($updateStatement = "UPDATE SERVICE_PROVIDER SET ")
-    #set($first = true)
-    #foreach($entry in $ctx.args.input.entrySet())
-      #if($entry.key != "SERVICE_PROVIDER_ID" && $entry.value)
-        #if(!$first)
-          #set($updateStatement = "$updateStatement, ")
-        #end
-        #set($updateStatement = "$updateStatement$entry.key = '$entry.value'")
-        #set($first = false)
-      #end
-    #end
-    #set($updateStatement = "$updateStatement WHERE SERVICE_PROVIDER_ID = '$ctx.args.input.SERVICE_PROVIDER_ID'")
-    "$updateStatement"
-  ]
+    "$util.escapeJavaScript($update)",
+    "$util.escapeJavaScript($select)"
+  ],
+  "variableMap": {
+    ":SERVICE_PROVIDER_ID": $util.toJson($ctx.args.input.SERVICE_PROVIDER_ID),
+    ":SERVICE_PROVIDER_NAME": $util.toJson($util.defaultIfNull($ctx.args.input.SERVICE_PROVIDER_NAME, null)),
+    ":CREATED_BY_USER_ID": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_BY_USER_ID, null)),
+    ":CREATED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_DATE, null)),
+    ":CHANGED_BY_USER_ID": $util.toJson($util.defaultIfNull($ctx.args.input.CHANGED_BY_USER_ID, null)),
+    ":CHANGED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CHANGED_DATE, null))
+  }
 }

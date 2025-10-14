@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Load table configuration
-const configPath = path.join(__dirname, '../backend/dml_scripts/table_config.json');
+const configPath = path.join(__dirname, '../config/table_config.json');
 const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 
 // Check which tables should be included in GraphQL/App

@@ -2,11 +2,26 @@ export default {
   name: 'SERVICE_DOMAIN',
   idField: 'SERVICE_DOMAIN_ID',
   
+  // Data loading configuration
+  loadServiceProviders: true,
+  
+  // Foreign key configuration for table display
+  foreignKeys: {
+    SERVICE_PROVIDER_ID: {
+      table: 'SERVICE_PROVIDER',
+      valueField: 'SERVICE_PROVIDER_ID',
+      displayField: 'SERVICE_PROVIDER_NAME'
+    }
+  },
+  
   // Form processing configuration
   keepAuditFieldsOnUpdate: false,
   
   // Environment copy configuration
   preserveOnCopy: ['SERVICE_DOMAIN_ID'],
+  
+  // Fields to remove before GraphQL mutations
+  fieldsToRemove: ['SERVICE_PROVIDER_ID_DISPLAY'],
   
   // Environment comparison configuration
   comparisonConfig: {
@@ -34,7 +49,7 @@ export default {
     },
     {
       "name": "SERVICE_PROVIDER_ID",
-      "type": "number",
+      "type": "select",
       "required": true,
       "disabled": false
     },

@@ -63,8 +63,8 @@ App.vue
 ## Key Files to Reference
 - `src/config/entities/[ENTITY_NAME].js`: Individual entity configurations
 - `src/config/entityConfig.js`: CRUD function generation and custom business logic only
-- `backend/dml_scripts/table_config.json`: Controls which tables are included in GraphQL/App
+- `config/table_config.json`: Controls which tables are included in GraphQL/App
 - `backend/scripts/generate-schema-from-sql.js`: Schema generation from SQL files
-- `backend/database-config.yml`: Centralized database connection configuration
+- `config/database-config.yml`: Centralized database connection configuration
 
 *Last updated: 2025-01-03*

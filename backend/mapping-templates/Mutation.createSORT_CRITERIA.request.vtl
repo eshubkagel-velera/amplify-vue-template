@@ -1,21 +1,31 @@
+#set($insert = "
+  INSERT INTO SORT_CRITERIA
+    (ORIGIN_PRODUCT_ID, STEP_TYPE_ID, JSON_PATH, SORT_ORDER, SORT_PRIORITY, SEQUENCE_NBR, CREATED_DATE, CHANGED_DATE)
+  VALUES
+    (:ORIGIN_PRODUCT_ID, :STEP_TYPE_ID, :JSON_PATH, :SORT_ORDER, :SORT_PRIORITY, :SEQUENCE_NBR, COALESCE(:CREATED_DATE, NOW()), :CHANGED_DATE)
+")
+#set($select = "
+  SELECT
+    SORT_CRITERIA_ID, ORIGIN_PRODUCT_ID, STEP_TYPE_ID, JSON_PATH, SORT_ORDER, SORT_PRIORITY, SEQUENCE_NBR, CREATED_DATE, CHANGED_DATE
+  FROM SORT_CRITERIA
+  WHERE JSON_PATH = :JSON_PATH
+  ORDER BY SORT_CRITERIA_ID DESC
+  LIMIT 1
+")
 {
   "version": "2018-05-29",
   "statements": [
-    #set($insertStatement = "INSERT INTO SORT_CRITERIA (")
-    #set($valuesStatement = " VALUES (")
-    #set($first = true)
-    #foreach($entry in $ctx.args.input.entrySet())
-      #if($entry.value)
-        #if(!$first)
-          #set($insertStatement = "$insertStatement, ")
-          #set($valuesStatement = "$valuesStatement, ")
-        #end
-        #set($insertStatement = "$insertStatement$entry.key")
-        #set($valuesStatement = "$valuesStatement'$entry.value'")
-        #set($first = false)
-      #end
-    #end
-    #set($insertStatement = "$insertStatement)$valuesStatement)")
-    "$insertStatement"
-  ]
+    "$util.escapeJavaScript($insert)",
+    "$util.escapeJavaScript($select)"
+  ],
+  "variableMap": {
+    ":ORIGIN_PRODUCT_ID": $util.toJson($ctx.args.input.ORIGIN_PRODUCT_ID),
+    ":STEP_TYPE_ID": $util.toJson($ctx.args.input.STEP_TYPE_ID),
+    ":JSON_PATH": $util.toJson($ctx.args.input.JSON_PATH),
+    ":SORT_ORDER": $util.toJson($ctx.args.input.SORT_ORDER),
+    ":SORT_PRIORITY": $util.toJson($ctx.args.input.SORT_PRIORITY),
+    ":SEQUENCE_NBR": $util.toJson($ctx.args.input.SEQUENCE_NBR),
+    ":CREATED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_DATE, null)),
+    ":CHANGED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CHANGED_DATE, null))
+  }
 }

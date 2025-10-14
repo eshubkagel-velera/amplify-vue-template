@@ -1,18 +1,25 @@
+#set($update = "
+  UPDATE CONFIG_PARAM
+  SET CONFIG_NAME = COALESCE(:CONFIG_NAME, CONFIG_NAME), CONFIG_VALUE = COALESCE(:CONFIG_VALUE, CONFIG_VALUE), DESCRIPTION = COALESCE(:DESCRIPTION, DESCRIPTION), CREATED_DATE = COALESCE(:CREATED_DATE, CREATED_DATE), CHANGED_DATE = COALESCE(:CHANGED_DATE, NOW())
+  WHERE CONFIG_PARAM_ID = :CONFIG_PARAM_ID
+")
+#set($select = "
+  SELECT CONFIG_PARAM_ID, CONFIG_NAME, CONFIG_VALUE, DESCRIPTION, CREATED_DATE, CHANGED_DATE
+  FROM CONFIG_PARAM
+  WHERE CONFIG_PARAM_ID = :CONFIG_PARAM_ID
+")
 {
   "version": "2018-05-29",
   "statements": [
-    #set($updateStatement = "UPDATE CONFIG_PARAM SET ")
-    #set($first = true)
-    #foreach($entry in $ctx.args.input.entrySet())
-      #if($entry.key != "CONFIG_PARAM_ID" && $entry.value)
-        #if(!$first)
-          #set($updateStatement = "$updateStatement, ")
-        #end
-        #set($updateStatement = "$updateStatement$entry.key = '$entry.value'")
-        #set($first = false)
-      #end
-    #end
-    #set($updateStatement = "$updateStatement WHERE CONFIG_PARAM_ID = '$ctx.args.input.CONFIG_PARAM_ID'")
-    "$updateStatement"
-  ]
+    "$util.escapeJavaScript($update)",
+    "$util.escapeJavaScript($select)"
+  ],
+  "variableMap": {
+    ":CONFIG_PARAM_ID": $util.toJson($ctx.args.input.CONFIG_PARAM_ID),
+    ":CONFIG_NAME": $util.toJson($util.defaultIfNull($ctx.args.input.CONFIG_NAME, null)),
+    ":CONFIG_VALUE": $util.toJson($util.defaultIfNull($ctx.args.input.CONFIG_VALUE, null)),
+    ":DESCRIPTION": $util.toJson($util.defaultIfNull($ctx.args.input.DESCRIPTION, null)),
+    ":CREATED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_DATE, null)),
+    ":CHANGED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CHANGED_DATE, null))
+  }
 }

@@ -1,6 +1,20 @@
+#set($preimage = "
+  SELECT SERVICE_PROVIDER_ID, SERVICE_PROVIDER_NAME, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE
+  FROM SERVICE_PROVIDER
+  WHERE SERVICE_PROVIDER_ID = :SERVICE_PROVIDER_ID
+  LIMIT 1
+")
+#set($delete = "
+  DELETE FROM SERVICE_PROVIDER
+  WHERE SERVICE_PROVIDER_ID = :SERVICE_PROVIDER_ID
+")
 {
   "version": "2018-05-29",
   "statements": [
-    "DELETE FROM SERVICE_PROVIDER WHERE SERVICE_PROVIDER_ID = '$ctx.args.input.SERVICE_PROVIDER_ID'"
-  ]
+    "$util.escapeJavaScript($preimage)",
+    "$util.escapeJavaScript($delete)"
+  ],
+  "variableMap": {
+    ":SERVICE_PROVIDER_ID": $util.toJson($ctx.args.input.SERVICE_PROVIDER_ID)
+  }
 }

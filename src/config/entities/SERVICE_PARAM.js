@@ -8,6 +8,18 @@ export default {
   // Environment copy configuration
   preserveOnCopy: ['SERVICE_PARAM_ID'],
   
+  // Foreign key configuration for table display
+  foreignKeys: {
+    SERVICE_ID: {
+      table: 'SERVICE',
+      valueField: 'SERVICE_ID',
+      displayField: 'URI'
+    }
+  },
+  
+  // Fields to remove before GraphQL mutations
+  fieldsToRemove: ['SERVICE_ID_DISPLAY'],
+  
   // Environment comparison configuration
   comparisonConfig: {
     matchingFields: ['PARAM_NAME'],
@@ -30,7 +42,7 @@ export default {
   formFields: [
     {
       "name": "SERVICE_ID",
-      "type": "number",
+      "type": "select",
       "required": true,
       "disabled": false
     },

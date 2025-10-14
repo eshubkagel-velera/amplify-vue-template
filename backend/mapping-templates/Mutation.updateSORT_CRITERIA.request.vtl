@@ -1,18 +1,28 @@
+#set($update = "
+  UPDATE SORT_CRITERIA
+  SET ORIGIN_PRODUCT_ID = COALESCE(:ORIGIN_PRODUCT_ID, ORIGIN_PRODUCT_ID), STEP_TYPE_ID = COALESCE(:STEP_TYPE_ID, STEP_TYPE_ID), JSON_PATH = COALESCE(:JSON_PATH, JSON_PATH), SORT_ORDER = COALESCE(:SORT_ORDER, SORT_ORDER), SORT_PRIORITY = COALESCE(:SORT_PRIORITY, SORT_PRIORITY), SEQUENCE_NBR = COALESCE(:SEQUENCE_NBR, SEQUENCE_NBR), CREATED_DATE = COALESCE(:CREATED_DATE, CREATED_DATE), CHANGED_DATE = COALESCE(:CHANGED_DATE, NOW())
+  WHERE SORT_CRITERIA_ID = :SORT_CRITERIA_ID
+")
+#set($select = "
+  SELECT SORT_CRITERIA_ID, ORIGIN_PRODUCT_ID, STEP_TYPE_ID, JSON_PATH, SORT_ORDER, SORT_PRIORITY, SEQUENCE_NBR, CREATED_DATE, CHANGED_DATE
+  FROM SORT_CRITERIA
+  WHERE SORT_CRITERIA_ID = :SORT_CRITERIA_ID
+")
 {
   "version": "2018-05-29",
   "statements": [
-    #set($updateStatement = "UPDATE SORT_CRITERIA SET ")
-    #set($first = true)
-    #foreach($entry in $ctx.args.input.entrySet())
-      #if($entry.key != "SORT_CRITERIA_ID" && $entry.value)
-        #if(!$first)
-          #set($updateStatement = "$updateStatement, ")
-        #end
-        #set($updateStatement = "$updateStatement$entry.key = '$entry.value'")
-        #set($first = false)
-      #end
-    #end
-    #set($updateStatement = "$updateStatement WHERE SORT_CRITERIA_ID = '$ctx.args.input.SORT_CRITERIA_ID'")
-    "$updateStatement"
-  ]
+    "$util.escapeJavaScript($update)",
+    "$util.escapeJavaScript($select)"
+  ],
+  "variableMap": {
+    ":SORT_CRITERIA_ID": $util.toJson($ctx.args.input.SORT_CRITERIA_ID),
+    ":ORIGIN_PRODUCT_ID": $util.toJson($util.defaultIfNull($ctx.args.input.ORIGIN_PRODUCT_ID, null)),
+    ":STEP_TYPE_ID": $util.toJson($util.defaultIfNull($ctx.args.input.STEP_TYPE_ID, null)),
+    ":JSON_PATH": $util.toJson($util.defaultIfNull($ctx.args.input.JSON_PATH, null)),
+    ":SORT_ORDER": $util.toJson($util.defaultIfNull($ctx.args.input.SORT_ORDER, null)),
+    ":SORT_PRIORITY": $util.toJson($util.defaultIfNull($ctx.args.input.SORT_PRIORITY, null)),
+    ":SEQUENCE_NBR": $util.toJson($util.defaultIfNull($ctx.args.input.SEQUENCE_NBR, null)),
+    ":CREATED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_DATE, null)),
+    ":CHANGED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CHANGED_DATE, null))
+  }
 }

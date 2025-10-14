@@ -2,6 +2,10 @@ export default {
   name: 'REDIRECT_URL',
   idField: 'REDIRECT_URL_ID',
   
+  // Data loading configuration
+  loadProductOptions: true,
+  hasFilters: true,
+  
   // Form processing configuration
   keepAuditFieldsOnUpdate: false,
   
@@ -32,15 +36,19 @@ export default {
   formFields: [
     {
       "name": "ORIGIN_PRODUCT_ID",
-      "type": "number",
+      "type": "select",
       "required": true,
       "disabled": false
     },
     {
       "name": "URL_TYPE_CODE",
-      "type": "text",
+      "type": "select",
       "required": true,
-      "disabled": false
+      "disabled": false,
+      "options": [
+        { "value": "N", "label": "N - New" },
+        { "value": "E", "label": "E - Existing" }
+      ]
     },
     {
       "name": "URL",

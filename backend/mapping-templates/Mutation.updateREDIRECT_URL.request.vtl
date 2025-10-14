@@ -1,18 +1,28 @@
+#set($update = "
+  UPDATE REDIRECT_URL
+  SET ORIGIN_PRODUCT_ID = COALESCE(:ORIGIN_PRODUCT_ID, ORIGIN_PRODUCT_ID), URL_TYPE_CODE = COALESCE(:URL_TYPE_CODE, URL_TYPE_CODE), URL = COALESCE(:URL, URL), RESPONSE_TEXT = COALESCE(:RESPONSE_TEXT, RESPONSE_TEXT), CREATED_BY_USER_ID = COALESCE(:CREATED_BY_USER_ID, CREATED_BY_USER_ID), CREATED_DATE = COALESCE(:CREATED_DATE, CREATED_DATE), CHANGED_BY_USER_ID = COALESCE(:CHANGED_BY_USER_ID, CHANGED_BY_USER_ID), CHANGED_DATE = COALESCE(:CHANGED_DATE, NOW())
+  WHERE REDIRECT_URL_ID = :REDIRECT_URL_ID
+")
+#set($select = "
+  SELECT REDIRECT_URL_ID, ORIGIN_PRODUCT_ID, URL_TYPE_CODE, URL, RESPONSE_TEXT, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE
+  FROM REDIRECT_URL
+  WHERE REDIRECT_URL_ID = :REDIRECT_URL_ID
+")
 {
   "version": "2018-05-29",
   "statements": [
-    #set($updateStatement = "UPDATE REDIRECT_URL SET ")
-    #set($first = true)
-    #foreach($entry in $ctx.args.input.entrySet())
-      #if($entry.key != "REDIRECT_URL_ID" && $entry.value)
-        #if(!$first)
-          #set($updateStatement = "$updateStatement, ")
-        #end
-        #set($updateStatement = "$updateStatement$entry.key = '$entry.value'")
-        #set($first = false)
-      #end
-    #end
-    #set($updateStatement = "$updateStatement WHERE REDIRECT_URL_ID = '$ctx.args.input.REDIRECT_URL_ID'")
-    "$updateStatement"
-  ]
+    "$util.escapeJavaScript($update)",
+    "$util.escapeJavaScript($select)"
+  ],
+  "variableMap": {
+    ":REDIRECT_URL_ID": $util.toJson($ctx.args.input.REDIRECT_URL_ID),
+    ":ORIGIN_PRODUCT_ID": $util.toJson($util.defaultIfNull($ctx.args.input.ORIGIN_PRODUCT_ID, null)),
+    ":URL_TYPE_CODE": $util.toJson($util.defaultIfNull($ctx.args.input.URL_TYPE_CODE, null)),
+    ":URL": $util.toJson($util.defaultIfNull($ctx.args.input.URL, null)),
+    ":RESPONSE_TEXT": $util.toJson($util.defaultIfNull($ctx.args.input.RESPONSE_TEXT, null)),
+    ":CREATED_BY_USER_ID": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_BY_USER_ID, null)),
+    ":CREATED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_DATE, null)),
+    ":CHANGED_BY_USER_ID": $util.toJson($util.defaultIfNull($ctx.args.input.CHANGED_BY_USER_ID, null)),
+    ":CHANGED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CHANGED_DATE, null))
+  }
 }

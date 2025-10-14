@@ -11,7 +11,7 @@
 - **Preserve Custom Settings**: When updating entity configs, read existing file first to preserve custom configurations
 
 ## Database Schema Context
-- **Use table_config.json**: Reference `/backend/dml_scripts/table_config.json` to understand table inclusion and operation permissions (allowQuery/allowCreate/allowUpdate/allowDelete)
+- **Use table_config.json**: Reference `/config/table_config.json` to understand table inclusion and operation permissions (allowQuery/allowCreate/allowUpdate/allowDelete)
 - **SQL File Focus**: When working with database changes, reference specific SQL files in `/backend/dml_scripts/individual_tables/`
 - **Operation-Level Permissions**: Check table_config.json for which operations are enabled per table
 - **Avoid Full Schema Reads**: Don't read entire `schema.graphql` unless specifically needed

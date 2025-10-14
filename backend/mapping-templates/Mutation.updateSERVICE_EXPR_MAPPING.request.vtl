@@ -1,18 +1,28 @@
+#set($update = "
+  UPDATE SERVICE_EXPR_MAPPING
+  SET SERVICE_PARAM_MAPPING_ID = COALESCE(:SERVICE_PARAM_MAPPING_ID, SERVICE_PARAM_MAPPING_ID), SOURCE_EXPR = COALESCE(:SOURCE_EXPR, SOURCE_EXPR), TARGET_EXPR = COALESCE(:TARGET_EXPR, TARGET_EXPR), COMMENT_TEXT = COALESCE(:COMMENT_TEXT, COMMENT_TEXT), CREATED_BY_USER_ID = COALESCE(:CREATED_BY_USER_ID, CREATED_BY_USER_ID), CREATED_DATE = COALESCE(:CREATED_DATE, CREATED_DATE), CHANGED_BY_USER_ID = COALESCE(:CHANGED_BY_USER_ID, CHANGED_BY_USER_ID), CHANGED_DATE = COALESCE(:CHANGED_DATE, NOW())
+  WHERE SERVICE_EXPR_MAPPING_ID = :SERVICE_EXPR_MAPPING_ID
+")
+#set($select = "
+  SELECT SERVICE_EXPR_MAPPING_ID, SERVICE_PARAM_MAPPING_ID, SOURCE_EXPR, TARGET_EXPR, COMMENT_TEXT, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE
+  FROM SERVICE_EXPR_MAPPING
+  WHERE SERVICE_EXPR_MAPPING_ID = :SERVICE_EXPR_MAPPING_ID
+")
 {
   "version": "2018-05-29",
   "statements": [
-    #set($updateStatement = "UPDATE SERVICE_EXPR_MAPPING SET ")
-    #set($first = true)
-    #foreach($entry in $ctx.args.input.entrySet())
-      #if($entry.key != "SERVICE_EXPR_MAPPING_ID" && $entry.value)
-        #if(!$first)
-          #set($updateStatement = "$updateStatement, ")
-        #end
-        #set($updateStatement = "$updateStatement$entry.key = '$entry.value'")
-        #set($first = false)
-      #end
-    #end
-    #set($updateStatement = "$updateStatement WHERE SERVICE_EXPR_MAPPING_ID = '$ctx.args.input.SERVICE_EXPR_MAPPING_ID'")
-    "$updateStatement"
-  ]
+    "$util.escapeJavaScript($update)",
+    "$util.escapeJavaScript($select)"
+  ],
+  "variableMap": {
+    ":SERVICE_EXPR_MAPPING_ID": $util.toJson($ctx.args.input.SERVICE_EXPR_MAPPING_ID),
+    ":SERVICE_PARAM_MAPPING_ID": $util.toJson($util.defaultIfNull($ctx.args.input.SERVICE_PARAM_MAPPING_ID, null)),
+    ":SOURCE_EXPR": $util.toJson($util.defaultIfNull($ctx.args.input.SOURCE_EXPR, null)),
+    ":TARGET_EXPR": $util.toJson($util.defaultIfNull($ctx.args.input.TARGET_EXPR, null)),
+    ":COMMENT_TEXT": $util.toJson($util.defaultIfNull($ctx.args.input.COMMENT_TEXT, null)),
+    ":CREATED_BY_USER_ID": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_BY_USER_ID, null)),
+    ":CREATED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_DATE, null)),
+    ":CHANGED_BY_USER_ID": $util.toJson($util.defaultIfNull($ctx.args.input.CHANGED_BY_USER_ID, null)),
+    ":CHANGED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CHANGED_DATE, null))
+  }
 }

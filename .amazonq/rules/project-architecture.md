@@ -7,7 +7,7 @@
 
 ## Database Schema Management
 - **SQL as Source of Truth**: Database structure is defined in `/backend/dml_scripts/individual_tables/*.sql` files
-- **Table Configuration**: `/backend/dml_scripts/table_config.json` controls table inclusion and operation permissions (allowQuery, allowCreate, allowUpdate, allowDelete)
+- **Table Configuration**: `/config/table_config.json` controls table inclusion and operation permissions (allowQuery, allowCreate, allowUpdate, allowDelete)
 - **Automated Generation**: Run `npm run schema` to auto-generate `schema.graphql`, VTL templates, entity configs, and serverless mappings from SQL files
 - **Operation-Level Control**: Only allowed operations generate GraphQL schema entries and VTL templates
 - **VTL Template Cleanup**: Automatically removes VTL templates and serverless mappings for disabled operations
@@ -23,7 +23,7 @@
 - **Database Updates**: Use `npm run db:dev` for database updates, `npm run db:dev -- --dry-run` for previews, `npm run db:dev -- --remove-extra` to remove extra columns
 - **API Deployment**: Use `npm run deploy:dev` for GraphQL API deployment
 - **Full Deployment**: Use `npm run full-deploy:dev` for complete deployment (schema + database + API)
-- **Centralized Database Config**: All database connection details are in `/backend/database-config.yml`, referenced by both serverless deployment and database update scripts
+- **Centralized Database Config**: All database connection details are in `/config/database-config.yml`, referenced by both serverless deployment and database update scripts
 
 ## File Organization Patterns
 - **Backend Scripts**: All automation scripts in `/backend/scripts/` directory

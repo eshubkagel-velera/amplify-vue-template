@@ -1,21 +1,31 @@
+#set($insert = "
+  INSERT INTO REDIRECT_URL
+    (ORIGIN_PRODUCT_ID, URL_TYPE_CODE, URL, RESPONSE_TEXT, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE)
+  VALUES
+    (:ORIGIN_PRODUCT_ID, :URL_TYPE_CODE, :URL, :RESPONSE_TEXT, :CREATED_BY_USER_ID, COALESCE(:CREATED_DATE, NOW()), :CHANGED_BY_USER_ID, :CHANGED_DATE)
+")
+#set($select = "
+  SELECT
+    REDIRECT_URL_ID, ORIGIN_PRODUCT_ID, URL_TYPE_CODE, URL, RESPONSE_TEXT, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE
+  FROM REDIRECT_URL
+  WHERE URL_TYPE_CODE = :URL_TYPE_CODE
+  ORDER BY REDIRECT_URL_ID DESC
+  LIMIT 1
+")
 {
   "version": "2018-05-29",
   "statements": [
-    #set($insertStatement = "INSERT INTO REDIRECT_URL (")
-    #set($valuesStatement = " VALUES (")
-    #set($first = true)
-    #foreach($entry in $ctx.args.input.entrySet())
-      #if($entry.value)
-        #if(!$first)
-          #set($insertStatement = "$insertStatement, ")
-          #set($valuesStatement = "$valuesStatement, ")
-        #end
-        #set($insertStatement = "$insertStatement$entry.key")
-        #set($valuesStatement = "$valuesStatement'$entry.value'")
-        #set($first = false)
-      #end
-    #end
-    #set($insertStatement = "$insertStatement)$valuesStatement)")
-    "$insertStatement"
-  ]
+    "$util.escapeJavaScript($insert)",
+    "$util.escapeJavaScript($select)"
+  ],
+  "variableMap": {
+    ":ORIGIN_PRODUCT_ID": $util.toJson($ctx.args.input.ORIGIN_PRODUCT_ID),
+    ":URL_TYPE_CODE": $util.toJson($ctx.args.input.URL_TYPE_CODE),
+    ":URL": $util.toJson($ctx.args.input.URL),
+    ":RESPONSE_TEXT": $util.toJson($util.defaultIfNull($ctx.args.input.RESPONSE_TEXT, null)),
+    ":CREATED_BY_USER_ID": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_BY_USER_ID, null)),
+    ":CREATED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_DATE, null)),
+    ":CHANGED_BY_USER_ID": $util.toJson($util.defaultIfNull($ctx.args.input.CHANGED_BY_USER_ID, null)),
+    ":CHANGED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CHANGED_DATE, null))
+  }
 }

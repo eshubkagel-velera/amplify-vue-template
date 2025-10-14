@@ -6,7 +6,7 @@ const path = require('path');
 const yaml = require('js-yaml');
 
 const stage = process.argv[2] || 'dev';
-const dbConfig = yaml.load(fs.readFileSync(path.join(__dirname, '../database-config.yml'), 'utf8'));
+const dbConfig = yaml.load(fs.readFileSync(path.join(__dirname, '../../config/database-config.yml'), 'utf8'));
 const stageConfig = dbConfig.stages[stage];
 const rdsData = new RDSDataClient({ region: 'us-east-2' });
 

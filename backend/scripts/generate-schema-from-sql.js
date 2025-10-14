@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const tableConfigPath = path.join(__dirname, '../dml_scripts/table_config.json');
+const tableConfigPath = path.join(__dirname, '../../config/table_config.json');
 let tableConfig = JSON.parse(fs.readFileSync(tableConfigPath, 'utf8'));
 
 function updateTableConfig(sqlFiles) {
@@ -187,6 +187,14 @@ function generateSchemaFromSQL() {
   const scriptsDir = path.join(__dirname, '../dml_scripts/individual_tables');
   const files = fs.readdirSync(scriptsDir).filter(file => file.endsWith('.sql'));
   
+  // Backup existing schema before regeneration
+  const schemaPath = path.join(__dirname, '../schema.graphql');
+  if (fs.existsSync(schemaPath)) {
+    const backupPath = path.join(__dirname, '../schema.graphql.backup');
+    fs.copyFileSync(schemaPath, backupPath);
+    console.log('📋 Backed up existing schema.graphql');
+  }
+  
   // Update table config with new SQL files
   updateTableConfig(files);
   
@@ -258,7 +266,8 @@ function generateSchemaFromSQL() {
     const tablePerms = tableConfig.tables[tableName];
     
     if (tablePerms.allowQuery) {
-      schemaQueries += `  list${tableName}S: ${tableName}Connection @aws_auth(cognito_groups: ["readonly", "developer", "deployment", "admin"])\n`;
+      const pluralName = tableName.endsWith('S') ? tableName : `${tableName}S`;
+      schemaQueries += `  list${pluralName}: ${tableName}Connection @aws_auth(cognito_groups: ["readonly", "developer", "deployment", "admin"])\n`;
     }
     
     if (tablePerms.allowCreate) {
@@ -327,12 +336,18 @@ function generateMappingTemplates() {
     
     const tablePerms = tableConfig.tables[tableName];
     
+    // Get primary key for this table (needed for all templates)
+    const sql = fs.readFileSync(path.join(scriptsDir, file), 'utf8');
+    const parsed = parseCreateTableSQL(sql);
+    const primaryKey = parsed ? parsed.primaryKey : `${tableName}_ID`;
+    
     // Query templates (only if allowed)
     if (tablePerms.allowQuery) {
+      
       const listRequestTemplate = `{
   "version": "2018-05-29",
   "statements": [
-    "SELECT * FROM ${tableName} ORDER BY ${tableName}_ID#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end"
+    "SELECT * FROM ${tableName} ORDER BY ${primaryKey}#if($ctx.args.nextToken) OFFSET $ctx.args.nextToken#end#if($ctx.args.limit) LIMIT $ctx.args.limit#end"
   ]
 }`;
 
@@ -357,71 +372,171 @@ function generateMappingTemplates() {
   #if($hasNextToken)"nextToken": "$nextTokenValue"#else"nextToken": null#end
 }`;
 
-      fs.writeFileSync(path.join(templatesDir, `Query.list${tableName}S.request.vtl`), listRequestTemplate);
-      fs.writeFileSync(path.join(templatesDir, `Query.list${tableName}S.response.vtl`), listResponseTemplate);
+      const pluralName = tableName.endsWith('S') ? tableName : `${tableName}S`;
+      fs.writeFileSync(path.join(templatesDir, `Query.list${pluralName}.request.vtl`), listRequestTemplate);
+      fs.writeFileSync(path.join(templatesDir, `Query.list${pluralName}.response.vtl`), listResponseTemplate);
     }
 
-    // Get primary key for this table
-    const sql = fs.readFileSync(path.join(scriptsDir, file), 'utf8');
-    const parsed = parseCreateTableSQL(sql);
-    const primaryKey = parsed ? parsed.primaryKey : `${tableName}_ID`;
+    // Generate column lists for templates
+    const allColumns = parsed.columns.map(col => col.name);
+    const createColumns = parsed.columns.filter(col => {
+      // Always exclude AUTO_INCREMENT primary key from INSERT
+      if (col.name === primaryKey && sql.includes('AUTO_INCREMENT')) {
+        return false;
+      }
+      return true;
+    });
     
-    // Mutation templates (only for allowed operations)
-    const createRequestTemplate = `{
+    const columnsList = allColumns.join(', ');
+    const createColumnsList = createColumns.map(col => col.name).join(', ');
+    const createParamsList = createColumns.map(col => `:${col.name}`).join(', ');
+    
+    // Build variable maps with proper null handling
+    const createVariableMap = createColumns.map(col => {
+      const isRequired = col.required && !col.name.includes('CHANGED_') && !col.name.includes('CREATED_');
+      if (isRequired) {
+        return `    ":${col.name}": $util.toJson($ctx.args.input.${col.name})`;
+      } else {
+        return `    ":${col.name}": $util.toJson($util.defaultIfNull($ctx.args.input.${col.name}, null))`;
+      }
+    }).join(',\n');
+    
+    const updateVariableMap = allColumns.map(col => {
+      if (col === primaryKey) {
+        return `    ":${col}": $util.toJson($ctx.args.input.${col})`;
+      } else {
+        return `    ":${col}": $util.toJson($util.defaultIfNull($ctx.args.input.${col}, null))`;
+      }
+    }).join(',\n');
+    
+    const updateSetClause = allColumns.filter(col => col !== primaryKey).map(col => {
+      if (col.includes('CHANGED_DATE')) {
+        return `${col} = COALESCE(:${col}, NOW())`;
+      } else {
+        return `${col} = COALESCE(:${col}, ${col})`;
+      }
+    }).join(', ');
+    
+    // Find a unique field to use for lookup (prefer NAME fields, then first non-ID field)
+    const uniqueField = parsed.columns.find(col => 
+      col.name.includes('NAME') && !col.name.includes('_ID')
+    ) || parsed.columns.find(col => 
+      !col.name.includes('_ID') && col.name !== primaryKey
+    ) || parsed.columns[1];
+    
+    // Special handling for tables without good unique fields
+    let selectWhereClause;
+    if (tableName === 'SERVICE') {
+      selectWhereClause = `SERVICE_PROVIDER_ID = :SERVICE_PROVIDER_ID AND URI = :URI`;
+    } else if (tableName === 'SERVICE_PARAM_MAPPING') {
+      selectWhereClause = `ORIGIN_PRODUCT_ID = :ORIGIN_PRODUCT_ID AND SOURCE_SERVICE_PARAM_ID = :SOURCE_SERVICE_PARAM_ID AND TARGET_SERVICE_PARAM_ID = :TARGET_SERVICE_PARAM_ID`;
+    } else if (tableName === 'STEP_TYPE_PARAM_MAP') {
+      selectWhereClause = `STEP_TYPE_ID = :STEP_TYPE_ID AND SERVICE_PARAM_MAPPING_ID = :SERVICE_PARAM_MAPPING_ID`;
+    } else {
+      selectWhereClause = `${uniqueField.name} = :${uniqueField.name}`;
+    }
+    
+    // Mutation templates using unique field lookup instead of LAST_INSERT_ID
+    const createRequestTemplate = `#set($insert = "
+  INSERT INTO ${tableName}
+    (${createColumnsList})
+  VALUES
+    (${createParamsList.replace(/:([A-Z_]+)/g, (match, field) => {
+      if (field.includes('CREATED_DATE')) return `COALESCE(:${field}, NOW())`;
+      return `:${field}`;
+    })})
+")
+#set($select = "
+  SELECT
+    ${columnsList}
+  FROM ${tableName}
+  WHERE ${selectWhereClause}
+  ORDER BY ${primaryKey} DESC
+  LIMIT 1
+")
+{
   "version": "2018-05-29",
   "statements": [
-    #set($insertStatement = "INSERT INTO ${tableName} (")
-    #set($valuesStatement = " VALUES (")
-    #set($first = true)
-    #foreach($entry in $ctx.args.input.entrySet())
-      #if($entry.value)
-        #if(!$first)
-          #set($insertStatement = "$insertStatement, ")
-          #set($valuesStatement = "$valuesStatement, ")
-        #end
-        #set($insertStatement = "$insertStatement$entry.key")
-        #set($valuesStatement = "$valuesStatement'$entry.value'")
-        #set($first = false)
-      #end
-    #end
-    #set($insertStatement = "$insertStatement)$valuesStatement)")
-    "$insertStatement"
-  ]
+    "$util.escapeJavaScript($insert)",
+    "$util.escapeJavaScript($select)"
+  ],
+  "variableMap": {
+${createVariableMap}
+  }
 }`;
 
-    const updateRequestTemplate = `{
+    const updateRequestTemplate = `#set($update = "
+  UPDATE ${tableName}
+  SET ${updateSetClause}
+  WHERE ${primaryKey} = :${primaryKey}
+")
+#set($select = "
+  SELECT ${columnsList}
+  FROM ${tableName}
+  WHERE ${primaryKey} = :${primaryKey}
+")
+{
   "version": "2018-05-29",
   "statements": [
-    #set($updateStatement = "UPDATE ${tableName} SET ")
-    #set($first = true)
-    #foreach($entry in $ctx.args.input.entrySet())
-      #if($entry.key != "${primaryKey}" && $entry.value)
-        #if(!$first)
-          #set($updateStatement = "$updateStatement, ")
-        #end
-        #set($updateStatement = "$updateStatement$entry.key = '$entry.value'")
-        #set($first = false)
-      #end
-    #end
-    #set($updateStatement = "$updateStatement WHERE ${primaryKey} = '$ctx.args.input.${primaryKey}'")
-    "$updateStatement"
-  ]
+    "$util.escapeJavaScript($update)",
+    "$util.escapeJavaScript($select)"
+  ],
+  "variableMap": {
+${updateVariableMap}
+  }
 }`;
 
-    const deleteRequestTemplate = `{
+    const deleteRequestTemplate = `#set($preimage = "
+  SELECT ${columnsList}
+  FROM ${tableName}
+  WHERE ${primaryKey} = :${primaryKey}
+  LIMIT 1
+")
+#set($delete = "
+  DELETE FROM ${tableName}
+  WHERE ${primaryKey} = :${primaryKey}
+")
+{
   "version": "2018-05-29",
   "statements": [
-    "DELETE FROM ${tableName} WHERE ${primaryKey} = '$ctx.args.input.${primaryKey}'"
-  ]
+    "$util.escapeJavaScript($preimage)",
+    "$util.escapeJavaScript($delete)"
+  ],
+  "variableMap": {
+    ":${primaryKey}": $util.toJson($ctx.args.input.${primaryKey})
+  }
 }`;
 
-    const mutationResponseTemplate = `## Handle RDS Data API response for MySQL (no RETURNING clause)
-#if($ctx.error)
-    $utils.error($ctx.error.message, $ctx.error.type)
+    const createResponseTemplate = `#if($ctx.error)
+  $util.error($ctx.error.message, $ctx.error.type)
+#end
+#set($rows = $util.rds.toJsonObject($ctx.result))
+#if($rows.size() < 2 || $rows[1].size() == 0)
+  $util.error("Create succeeded but no row was returned by SELECT.", "NotFound")
+#end
+$util.toJson($rows[1][0])`;
+
+    const updateResponseTemplate = `#if($ctx.error)
+  $util.error($ctx.error.message, $ctx.error.type)
 #end
 
-## MySQL INSERT/UPDATE doesn't return data, so return input with success indicator
-$util.toJson($ctx.args.input)`;
+#set($rows = $util.rds.toJsonObject($ctx.result))
+#if($rows.size() < 2 || $rows[1].size() == 0)
+  $util.error("No row found for ${primaryKey}.", "NotFound")
+#end
+
+$util.toJson($rows[1][0])`;
+
+    const deleteResponseTemplate = `#if($ctx.error)
+  $util.error($ctx.error.message, $ctx.error.type)
+#end
+
+#set($rows = $util.rds.toJsonObject($ctx.result))
+#if($rows[0].size() == 0)
+  $util.error("Nothing to delete for ${primaryKey}.", "NotFound")
+#end
+
+$util.toJson($rows[0][0])`;
 
     const operations = [
       { name: 'create', allowed: tablePerms.allowCreate },
@@ -431,13 +546,20 @@ $util.toJson($ctx.args.input)`;
     
     operations.forEach(op => {
       if (op.allowed) {
-        let requestTemplate;
-        if (op.name === 'create') requestTemplate = createRequestTemplate;
-        else if (op.name === 'update') requestTemplate = updateRequestTemplate;
-        else if (op.name === 'delete') requestTemplate = deleteRequestTemplate;
+        let requestTemplate, responseTemplate;
+        if (op.name === 'create') {
+          requestTemplate = createRequestTemplate;
+          responseTemplate = createResponseTemplate;
+        } else if (op.name === 'update') {
+          requestTemplate = updateRequestTemplate;
+          responseTemplate = updateResponseTemplate;
+        } else if (op.name === 'delete') {
+          requestTemplate = deleteRequestTemplate;
+          responseTemplate = deleteResponseTemplate;
+        }
         
         fs.writeFileSync(path.join(templatesDir, `Mutation.${op.name}${tableName}.request.vtl`), requestTemplate);
-        fs.writeFileSync(path.join(templatesDir, `Mutation.${op.name}${tableName}.response.vtl`), mutationResponseTemplate);
+        fs.writeFileSync(path.join(templatesDir, `Mutation.${op.name}${tableName}.response.vtl`), responseTemplate);
       }
     });
   });
@@ -585,6 +707,12 @@ function generateFrontendGraphQL() {
     fs.mkdirSync(frontendGraphQLDir, { recursive: true });
   }
   
+  // Special cases for query names to match GraphQL schema
+  const queryNameOverrides = {
+    'LOAN_APP_EXECS': 'listLoanAppExecs',
+    'LOAN_APP_STEP_STATUS': 'listLoanAppStepStatus'
+  };
+  
   let queries = '';
   let mutations = '';
   
@@ -610,9 +738,15 @@ function generateFrontendGraphQL() {
     // Generate query
     if (tablePerms.allowQuery) {
       const fieldsList = parsed.columns.map(col => `        ${col.name}`).join('\n');
-      queries += `export const list${pascalCaseName}s = \`
-  query List${pascalCaseName}s {
-    list${tableName}S {
+      const pluralName = tableName.endsWith('S') ? tableName : `${tableName}S`;
+      
+      // Use override name if specified, otherwise use default
+      const queryExportName = queryNameOverrides[tableName] || `list${pascalCaseName}s`;
+      const queryName = queryNameOverrides[tableName] ? queryNameOverrides[tableName].replace('list', 'List') : `List${pascalCaseName}s`;
+      
+      queries += `export const ${queryExportName} = \`
+  query ${queryName} {
+    list${pluralName} {
       items {
 ${fieldsList}
       }
@@ -664,6 +798,9 @@ ${fieldsList}
   
   console.log('✅ Generated frontend GraphQL queries and mutations');
   
+  // Update integration tests
+  updateIntegrationTests();
+  
   // Validate generated VTL templates
   console.log('\n🔍 Validating VTL templates...');
   try {
@@ -671,6 +808,30 @@ ${fieldsList}
   } catch (error) {
     console.log('⚠️  VTL validation failed - templates may have issues');
   }
+}
+
+function updateIntegrationTests() {
+  console.log('🧪 Updating integration tests...');
+  
+  const testDataGeneratorPath = path.join(__dirname, '../../src/tests/test-data-generator.js');
+  
+  // Check if test data generator exists
+  if (!fs.existsSync(testDataGeneratorPath)) {
+    console.log('⚠️  Test data generator not found - skipping test updates');
+    return;
+  }
+  
+  // The test data generator will automatically pick up changes from:
+  // 1. SQL files in backend/dml_scripts/individual_tables/
+  // 2. table_config.json permissions
+  // 3. Generated GraphQL schema and mutations
+  
+  // No additional updates needed - tests are now fully dynamic
+  console.log('✅ Integration tests are configured to use dynamic data generation');
+  console.log('   Tests will automatically adapt to:');
+  console.log('   - New/modified SQL table structures');
+  console.log('   - Updated table permissions in table_config.json');
+  console.log('   - Generated GraphQL schema and mutations');
 }
 
 function getFormFieldType(graphqlType) {

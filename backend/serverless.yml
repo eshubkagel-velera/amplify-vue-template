@@ -14,7 +14,7 @@ custom:
   userPoolId: us-east-2_iAtP0Uzh5
   
   # Load database configurations from external file
-  databaseConfig: ${file(database-config.yml)}
+  databaseConfig: ${file(../config/database-config.yml)}
   stageConfig: ${self:custom.databaseConfig.stages.${self:provider.stage}}
   appSync:
     name: vue-appsync-api-${self:provider.stage}
@@ -264,16 +264,6 @@ custom:
         field: listLOAN_APPS
         request: Query.listLOAN_APPS.request.vtl
         response: Query.listLOAN_APPS.response.vtl
-      - dataSource: StageDataSource
-        type: Query
-        field: listLOAN_APP_EXECSS
-        request: Query.listLOAN_APP_EXECSS.request.vtl
-        response: Query.listLOAN_APP_EXECSS.response.vtl
-      - dataSource: StageDataSource
-        type: Query
-        field: listLOAN_APP_STEP_STATUSS
-        request: Query.listLOAN_APP_STEP_STATUSS.request.vtl
-        response: Query.listLOAN_APP_STEP_STATUSS.response.vtl
       - dataSource: StageDataSource
         type: Query
         field: listNEW_MEMBER_TOKENS

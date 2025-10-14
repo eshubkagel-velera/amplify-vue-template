@@ -1,21 +1,35 @@
+#set($insert = "
+  INSERT INTO SERVICE_PARAM_MAPPING
+    (ORIGIN_PRODUCT_ID, SYSTEM_NBR, PRIN_NBR, AGENT_NBR, SOURCE_SERVICE_PARAM_ID, TARGET_SERVICE_PARAM_ID, PLASTIC_TYPE_ID, COMMENT_TEXT, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE)
+  VALUES
+    (:ORIGIN_PRODUCT_ID, :SYSTEM_NBR, :PRIN_NBR, :AGENT_NBR, :SOURCE_SERVICE_PARAM_ID, :TARGET_SERVICE_PARAM_ID, :PLASTIC_TYPE_ID, :COMMENT_TEXT, :CREATED_BY_USER_ID, COALESCE(:CREATED_DATE, NOW()), :CHANGED_BY_USER_ID, :CHANGED_DATE)
+")
+#set($select = "
+  SELECT
+    SERVICE_PARAM_MAPPING_ID, ORIGIN_PRODUCT_ID, SYSTEM_NBR, PRIN_NBR, AGENT_NBR, SOURCE_SERVICE_PARAM_ID, TARGET_SERVICE_PARAM_ID, PLASTIC_TYPE_ID, COMMENT_TEXT, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE
+  FROM SERVICE_PARAM_MAPPING
+  WHERE ORIGIN_PRODUCT_ID = :ORIGIN_PRODUCT_ID AND SOURCE_SERVICE_PARAM_ID = :SOURCE_SERVICE_PARAM_ID AND TARGET_SERVICE_PARAM_ID = :TARGET_SERVICE_PARAM_ID
+  ORDER BY SERVICE_PARAM_MAPPING_ID DESC
+  LIMIT 1
+")
 {
   "version": "2018-05-29",
   "statements": [
-    #set($insertStatement = "INSERT INTO SERVICE_PARAM_MAPPING (")
-    #set($valuesStatement = " VALUES (")
-    #set($first = true)
-    #foreach($entry in $ctx.args.input.entrySet())
-      #if($entry.value)
-        #if(!$first)
-          #set($insertStatement = "$insertStatement, ")
-          #set($valuesStatement = "$valuesStatement, ")
-        #end
-        #set($insertStatement = "$insertStatement$entry.key")
-        #set($valuesStatement = "$valuesStatement'$entry.value'")
-        #set($first = false)
-      #end
-    #end
-    #set($insertStatement = "$insertStatement)$valuesStatement)")
-    "$insertStatement"
-  ]
+    "$util.escapeJavaScript($insert)",
+    "$util.escapeJavaScript($select)"
+  ],
+  "variableMap": {
+    ":ORIGIN_PRODUCT_ID": $util.toJson($ctx.args.input.ORIGIN_PRODUCT_ID),
+    ":SYSTEM_NBR": $util.toJson($util.defaultIfNull($ctx.args.input.SYSTEM_NBR, null)),
+    ":PRIN_NBR": $util.toJson($util.defaultIfNull($ctx.args.input.PRIN_NBR, null)),
+    ":AGENT_NBR": $util.toJson($util.defaultIfNull($ctx.args.input.AGENT_NBR, null)),
+    ":SOURCE_SERVICE_PARAM_ID": $util.toJson($ctx.args.input.SOURCE_SERVICE_PARAM_ID),
+    ":TARGET_SERVICE_PARAM_ID": $util.toJson($ctx.args.input.TARGET_SERVICE_PARAM_ID),
+    ":PLASTIC_TYPE_ID": $util.toJson($util.defaultIfNull($ctx.args.input.PLASTIC_TYPE_ID, null)),
+    ":COMMENT_TEXT": $util.toJson($util.defaultIfNull($ctx.args.input.COMMENT_TEXT, null)),
+    ":CREATED_BY_USER_ID": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_BY_USER_ID, null)),
+    ":CREATED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_DATE, null)),
+    ":CHANGED_BY_USER_ID": $util.toJson($util.defaultIfNull($ctx.args.input.CHANGED_BY_USER_ID, null)),
+    ":CHANGED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CHANGED_DATE, null))
+  }
 }

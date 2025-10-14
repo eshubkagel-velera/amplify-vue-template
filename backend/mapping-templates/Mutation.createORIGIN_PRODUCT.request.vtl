@@ -1,21 +1,32 @@
+#set($insert = "
+  INSERT INTO ORIGIN_PRODUCT
+    (VENDOR_NAME, PRODUCT_ID, PSCU_CLIENT_ID, PRODUCT_DESC, PARTNER_CODE, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE)
+  VALUES
+    (:VENDOR_NAME, :PRODUCT_ID, :PSCU_CLIENT_ID, :PRODUCT_DESC, :PARTNER_CODE, :CREATED_BY_USER_ID, COALESCE(:CREATED_DATE, NOW()), :CHANGED_BY_USER_ID, :CHANGED_DATE)
+")
+#set($select = "
+  SELECT
+    ORIGIN_PRODUCT_ID, VENDOR_NAME, PRODUCT_ID, PSCU_CLIENT_ID, PRODUCT_DESC, PARTNER_CODE, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE
+  FROM ORIGIN_PRODUCT
+  WHERE VENDOR_NAME = :VENDOR_NAME
+  ORDER BY ORIGIN_PRODUCT_ID DESC
+  LIMIT 1
+")
 {
   "version": "2018-05-29",
   "statements": [
-    #set($insertStatement = "INSERT INTO ORIGIN_PRODUCT (")
-    #set($valuesStatement = " VALUES (")
-    #set($first = true)
-    #foreach($entry in $ctx.args.input.entrySet())
-      #if($entry.value)
-        #if(!$first)
-          #set($insertStatement = "$insertStatement, ")
-          #set($valuesStatement = "$valuesStatement, ")
-        #end
-        #set($insertStatement = "$insertStatement$entry.key")
-        #set($valuesStatement = "$valuesStatement'$entry.value'")
-        #set($first = false)
-      #end
-    #end
-    #set($insertStatement = "$insertStatement)$valuesStatement)")
-    "$insertStatement"
-  ]
+    "$util.escapeJavaScript($insert)",
+    "$util.escapeJavaScript($select)"
+  ],
+  "variableMap": {
+    ":VENDOR_NAME": $util.toJson($ctx.args.input.VENDOR_NAME),
+    ":PRODUCT_ID": $util.toJson($ctx.args.input.PRODUCT_ID),
+    ":PSCU_CLIENT_ID": $util.toJson($ctx.args.input.PSCU_CLIENT_ID),
+    ":PRODUCT_DESC": $util.toJson($ctx.args.input.PRODUCT_DESC),
+    ":PARTNER_CODE": $util.toJson($util.defaultIfNull($ctx.args.input.PARTNER_CODE, null)),
+    ":CREATED_BY_USER_ID": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_BY_USER_ID, null)),
+    ":CREATED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CREATED_DATE, null)),
+    ":CHANGED_BY_USER_ID": $util.toJson($util.defaultIfNull($ctx.args.input.CHANGED_BY_USER_ID, null)),
+    ":CHANGED_DATE": $util.toJson($util.defaultIfNull($ctx.args.input.CHANGED_DATE, null))
+  }
 }

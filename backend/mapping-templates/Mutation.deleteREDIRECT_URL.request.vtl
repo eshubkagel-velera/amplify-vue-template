@@ -1,6 +1,20 @@
+#set($preimage = "
+  SELECT REDIRECT_URL_ID, ORIGIN_PRODUCT_ID, URL_TYPE_CODE, URL, RESPONSE_TEXT, CREATED_BY_USER_ID, CREATED_DATE, CHANGED_BY_USER_ID, CHANGED_DATE
+  FROM REDIRECT_URL
+  WHERE REDIRECT_URL_ID = :REDIRECT_URL_ID
+  LIMIT 1
+")
+#set($delete = "
+  DELETE FROM REDIRECT_URL
+  WHERE REDIRECT_URL_ID = :REDIRECT_URL_ID
+")
 {
   "version": "2018-05-29",
   "statements": [
-    "DELETE FROM REDIRECT_URL WHERE REDIRECT_URL_ID = '$ctx.args.input.REDIRECT_URL_ID'"
-  ]
+    "$util.escapeJavaScript($preimage)",
+    "$util.escapeJavaScript($delete)"
+  ],
+  "variableMap": {
+    ":REDIRECT_URL_ID": $util.toJson($ctx.args.input.REDIRECT_URL_ID)
+  }
 }

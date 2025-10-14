@@ -1,6 +1,20 @@
+#set($preimage = "
+  SELECT FILTER_CRITERIA_ID, ORIGIN_PRODUCT_ID, STEP_TYPE_ID, CRITERIA, SEQUENCE_NBR, CREATED_DATE, CHANGED_DATE
+  FROM FILTER_CRITERIA
+  WHERE FILTER_CRITERIA_ID = :FILTER_CRITERIA_ID
+  LIMIT 1
+")
+#set($delete = "
+  DELETE FROM FILTER_CRITERIA
+  WHERE FILTER_CRITERIA_ID = :FILTER_CRITERIA_ID
+")
 {
   "version": "2018-05-29",
   "statements": [
-    "DELETE FROM FILTER_CRITERIA WHERE FILTER_CRITERIA_ID = '$ctx.args.input.FILTER_CRITERIA_ID'"
-  ]
+    "$util.escapeJavaScript($preimage)",
+    "$util.escapeJavaScript($delete)"
+  ],
+  "variableMap": {
+    ":FILTER_CRITERIA_ID": $util.toJson($ctx.args.input.FILTER_CRITERIA_ID)
+  }
 }

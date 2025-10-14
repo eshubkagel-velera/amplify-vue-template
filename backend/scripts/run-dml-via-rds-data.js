@@ -7,7 +7,7 @@ const yaml = require('js-yaml');
 
 // Load database configuration from central file
 const stage = process.argv[2] || process.env.STAGE || 'dev';
-const dbConfigFile = path.join(__dirname, '../database-config.yml');
+const dbConfigFile = path.join(__dirname, '../../config/database-config.yml');
 
 if (!fs.existsSync(dbConfigFile)) {
   console.error('❌ database-config.yml not found');
@@ -25,6 +25,29 @@ if (!stageConfig) {
 console.log(`📁 Loaded configuration for ${stage.toUpperCase()} environment from database-config.yml`);
 
 const rdsData = new RDSDataClient({ region: 'us-east-2' });
+
+async function validateConnection() {
+  try {
+    const clusterArn = `arn:aws:rds:us-east-2:794611117044:cluster:${stageConfig.clusterIdentifier}`;
+    const secretArn = stageConfig.secretArn;
+    const database = stageConfig.databaseName;
+    
+    // Test connection with simple query
+    await rdsData.send(new ExecuteStatementCommand({
+      resourceArn: clusterArn,
+      secretArn: secretArn,
+      database: database,
+      sql: 'SELECT 1'
+    }));
+  } catch (error) {
+    console.error('❌ Database connection failed:', error.message);
+    if (error.message.includes('security token') || error.message.includes('InvalidClientTokenId')) {
+      console.error('\n💡 This appears to be an AWS authentication issue.');
+      console.error('   Please check your AWS credentials and try again.');
+    }
+    throw new Error(`Database connection failed: ${error.message}`);
+  }
+}
 
 async function getCurrentTableStructure(tableName) {
   try {
@@ -67,12 +90,13 @@ async function getCurrentTableStructure(tableName) {
     
     return { exists: true, columns };
   } catch (error) {
-    // If we can't query the database, assume table doesn't exist
+    // If authentication fails, throw error instead of continuing
+    if (error.message.includes('security token') || error.message.includes('InvalidClientTokenId')) {
+      throw new Error(`Database authentication failed: ${error.message}`);
+    }
+    // For other errors, assume table doesn't exist
     if (process.argv.includes('--verbose')) {
       console.error(`⚠️  Database query failed for table ${tableName}:`, error.message);
-      console.error(`   Cluster ARN: ${clusterArn}`);
-      console.error(`   Secret ARN: ${secretArn}`);
-      console.error(`   Database: ${database}`);
     }
     return { exists: false };
   }
@@ -341,6 +365,9 @@ const tableOrder = [
 ];
 
 async function showSummary() {
+  // Validate connection before proceeding
+  await validateConnection();
+  
   const scriptsDir = path.join(__dirname, '../dml_scripts/individual_tables');
   const existingFiles = tableOrder.filter(file => fs.existsSync(path.join(scriptsDir, file)));
   const missingFiles = tableOrder.filter(file => !fs.existsSync(path.join(scriptsDir, file)));

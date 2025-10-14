@@ -1,6 +1,20 @@
+#set($preimage = "
+  SELECT STEP_TYPE_PARAM_MAP_ID, STEP_TYPE_ID, SERVICE_PARAM_MAPPING_ID, CREATED_BY_USER_ID, CREATED_DATE
+  FROM STEP_TYPE_PARAM_MAP
+  WHERE STEP_TYPE_PARAM_MAP_ID = :STEP_TYPE_PARAM_MAP_ID
+  LIMIT 1
+")
+#set($delete = "
+  DELETE FROM STEP_TYPE_PARAM_MAP
+  WHERE STEP_TYPE_PARAM_MAP_ID = :STEP_TYPE_PARAM_MAP_ID
+")
 {
   "version": "2018-05-29",
   "statements": [
-    "DELETE FROM STEP_TYPE_PARAM_MAP WHERE STEP_TYPE_PARAM_MAP_ID = '$ctx.args.input.STEP_TYPE_PARAM_MAP_ID'"
-  ]
+    "$util.escapeJavaScript($preimage)",
+    "$util.escapeJavaScript($delete)"
+  ],
+  "variableMap": {
+    ":STEP_TYPE_PARAM_MAP_ID": $util.toJson($ctx.args.input.STEP_TYPE_PARAM_MAP_ID)
+  }
 }
