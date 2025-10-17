@@ -4,9 +4,27 @@ export default {
   
   // Form processing configuration
   keepAuditFieldsOnUpdate: false,
+  hasAuditFields: false,
   
   // Environment copy configuration
   preserveOnCopy: ['SORT_CRITERIA_ID'],
+  
+  // Foreign key configuration for table display
+  foreignKeys: {
+    ORIGIN_PRODUCT_ID: {
+      table: 'ORIGIN_PRODUCT',
+      valueField: 'ORIGIN_PRODUCT_ID',
+      displayField: 'PRODUCT_ID'
+    },
+    STEP_TYPE_ID: {
+      table: 'STEP_TYPE',
+      valueField: 'STEP_TYPE_ID',
+      displayField: 'STEP_TYPE_NAME'
+    }
+  },
+  
+  // Fields to remove before GraphQL mutations
+  fieldsToRemove: ['ORIGIN_PRODUCT_ID_DISPLAY', 'STEP_TYPE_ID_DISPLAY'],
   
   // Environment comparison configuration
   comparisonConfig: {
@@ -32,13 +50,13 @@ export default {
   formFields: [
     {
       "name": "ORIGIN_PRODUCT_ID",
-      "type": "number",
+      "type": "select",
       "required": true,
       "disabled": false
     },
     {
       "name": "STEP_TYPE_ID",
-      "type": "number",
+      "type": "select",
       "required": true,
       "disabled": false
     },

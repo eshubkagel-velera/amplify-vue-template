@@ -2,6 +2,26 @@ export default {
   name: 'ORIGIN_PRODUCT',
   idField: 'ORIGIN_PRODUCT_ID',
   
+  // Row actions configuration
+  hasRowActions: true,
+  rowActions: {
+    showMappingButton: true
+  },
+  
+  // Relationship counting configuration
+  relationships: {
+    mappings: {
+      query: 'listServiceParamMappings',
+      dataKey: 'listSERVICE_PARAM_MAPPINGS',
+      countFields: ['ORIGIN_PRODUCT_ID']
+    },
+    redirectUrls: {
+      query: 'listRedirectUrls', 
+      dataKey: 'listREDIRECT_URLS',
+      countFields: ['ORIGIN_PRODUCT_ID']
+    }
+  },
+  
   // Form processing configuration
   keepAuditFieldsOnUpdate: false,
   

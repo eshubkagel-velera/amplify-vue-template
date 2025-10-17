@@ -33,6 +33,24 @@ export default {
   // Fields to remove before GraphQL mutations
   fieldsToRemove: ['ORIGIN_PRODUCT_ID_DISPLAY', 'SOURCE_SERVICE_PARAM_ID_DISPLAY', 'TARGET_SERVICE_PARAM_ID_DISPLAY'],
   
+  // Integrated service selection for parameter filtering
+  integratedFilters: {
+    SOURCE_SERVICE_PARAM_ID: {
+      filterField: 'SOURCE_SERVICE_ID',
+      filterLabel: 'Source Service',
+      filterSource: 'SERVICE',
+      filterValueField: 'SERVICE_ID',
+      filterDisplayField: 'URI'
+    },
+    TARGET_SERVICE_PARAM_ID: {
+      filterField: 'TARGET_SERVICE_ID', 
+      filterLabel: 'Target Service',
+      filterSource: 'SERVICE',
+      filterValueField: 'SERVICE_ID',
+      filterDisplayField: 'URI'
+    }
+  },
+  
   // Environment comparison configuration
   comparisonConfig: {
     matchingFields: ['ORIGIN_PRODUCT_ID'],

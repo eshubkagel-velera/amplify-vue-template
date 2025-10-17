@@ -15,6 +15,15 @@ export default {
     stringMatchThreshold: 0.50
   },
   
+  // Relationship counting configuration
+  relationships: {
+    stepServices: {
+      query: 'listStepServiceMappings',
+      dataKey: 'listSTEP_SERVICE_MAPPINGS',
+      countFields: ['STEP_TYPE_ID']
+    }
+  },
+  
   // Fields configuration
   fields: [
     "STEP_TYPE_ID",

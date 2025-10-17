@@ -8,11 +8,37 @@ export default {
   // Environment copy configuration
   preserveOnCopy: ['SERVICE_ID'],
   
+  // Foreign key configuration for table display
+  foreignKeys: {
+    SERVICE_PROVIDER_ID: {
+      table: 'SERVICE_PROVIDER',
+      valueField: 'SERVICE_PROVIDER_ID',
+      displayField: 'SERVICE_PROVIDER_NAME'
+    }
+  },
+  
+  // Fields to remove before GraphQL mutations
+  fieldsToRemove: ['SERVICE_PROVIDER_ID_DISPLAY'],
+  
   // Environment comparison configuration
   comparisonConfig: {
     matchingFields: ['SECRET_NAME'],
     stringMatchFields: ['SECRET_NAME'],
     stringMatchThreshold: 0.50
+  },
+  
+  // Relationship counting configuration
+  relationships: {
+    parameters: {
+      query: 'listServiceParams',
+      dataKey: 'listSERVICE_PARAMS',
+      countFields: ['SERVICE_ID']
+    },
+    stepMappings: {
+      query: 'listStepServiceMappings',
+      dataKey: 'listSTEP_SERVICE_MAPPINGS', 
+      countFields: ['SERVICE_ID']
+    }
   },
   
   // Fields configuration
@@ -32,7 +58,7 @@ export default {
   formFields: [
     {
       "name": "SERVICE_PROVIDER_ID",
-      "type": "number",
+      "type": "select",
       "required": true,
       "disabled": false
     },
@@ -50,9 +76,15 @@ export default {
     },
     {
       "name": "REQUEST_TYPE",
-      "type": "text",
+      "type": "select",
       "required": false,
-      "disabled": false
+      "disabled": false,
+      "options": [
+        { "value": "get", "label": "GET" },
+        { "value": "post", "label": "POST" },
+        { "value": "put", "label": "PUT" },
+        { "value": "delete", "label": "DELETE" }
+      ]
     },
     {
       "name": "CREATED_BY_USER_ID",

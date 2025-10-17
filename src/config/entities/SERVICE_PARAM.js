@@ -27,6 +27,26 @@ export default {
     stringMatchThreshold: 0.50
   },
   
+  // Relationship counting configuration
+  relationships: {
+    mappings: {
+      query: 'listServiceParamMappings',
+      dataKey: 'listSERVICE_PARAM_MAPPINGS',
+      countFields: ['SOURCE_SERVICE_PARAM_ID', 'TARGET_SERVICE_PARAM_ID']
+    }
+  },
+  
+  // Auto-fill configuration
+  autoFillFromFilter: {
+    filterField: 'selectedServiceFilter',
+    formField: 'SERVICE_ID'
+  },
+  
+  // Filter configuration
+  hasFilters: true,
+  filterType: 'service',
+  requiresServiceFilter: true,
+  
   // Fields configuration
   fields: [
     "SERVICE_PARAM_ID",

@@ -110,6 +110,10 @@
             :is-matched="isRecordMatched(entity)"
             :has-differences="hasFieldDifferences(entity)"
             :mapping-count="getMappingCount(entity)"
+            :redirect-url-count="getRedirectUrlCount(entity)"
+            :parameter-count="getParameterCount(entity)"
+            :step-mapping-count="getStepMappingCount(entity)"
+            :step-service-count="getStepServiceCount(entity)"
             :copy-on-edit-with-mappings="entityConfig.copyOnEditWithMappings"
             @edit="editEntity"
             @add-to-other="addToOtherEnvironment"
@@ -162,6 +166,33 @@
       @cancel="cancelForm"
     >
       <form @submit.prevent="submitForm">
+        <!-- Helper filters for SERVICE_PARAM_MAPPING selection -->
+        <div v-if="entityConfig.helperFilters" class="helper-filters">
+          <h4>Filter Options:</h4>
+          <div v-for="filter in entityConfig.helperFilters" :key="filter.name" class="form-group">
+            <label :for="filter.name">{{ filter.label }}</label>
+            <select 
+              v-if="filter.type === 'select'"
+              :id="filter.name" 
+              v-model="helperFilterData[filter.name]" 
+              @change="filterServiceParamMappings"
+            >
+              <option value="">-- All {{ filter.label }} --</option>
+              <option v-for="option in getHelperFilterOptions(filter)" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+            <input 
+              v-else
+              :id="filter.name" 
+              v-model="helperFilterData[filter.name]" 
+              :type="filter.type" 
+              @input="filterServiceParamMappings"
+            />
+          </div>
+          <hr>
+        </div>
+        
         <div v-for="field in createFormFields" :key="field.name" class="form-group">
           <label :for="field.name">{{ field.name }}</label>
           <select 
@@ -172,7 +203,7 @@
             :disabled="field.disabled"
           >
             <option value="">-- Select {{ field.name }} --</option>
-            <option v-for="option in field.options" :key="option.value" :value="option.value">
+            <option v-for="option in getFieldOptions(field)" :key="option.value" :value="option.value">
               {{ option.label }}
             </option>
           </select>
@@ -184,6 +215,26 @@
             :required="field.required"
             :disabled="field.disabled"
           />
+          
+          <!-- Integrated filter dropdowns below the field they filter -->
+          <div v-if="entityConfig.integratedFilters && entityConfig.integratedFilters[field.name]" class="integrated-filters">
+            <div v-for="filter in (Array.isArray(entityConfig.integratedFilters[field.name]) ? entityConfig.integratedFilters[field.name] : [entityConfig.integratedFilters[field.name]])" :key="filter.filterField" class="integrated-filter">
+              <label :for="filter.filterField" class="filter-label">
+                ↳ Filter by {{ filter.filterLabel }}
+              </label>
+              <select 
+                :id="filter.filterField"
+                v-model="helperFilterData[filter.filterField]"
+                @change="filterIntegratedOptions(field.name)"
+                class="filter-dropdown"
+              >
+                <option value="">-- Select {{ filter.filterLabel }} --</option>
+                <option v-for="option in getIntegratedFilterOptions(filter)" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+            </div>
+          </div>
         </div>
       </form>
     </BaseModal>
@@ -278,6 +329,7 @@ import CopyDifferencesModal from './shared/CopyDifferencesModal.vue';
 import { useErrorHandler } from '../composables/useErrorHandler';
 import { useTableOperations } from '../composables/useTableOperations';
 import { useAuth } from '../composables/useAuth';
+import { useHelperFilters } from '../composables/useHelperFilters';
 import { formatDate, getCurrentDateString } from '../utils/dateUtils';
 import { getEntityConfig } from '../config/entityConfigLoader.js';
 import { fetchUserAttributes } from 'aws-amplify/auth';
@@ -343,8 +395,14 @@ const selectedStepFilter = ref('');
 const serviceOptions = ref([]);
 const productOptions = ref([]);
 const vendorNames = ref([]);
+const relationshipCounts = ref(new Map());
+const filteredServiceParamMappings = ref([]);
+const allServiceParamMappings = ref([]);
 const paramMappings = ref(new Map());
 const userProfileId = ref(null);
+
+// Use helper filters composable
+const { helperFilterData, loadHelperFilterData: loadHelperFilters, getHelperFilterOptions, resetHelperFilters } = useHelperFilters();
 const formProcessor = ref(null);
 const foreignKeyLookups = ref(new Map());
 
@@ -375,6 +433,11 @@ const allSelected = computed(() =>
 );
 
 const filteredFields = computed(() => {
+  // If entity doesn't have audit fields, return fields as-is
+  if (entityConfig.value.hasAuditFields === false) {
+    return props.fields;
+  }
+  
   const baseFields = props.fields.filter(field => 
     !['CREATED_BY_USER_ID', 'CREATED_DATE', 'CHANGED_BY_USER_ID', 'CHANGED_DATE'].includes(field)
   );
@@ -499,12 +562,35 @@ const loadEntities = async () => {
         } catch (error) {
           console.warn('Service enhancement failed:', error);
         }
-        await checkParameterMappings();
+      }
+      
+      // Load relationship counts
+      await loadRelationshipCounts();
+      
+      // Load service param mappings for filtering if needed
+      if (props.entityName === 'STEP_TYPE_PARAM_MAP') {
+        await loadServiceParamMappingsForFiltering();
+      }
+      
+      // Load helper filter data for entities that need it
+      if (entityConfig.value.helperFilters || entityConfig.value.integratedFilters) {
+        const { getClient } = await import('../client.js');
+        if (entityConfig.value.helperFilters) {
+          await loadHelperFilters(entityConfig.value, getClient());
+        }
+        if (entityConfig.value.integratedFilters) {
+          await loadIntegratedFilterData();
+        }
       }
       
       // Enhance with foreign key display values
       if (entityConfig.value.foreignKeys) {
         items = await enhanceWithForeignKeys(items);
+      }
+      
+      // Enhance items with custom display fields
+      if (entityConfig.value.customDisplayFields && props.entityName === 'STEP_TYPE_PARAM_MAP') {
+        items = await enhanceServiceParamMappingDisplay(items);
       }
       
       allEntities.value = items;
@@ -850,26 +936,29 @@ const enhanceWithForeignKeys = async (items) => {
   }
 };
 
-const checkParameterMappings = async () => {
-  if (props.entityName !== 'SERVICE_PARAM') return;
+const loadRelationshipCounts = async () => {
+  const relationships = entityConfig.value.relationships;
+  if (!relationships) return;
   
   try {
     const { getClient } = await import('../client.js');
-    const result = await getClient().graphql({ query: queries.listServiceParamMappings });
-    const mappings = result.data.listSERVICE_PARAM_MAPPINGS?.items || [];
-    const mappingCounts = new Map();
     
-    mappings.forEach(mapping => {
-      const sourceId = mapping.SOURCE_SERVICE_PARAM_ID;
-      const targetId = mapping.TARGET_SERVICE_PARAM_ID;
+    for (const [relationKey, config] of Object.entries(relationships)) {
+      const result = await getClient().graphql({ query: queries[config.query] });
+      const items = result.data[config.dataKey]?.items || [];
+      const counts = new Map();
       
-      mappingCounts.set(sourceId, (mappingCounts.get(sourceId) || 0) + 1);
-      mappingCounts.set(targetId, (mappingCounts.get(targetId) || 0) + 1);
-    });
-    
-    paramMappings.value = mappingCounts;
+      items.forEach(item => {
+        config.countFields.forEach(field => {
+          const id = item[field];
+          if (id) counts.set(id, (counts.get(id) || 0) + 1);
+        });
+      });
+      
+      relationshipCounts.value.set(relationKey, counts);
+    }
   } catch (error) {
-    console.error('Failed to check parameter mappings:', error);
+    console.error('Failed to load relationship counts:', error);
   }
 };
 
@@ -983,7 +1072,16 @@ const hasFieldDifferences = (entity) => {
   return false;
 };
 
-const getMappingCount = (entity) => paramMappings.value.get(getEntityId(entity)) || 0;
+const getRelationshipCount = (entity, relationKey) => {
+  const counts = relationshipCounts.value.get(relationKey);
+  return counts ? counts.get(getEntityId(entity)) || 0 : 0;
+};
+
+const getMappingCount = (entity) => getRelationshipCount(entity, 'mappings');
+const getRedirectUrlCount = (entity) => getRelationshipCount(entity, 'redirectUrls');
+const getParameterCount = (entity) => getRelationshipCount(entity, 'parameters');
+const getStepMappingCount = (entity) => getRelationshipCount(entity, 'stepMappings');
+const getStepServiceCount = (entity) => getRelationshipCount(entity, 'stepServices');
 const getOtherEnvironmentName = () => props.otherEnvironment?.toUpperCase() || '';
 
 // Action button handlers
@@ -1044,6 +1142,299 @@ const openStepServices = (entity) => emit('openStepServices', { stepTypeId: enti
 const openServiceParams = (entity) => emit('openServiceParams', { serviceId: entity.SERVICE_ID });
 const openServiceStepMapping = (entity) => emit('openServiceStepMapping', { serviceId: entity.SERVICE_ID });
 
+const getIntegratedFilterOptions = (filterConfig) => {
+  // Handle cascading dropdowns for service params
+  if (filterConfig.dependsOn) {
+    const parentValue = helperFilterData.value[filterConfig.dependsOn];
+    if (!parentValue) return [];
+    
+    // Filter params by selected service
+    const serviceParams = window.serviceParams || [];
+    const filteredParams = serviceParams.filter(p => p.SERVICE_ID === parseInt(parentValue));
+    return filteredParams.map(p => ({ value: p.SERVICE_PARAM_ID, label: `${p.SERVICE_PARAM_ID}: ${p.PARAM_NAME}` }));
+  }
+  
+  // Handle service filtering based on selected product and available mappings
+  if (filterConfig.filterField.includes('SERVICE_ID') && props.entityName === 'STEP_TYPE_PARAM_MAP') {
+    const selectedProductId = helperFilterData.value.FILTER_PRODUCT_ID;
+    if (!selectedProductId) return [];
+    
+    // Get services that have mappings for the selected product
+    const relevantMappings = allServiceParamMappings.value.filter(m => 
+      m.ORIGIN_PRODUCT_ID === parseInt(selectedProductId)
+    );
+    
+    const serviceIds = new Set();
+    relevantMappings.forEach(mapping => {
+      const sourceParam = window.serviceParams?.find(p => p.SERVICE_PARAM_ID === mapping.SOURCE_SERVICE_PARAM_ID);
+      const targetParam = window.serviceParams?.find(p => p.SERVICE_PARAM_ID === mapping.TARGET_SERVICE_PARAM_ID);
+      
+      if (filterConfig.filterField.includes('SOURCE') && sourceParam) {
+        serviceIds.add(sourceParam.SERVICE_ID);
+      }
+      if (filterConfig.filterField.includes('TARGET') && targetParam) {
+        serviceIds.add(targetParam.SERVICE_ID);
+      }
+    });
+    
+    const lookupMap = foreignKeyLookups.value.get(filterConfig.filterField);
+    if (lookupMap) {
+      return Array.from(serviceIds).map(serviceId => {
+        const display = lookupMap.get(serviceId);
+        return { value: serviceId, label: `${serviceId}: ${display}` };
+      });
+    }
+  }
+  
+  // Regular dropdown
+  const lookupMap = foreignKeyLookups.value.get(filterConfig.filterField);
+  if (lookupMap) {
+    return Array.from(lookupMap.entries()).map(([value, display]) => ({
+      value,
+      label: `${value}: ${display}`
+    }));
+  }
+  return [];
+};
+
+const filterIntegratedOptions = (fieldName) => {
+  // This will trigger reactivity for the parameter dropdown options
+  // The getFieldOptions method will handle filtering based on selected service
+};
+
+const enhanceServiceParamMappingDisplay = async (items) => {
+  try {
+    return items.map(item => {
+      if (item.SERVICE_PARAM_MAPPING_ID) {
+        const mapping = allServiceParamMappings.value.find(m => 
+          m.SERVICE_PARAM_MAPPING_ID === item.SERVICE_PARAM_MAPPING_ID
+        );
+        if (mapping) {
+          return {
+            ...item,
+            SERVICE_PARAM_MAPPING_ID_DISPLAY: `${mapping.SERVICE_PARAM_MAPPING_ID}: ${mapping.PRODUCT_ID || 'N/A'} - ${mapping.SOURCE_PARAM || 'N/A'} → ${mapping.TARGET_PARAM || 'N/A'}`
+          };
+        }
+      }
+      return item;
+    });
+  } catch (error) {
+    console.error('Failed to enhance service param mapping display:', error);
+    return items;
+  }
+};
+
+const loadIntegratedFilterData = async () => {
+  try {
+    const { getClient } = await import('../client.js');
+    const client = getClient();
+    
+    const [servicesResult, paramsResult] = await Promise.all([
+      client.graphql({ query: queries.listServices }),
+      client.graphql({ query: queries.listServiceParams })
+    ]);
+    
+    const services = servicesResult.data.listSERVICES?.items || [];
+    const params = paramsResult.data.listSERVICE_PARAMS?.items || [];
+    
+    // Create lookup maps for integrated filters
+    const serviceLookup = new Map();
+    services.forEach(s => serviceLookup.set(s.SERVICE_ID, s.URI));
+    foreignKeyLookups.value.set('SOURCE_SERVICE_ID', serviceLookup);
+    foreignKeyLookups.value.set('TARGET_SERVICE_ID', serviceLookup);
+    
+    const paramLookup = new Map();
+    params.forEach(p => paramLookup.set(p.SERVICE_PARAM_ID, p.PARAM_NAME));
+    foreignKeyLookups.value.set('SOURCE_SERVICE_PARAM_ID', paramLookup);
+    foreignKeyLookups.value.set('TARGET_SERVICE_PARAM_ID', paramLookup);
+    
+    // Store params with service relationship for filtering
+    window.serviceParams = params;
+    
+    // Also create lookups for STEP_TYPE_PARAM_MAP filters
+    if (props.entityName === 'STEP_TYPE_PARAM_MAP') {
+      const productsResult = await client.graphql({ query: queries.listOriginProducts });
+      const products = productsResult.data.listORIGIN_PRODUCTS?.items || [];
+      
+      const productLookup = new Map();
+      products.forEach(p => productLookup.set(p.ORIGIN_PRODUCT_ID, p.PRODUCT_ID));
+      foreignKeyLookups.value.set('FILTER_PRODUCT_ID', productLookup);
+      
+      // Reuse service and param lookups with filter prefixes
+      foreignKeyLookups.value.set('FILTER_SOURCE_SERVICE_ID', serviceLookup);
+      foreignKeyLookups.value.set('FILTER_TARGET_SERVICE_ID', serviceLookup);
+      foreignKeyLookups.value.set('FILTER_SOURCE_PARAM_ID', paramLookup);
+      foreignKeyLookups.value.set('FILTER_TARGET_PARAM_ID', paramLookup);
+    }
+  } catch (error) {
+    console.error('Failed to load integrated filter data:', error);
+  }
+};
+
+
+
+const getFieldOptions = (field) => {
+  if (field.name === 'SERVICE_PARAM_MAPPING_ID') {
+    // For STEP_TYPE_PARAM_MAP, filter by selected product
+    if (props.entityName === 'STEP_TYPE_PARAM_MAP') {
+      const selectedProductId = helperFilterData.value.FILTER_PRODUCT_ID;
+      let mappingsToShow = allServiceParamMappings.value;
+      
+      if (selectedProductId) {
+        mappingsToShow = allServiceParamMappings.value.filter(m => 
+          m.ORIGIN_PRODUCT_ID === parseInt(selectedProductId)
+        );
+      }
+      
+      // Further filter by selected services and params if specified
+      const sourceServiceId = helperFilterData.value.FILTER_SOURCE_SERVICE_ID;
+      const targetServiceId = helperFilterData.value.FILTER_TARGET_SERVICE_ID;
+      const sourceParamId = helperFilterData.value.FILTER_SOURCE_PARAM_ID;
+      const targetParamId = helperFilterData.value.FILTER_TARGET_PARAM_ID;
+      
+      if (sourceServiceId || targetServiceId || sourceParamId || targetParamId) {
+        mappingsToShow = mappingsToShow.filter(mapping => {
+          let matches = true;
+          
+          if (sourceParamId) {
+            matches = matches && mapping.SOURCE_SERVICE_PARAM_ID === parseInt(sourceParamId);
+          } else if (sourceServiceId) {
+            const sourceParam = window.serviceParams?.find(p => p.SERVICE_PARAM_ID === mapping.SOURCE_SERVICE_PARAM_ID);
+            matches = matches && sourceParam?.SERVICE_ID === parseInt(sourceServiceId);
+          }
+          
+          if (targetParamId) {
+            matches = matches && mapping.TARGET_SERVICE_PARAM_ID === parseInt(targetParamId);
+          } else if (targetServiceId) {
+            const targetParam = window.serviceParams?.find(p => p.SERVICE_PARAM_ID === mapping.TARGET_SERVICE_PARAM_ID);
+            matches = matches && targetParam?.SERVICE_ID === parseInt(targetServiceId);
+          }
+          
+          return matches;
+        });
+      }
+      
+      return mappingsToShow.map(mapping => ({
+        value: mapping.SERVICE_PARAM_MAPPING_ID,
+        label: `${mapping.SERVICE_PARAM_MAPPING_ID}: ${mapping.PRODUCT_ID || 'N/A'} - ${mapping.SOURCE_PARAM || 'N/A'} → ${mapping.TARGET_PARAM || 'N/A'}`
+      }));
+    }
+    
+    // For SERVICE_PARAM_MAPPING entity itself
+    return filteredServiceParamMappings.value.map(mapping => ({
+      value: mapping.SERVICE_PARAM_MAPPING_ID,
+      label: `${mapping.SERVICE_PARAM_MAPPING_ID}: ${mapping.PRODUCT_ID || 'N/A'} - ${mapping.SOURCE_PARAM || 'N/A'} → ${mapping.TARGET_PARAM || 'N/A'}`
+    }));
+  }
+  
+  // Handle integrated filtered parameter fields
+  if (entityConfig.value.integratedFilters && entityConfig.value.integratedFilters[field.name]) {
+    const filterConfig = entityConfig.value.integratedFilters[field.name];
+    const selectedServiceId = helperFilterData.value[filterConfig.filterField];
+    
+    if (!selectedServiceId) return [];
+    
+    // Filter service params by selected service
+    const allParams = Array.from(foreignKeyLookups.value.get(field.name)?.entries() || []);
+    const serviceParams = window.serviceParams || [];
+    const filteredParams = serviceParams.filter(p => p.SERVICE_ID === parseInt(selectedServiceId));
+    
+    return filteredParams.map(p => ({
+      value: p.SERVICE_PARAM_ID,
+      label: `${p.SERVICE_PARAM_ID}: ${p.PARAM_NAME}`
+    }));
+  }
+  
+  return field.options || [];
+};
+
+const filterServiceParamMappings = () => {
+  if (!allServiceParamMappings.value.length) {
+    filteredServiceParamMappings.value = [];
+    return;
+  }
+  
+  let filtered = [...allServiceParamMappings.value];
+  
+  // Apply filters using the updated field names
+  if (helperFilterData.value.ORIGIN_PRODUCT_ID) {
+    filtered = filtered.filter(m => m.ORIGIN_PRODUCT_ID === parseInt(helperFilterData.value.ORIGIN_PRODUCT_ID));
+  }
+  if (helperFilterData.value.SOURCE_SERVICE_ID) {
+    filtered = filtered.filter(m => m.SOURCE_SERVICE_ID === parseInt(helperFilterData.value.SOURCE_SERVICE_ID));
+  }
+  if (helperFilterData.value.SOURCE_PARAM_ID) {
+    filtered = filtered.filter(m => m.SOURCE_SERVICE_PARAM_ID === parseInt(helperFilterData.value.SOURCE_PARAM_ID));
+  }
+  if (helperFilterData.value.TARGET_SERVICE_ID) {
+    filtered = filtered.filter(m => m.TARGET_SERVICE_ID === parseInt(helperFilterData.value.TARGET_SERVICE_ID));
+  }
+  if (helperFilterData.value.TARGET_PARAM_ID) {
+    filtered = filtered.filter(m => m.TARGET_SERVICE_PARAM_ID === parseInt(helperFilterData.value.TARGET_PARAM_ID));
+  }
+  
+  filteredServiceParamMappings.value = filtered;
+};
+
+const loadServiceParamMappingsForFiltering = async () => {
+  if (props.entityName !== 'STEP_TYPE_PARAM_MAP') return;
+  
+  try {
+    const { getClient } = await import('../client.js');
+    const [mappingsResult, productsResult, servicesResult, paramsResult] = await Promise.all([
+      getClient().graphql({ query: queries.listServiceParamMappings }),
+      getClient().graphql({ query: queries.listOriginProducts }),
+      getClient().graphql({ query: queries.listServices }),
+      getClient().graphql({ query: queries.listServiceParams })
+    ]);
+    
+    const mappings = mappingsResult.data.listSERVICE_PARAM_MAPPINGS?.items || [];
+    const products = productsResult.data.listORIGIN_PRODUCTS?.items || [];
+    const services = servicesResult.data.listSERVICES?.items || [];
+    const params = paramsResult.data.listSERVICE_PARAMS?.items || [];
+    
+    // Create lookup maps for helper filters
+    const productLookup = new Map();
+    products.forEach(p => productLookup.set(p.ORIGIN_PRODUCT_ID, p.PRODUCT_ID));
+    foreignKeyLookups.value.set('ORIGIN_PRODUCT_ID', productLookup);
+    
+    const serviceLookup = new Map();
+    services.forEach(s => serviceLookup.set(s.SERVICE_ID, s.URI));
+    foreignKeyLookups.value.set('SOURCE_SERVICE_ID', serviceLookup);
+    foreignKeyLookups.value.set('TARGET_SERVICE_ID', serviceLookup);
+    
+    const paramLookup = new Map();
+    params.forEach(p => paramLookup.set(p.SERVICE_PARAM_ID, p.PARAM_NAME));
+    foreignKeyLookups.value.set('SOURCE_PARAM_ID', paramLookup);
+    foreignKeyLookups.value.set('TARGET_PARAM_ID', paramLookup);
+    
+    // Enhance mappings with readable information
+    const enhancedMappings = mappings.map(mapping => {
+      const product = products.find(p => p.ORIGIN_PRODUCT_ID === mapping.ORIGIN_PRODUCT_ID);
+      const sourceParam = params.find(p => p.SERVICE_PARAM_ID === mapping.SOURCE_SERVICE_PARAM_ID);
+      const targetParam = params.find(p => p.SERVICE_PARAM_ID === mapping.TARGET_SERVICE_PARAM_ID);
+      const sourceService = sourceParam ? services.find(s => s.SERVICE_ID === sourceParam.SERVICE_ID) : null;
+      const targetService = targetParam ? services.find(s => s.SERVICE_ID === targetParam.SERVICE_ID) : null;
+      
+      return {
+        ...mapping,
+        PRODUCT_ID: product?.PRODUCT_ID,
+        SOURCE_PARAM: sourceParam?.PARAM_NAME,
+        TARGET_PARAM: targetParam?.PARAM_NAME,
+        SOURCE_SERVICE_ID: sourceService?.SERVICE_ID,
+        TARGET_SERVICE_ID: targetService?.SERVICE_ID
+      };
+    });
+    
+    allServiceParamMappings.value = enhancedMappings;
+    filteredServiceParamMappings.value = enhancedMappings;
+  } catch (error) {
+    console.error('Failed to load service param mappings for filtering:', error);
+  }
+};
+
+
+
 // Add missing watchers
 watch(selectedEntities, (newVal) => {
   emit('selectedCountChanged', newVal.length);
@@ -1098,9 +1489,12 @@ onUnmounted(() => {
 });
 
 // Watch for create modal to set defaults
-watch(showCreateModal, (newVal) => {
+watch(showCreateModal, async (newVal) => {
   if (newVal) {
     const today = getCurrentDateString();
+    
+    // Reset helper filter data
+    resetHelperFilters();
     
     // Only set fields that exist in the entity's formFields configuration
     const defaultData = { ...formData.value };
@@ -1133,6 +1527,29 @@ watch(showCreateModal, (newVal) => {
                          filterField === 'selectedProductFilter' ? selectedProductFilter.value : null;
       if (filterValue) {
         formData.value[formField] = parseInt(filterValue);
+      }
+    }
+    
+    // Set default values from form field configuration
+    entityConfig.value.formFields?.forEach(field => {
+      if (field.defaultValue !== undefined && formData.value[field.name] === undefined) {
+        formData.value[field.name] = field.defaultValue;
+      }
+    });
+    
+    // Initialize filtered mappings for STEP_TYPE_PARAM_MAP
+    if (props.entityName === 'STEP_TYPE_PARAM_MAP') {
+      filterServiceParamMappings();
+    }
+    
+    // Load helper filter data for entities that need it
+    if (entityConfig.value.helperFilters || entityConfig.value.integratedFilters) {
+      const { getClient } = await import('../client.js');
+      if (entityConfig.value.helperFilters) {
+        await loadHelperFilters(entityConfig.value, getClient());
+      }
+      if (entityConfig.value.integratedFilters) {
+        await loadIntegratedFilterData();
       }
     }
   }
@@ -1190,6 +1607,13 @@ defineExpose({
 </script>
 
 <style scoped>
+.integrated-filter {
+  margin-top: 8px;
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
+
 .entity-manager {
   width: 100%;
   height: calc(100vh - 250px);

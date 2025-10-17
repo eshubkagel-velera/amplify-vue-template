@@ -40,30 +40,46 @@
 
       <!-- ORIGIN_PRODUCT specific -->
       <template v-if="entityName === 'ORIGIN_PRODUCT'">
-        <button @click="$emit('openMapping', entity)" class="btn-primary">
-          Mapping
+        <button 
+          v-if="mappingCount > 0"
+          @click="$emit('openMapping', entity)" 
+          class="btn-primary"
+        >
+          Mapping ({{ mappingCount }})
         </button>
-        <button @click="$emit('openRedirectUrls', entity)" class="btn-primary">
-          Redirect URLs
+        <button 
+          v-if="redirectUrlCount > 0"
+          @click="$emit('openRedirectUrls', entity)" 
+          class="btn-primary"
+        >
+          Redirect URLs ({{ redirectUrlCount }})
         </button>
       </template>
 
       <!-- STEP_TYPE specific -->
       <button 
-        v-if="entityName === 'STEP_TYPE'" 
+        v-if="entityName === 'STEP_TYPE' && stepServiceCount > 0" 
         @click="$emit('openStepServices', entity)" 
         class="btn-primary"
       >
-        Edit Services
+        Edit Services ({{ stepServiceCount }})
       </button>
 
       <!-- SERVICE specific -->
       <template v-if="entityName === 'SERVICE'">
-        <button @click="$emit('openServiceParams', entity)" class="btn-primary">
-          Parameters
+        <button 
+          v-if="parameterCount > 0"
+          @click="$emit('openServiceParams', entity)" 
+          class="btn-primary"
+        >
+          Parameters ({{ parameterCount }})
         </button>
-        <button @click="$emit('openServiceStepMapping', entity)" class="btn-primary">
-          Step Mappings
+        <button 
+          v-if="stepMappingCount > 0"
+          @click="$emit('openServiceStepMapping', entity)" 
+          class="btn-primary"
+        >
+          Step Mappings ({{ stepMappingCount }})
         </button>
       </template>
     </template>
@@ -82,6 +98,10 @@ const props = defineProps({
   isMatched: { type: Boolean, default: false },
   hasDifferences: { type: Boolean, default: false },
   mappingCount: { type: Number, default: 0 },
+  redirectUrlCount: { type: Number, default: 0 },
+  parameterCount: { type: Number, default: 0 },
+  stepMappingCount: { type: Number, default: 0 },
+  stepServiceCount: { type: Number, default: 0 },
   copyOnEditWithMappings: { type: Boolean, default: false }
 });
 
