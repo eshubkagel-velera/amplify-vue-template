@@ -92,7 +92,7 @@
                 <button v-if="row.primary && !row.primary.__isBlank && row.compare && !row.compare.__isBlank && hasDifferences(row.primary)" @click="copyToOther(row.primary, compareEnvironment)" class="btn-warning">Copy to {{ compareEnvironment.toUpperCase() }}</button>
               </td>
               <td v-for="field in filteredFields" :key="`primary-${field}`" :class="getCellClass(row, field, 'primary')" class="primary-cell">
-                <span v-if="row.primary && !row.primary.__isBlank">{{ formatFieldValue(row.primary[field], field) }}</span>
+                <span v-if="row.primary && !row.primary.__isBlank">{{ formatFieldValue(row.primary, field) }}</span>
                 <span v-else class="blank-cell">—</span>
               </td>
               <td v-if="selectedEntity === 'SERVICE_PARAM' && selectedServiceFilter" class="checkbox-cell">
@@ -106,7 +106,7 @@
                 <button v-if="row.compare && !row.compare.__isBlank && row.primary && !row.primary.__isBlank && hasDifferences(row.compare)" @click="copyToOther(row.compare, primaryEnvironment)" class="btn-warning">Copy to {{ primaryEnvironment.toUpperCase() }}</button>
               </td>
               <td v-for="field in filteredFields" :key="`compare-${field}`" :class="getCellClass(row, field, 'compare')" class="compare-cell">
-                <span v-if="row.compare && !row.compare.__isBlank">{{ formatFieldValue(row.compare[field], field) }}</span>
+                <span v-if="row.compare && !row.compare.__isBlank">{{ formatFieldValue(row.compare, field) }}</span>
                 <span v-else class="blank-cell">—</span>
               </td>
             </tr>
@@ -126,15 +126,28 @@
         <div class="edit-form">
           <div v-for="formField in entityConfig?.formFields?.filter(f => !['CREATED_DATE', 'CREATED_BY_USER_ID'].includes(f.name)) || []" :key="formField.name" class="form-group">
             <label :for="formField.name">{{ formField.name }}:</label>
-            <input 
+            <select 
+              v-if="formField.type === 'select'"
               :id="formField.name" 
               v-model="editFormData[formField.name]" 
-              :type="formField.type || 'text'"
-              :disabled="formField.name.includes('_ID') && formField.name !== 'PSCU_CLIENT_ID'"
+              :disabled="formField.name === 'CHANGED_DATE'"
+              class="form-input"
+            >
+              <option value="">-- Select {{ formField.name }} --</option>
+              <option v-for="option in getEditFieldOptions(formField.name)" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+            <input 
+              v-else
+              :id="formField.name" 
+              v-model="editFormData[formField.name]" 
+              :type="formField.name.includes('DATE') ? 'date' : (formField.type || 'text')"
+              :disabled="formField.name.includes('_ID') && formField.name !== 'PSCU_CLIENT_ID' || formField.name === 'CHANGED_DATE'"
               class="form-input"
             />
           </div>
-          <div class="form-group">
+          <div v-if="entityConfig?.formFields?.some(f => f.name === 'CHANGED_BY_USER_ID')" class="form-group">
             <label for="changedByUserId">CHANGED_BY_USER_ID:</label>
             <input 
               id="changedByUserId" 
@@ -186,9 +199,9 @@
           <h4>Fields to update:</h4>
           <div v-for="field in copyDifferencesData.fieldsToUpdate" :key="field" class="field-preview">
             <strong>{{ field }}:</strong> 
-            {{ copyDifferencesData.targetEnvironment === compareEnvironment ? 
-                copyDifferencesData.diffInfo.primaryRecord[field] : 
-                copyDifferencesData.diffInfo.compareRecord[field] }}
+            {{ formatFieldValue(copyDifferencesData.targetEnvironment === compareEnvironment ? 
+                copyDifferencesData.diffInfo.primaryRecord : 
+                copyDifferencesData.diffInfo.compareRecord, field) }}
           </div>
         </div>
         <div class="form-actions">
@@ -227,12 +240,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import EntityManager from './EntityManager.vue';
 import { getClient } from '../client.js';
 import { useAuth } from '../composables/useAuth';
 import { fetchUserAttributes } from 'aws-amplify/auth';
 import * as queries from '../graphql/queries.js';
+import { createComparisonClient } from '../utils/comparisonClient.js';
 
 const props = defineProps({
   primaryEnvironment: {
@@ -261,6 +275,8 @@ const selectedProductFilter = ref('');
 const allPrimaryServices = ref([]);
 const compareServices = ref([]);
 const selectedServiceFilter = ref('');
+const allPrimaryStepTypes = ref([]);
+const compareStepTypes = ref([]);
 const selectedRows = ref([]);
 const selectedPrimaryRows = ref([]);
 const selectedCompareRows = ref([]);
@@ -358,8 +374,8 @@ const analyzeDifferences = () => {
   // String similarity function using substring matching
   const calculateStringSimilarity = (str1, str2) => {
     if (!str1 || !str2) return 0;
-    const s1 = str1.toLowerCase();
-    const s2 = str2.toLowerCase();
+    const s1 = String(str1).toLowerCase();
+    const s2 = String(str2).toLowerCase();
     if (s1 === s2) return 1;
     
     // Find the shorter and longer strings
@@ -429,7 +445,39 @@ const analyzeDifferences = () => {
         const matchingFieldsMatch = config.matchingFields.every(field => record1[field] === record2[field]);
         
         if (!matchingFieldsMatch) {
-          return { matchPercentage: 0, differentFields: comparisonFields, totalFields: comparisonFields.length };
+          // Still calculate field differences even if matching fields don't match exactly
+          let matches = 0;
+          const differentFields = [];
+          
+          comparisonFields.forEach(field => {
+            let val1 = record1[field];
+            let val2 = record2[field];
+            
+            if (config.useDisplayValues && config.useDisplayValues[field]) {
+              const displayField = config.useDisplayValues[field];
+              let displayVal1 = record1[`${field}_DISPLAY`] || record1[displayField] || val1;
+              let displayVal2 = record2[`${field}_DISPLAY`] || record2[displayField] || val2;
+              
+              if (displayVal1 && typeof displayVal1 === 'string' && displayVal1.includes(':')) {
+                displayVal1 = displayVal1.split(':')[1].trim();
+              }
+              if (displayVal2 && typeof displayVal2 === 'string' && displayVal2.includes(':')) {
+                displayVal2 = displayVal2.split(':')[1].trim();
+              }
+              
+              val1 = displayVal1;
+              val2 = displayVal2;
+            }
+            
+            if (val1 === val2) {
+              matches++;
+            } else {
+              differentFields.push(field);
+            }
+          });
+          
+          const matchPercentage = Math.round((matches / comparisonFields.length) * 100);
+          return { matchPercentage, differentFields, totalFields: comparisonFields.length };
         }
         
         console.log(`${config.matchingFields.join(' + ')} exact match found - checking field differences`);
@@ -447,9 +495,33 @@ const analyzeDifferences = () => {
     const differentFields = [];
     
     comparisonFields.forEach(field => {
-      const val1 = record1[field];
-      const val2 = record2[field];
-      console.log(`  ${field}: '${val1}' vs '${val2}' - ${val1 === val2 ? 'MATCH' : 'DIFFERENT'}`);
+      let val1 = record1[field];
+      let val2 = record2[field];
+      
+      // Use display values for foreign key fields if configured
+      if (config.useDisplayValues && config.useDisplayValues[field]) {
+        const displayField = config.useDisplayValues[field];
+        // Look for enhanced display field first, then fallback to lookup
+        let displayVal1 = record1[`${field}_DISPLAY`] || record1[displayField] || val1;
+        let displayVal2 = record2[`${field}_DISPLAY`] || record2[displayField] || val2;
+        
+        // Extract business value from display format "ID: Value"
+        if (displayVal1 && typeof displayVal1 === 'string' && displayVal1.includes(':')) {
+          displayVal1 = displayVal1.split(':')[1].trim();
+        }
+        if (displayVal2 && typeof displayVal2 === 'string' && displayVal2.includes(':')) {
+          displayVal2 = displayVal2.split(':')[1].trim();
+        }
+        
+        val1 = displayVal1;
+        val2 = displayVal2;
+      }
+      
+      if (field === 'ORIGIN_PRODUCT_ID' || field === 'STEP_TYPE_ID') {
+        console.log(`  ${field}: raw='${record1[field]}' vs '${record2[field]}', display='${record1[`${field}_DISPLAY`]}' vs '${record2[`${field}_DISPLAY`]}', final='${val1}' vs '${val2}' - ${val1 === val2 ? 'MATCH' : 'DIFFERENT'}`);
+      } else {
+        console.log(`  ${field}: '${val1}' vs '${val2}' - ${val1 === val2 ? 'MATCH' : 'DIFFERENT'}`);
+      }
       if (val1 === val2) {
         matches++;
       } else {
@@ -472,7 +544,7 @@ const analyzeDifferences = () => {
       const compareId = compareRecord[props.entityConfig?.idField || 'id'];
       const match = calculateMatch(primaryRecord, compareRecord);
       
-      if (match.matchPercentage >= 75) {
+      if (match.matchPercentage >= 50) {
         allPossibleMatches.push({
           primaryId,
           compareId,
@@ -485,7 +557,7 @@ const analyzeDifferences = () => {
     });
   });
   
-  console.log(`Found ${allPossibleMatches.length} potential matches above 80% threshold`);
+  console.log(`Found ${allPossibleMatches.length} potential matches above 50% threshold`);
   
   // Sort by match percentage - 100% matches first, then by highest percentage
   allPossibleMatches.sort((a, b) => {
@@ -637,7 +709,6 @@ const analyzeDifferences = () => {
 };
 
 const loadCommonProducts = async () => {
-  if (props.selectedEntity !== 'REDIRECT_URL') return;
   
   try {
     // Load products from primary environment
@@ -669,7 +740,6 @@ const loadCommonProducts = async () => {
 };
 
 const loadCommonServices = async () => {
-  if (props.selectedEntity !== 'SERVICE_PARAM') return;
   
   try {
     // Load services from primary environment
@@ -701,6 +771,35 @@ const loadCommonServices = async () => {
 
 const productExistsInCompare = (productId) => {
   return compareProducts.value.some(product => product.PRODUCT_ID === productId);
+};
+
+const loadCommonStepTypes = async () => {
+  try {
+    const { callExternalApi } = await import('../client.js');
+    const environment = localStorage.getItem('selectedEnvironment') || 'dev';
+    const primaryResult = await callExternalApi(environment, 'listSTEP_TYPES');
+    
+    const { loadComparisonData } = await import('../utils/comparisonClient.js');
+    const originalEnv = window.compareEnvironment;
+    window.compareEnvironment = props.compareEnvironment;
+    const compareResult = await loadComparisonData('STEP_TYPE');
+    window.compareEnvironment = originalEnv;
+    
+    if (primaryResult?.data) {
+      allPrimaryStepTypes.value = primaryResult.data.listSTEP_TYPES?.items || [];
+    }
+    
+    if (compareResult?.data) {
+      compareStepTypes.value = compareResult.data.listSTEP_TYPES?.items || [];
+    }
+    
+    console.log('Primary step types loaded:', allPrimaryStepTypes.value.length);
+    console.log('Compare step types loaded:', compareStepTypes.value.length);
+  } catch (error) {
+    console.error('Error loading step types:', error);
+    allPrimaryStepTypes.value = [];
+    compareStepTypes.value = [];
+  }
 };
 
 const serviceExistsInCompare = (serviceId) => {
@@ -888,11 +987,10 @@ watch(() => props.compareEnvironment, async () => {
 
 // Watch for entity or environment changes to load products and services
 watch([() => props.selectedEntity, () => props.compareEnvironment], async () => {
-  if (props.selectedEntity === 'REDIRECT_URL' && props.compareEnvironment) {
+  if (props.compareEnvironment) {
     await loadCommonProducts();
-  }
-  if (props.selectedEntity === 'SERVICE_PARAM' && props.compareEnvironment) {
     await loadCommonServices();
+    await loadCommonStepTypes();
   }
 }, { immediate: true });
 
@@ -973,7 +1071,44 @@ const unifiedRows = computed(() => {
   return rows;
 });
 
-const formatFieldValue = (value, field) => {
+const formatFieldValue = (record, field) => {
+  if (!record) return '';
+  
+  // Use comparison display field mapping for both environments in comparison mode (highest priority)
+  if (props.compareEnvironment && props.entityConfig?.comparisonConfig?.displayFieldMapping?.[field]) {
+    const displayField = `${field}_DISPLAY`;
+    
+    // Always try to extract from display field first
+    if (record[displayField]) {
+      const displayValue = record[displayField];
+      if (displayValue.includes(':')) {
+        const extracted = displayValue.split(':')[1].trim();
+        console.log(`Extracted ${field}: '${displayValue}' -> '${extracted}'`);
+        return extracted;
+      }
+      console.log(`No colon in ${field}: '${displayValue}'`);
+      return displayValue;
+    }
+    
+    // Check if raw field value is in display format (ID: Value)
+    const rawValue = record[field];
+    if (rawValue && typeof rawValue === 'string' && rawValue.includes(':')) {
+      const extracted = rawValue.split(':')[1].trim();
+      console.log(`Extracted from raw ${field}: '${rawValue}' -> '${extracted}'`);
+      return extracted;
+    }
+    
+    console.log(`No display field for ${field}, using raw value:`, rawValue);
+    return rawValue || '';
+  }
+  
+  // Use enhanced display field if available (for single entity screens)
+  const displayField = `${field}_DISPLAY`;
+  if (record[displayField]) {
+    return record[displayField];
+  }
+  
+  const value = record[field];
   if (field.includes('DATE') && value) {
     return new Date(value).toLocaleDateString();
   }
@@ -996,7 +1131,11 @@ const getCellClass = (row, field, side) => {
   
   if (!otherRecord || otherRecord.__isBlank) return '';
   
-  if (record[field] !== otherRecord[field]) {
+  // Use the same comparison logic as formatFieldValue for display consistency
+  const val1 = formatFieldValue(record, field);
+  const val2 = formatFieldValue(otherRecord, field);
+  
+  if (val1 !== val2) {
     return 'field-different';
   }
   
@@ -1008,24 +1147,48 @@ const editRecord = (record, environment) => {
   handleEditRecord({ entity: record, environment, entityType: props.selectedEntity });
 };
 
-const handleEditRecord = (data) => {
+const handleEditRecord = async (data) => {
   console.log('Edit record:', data);
+  console.log('Original ORIGIN_PRODUCT_ID:', data.entity.ORIGIN_PRODUCT_ID, typeof data.entity.ORIGIN_PRODUCT_ID);
   editingEntity.value = { ...data.entity, environment: data.environment };
+  
+  showEditModal.value = true;
+  
+  // Wait for next tick to ensure template is rendered and options are available
+  await nextTick();
   
   // Create clean form data, excluding computed fields and ensuring proper JSON structure
   editFormData.value = {};
   Object.keys(data.entity).forEach(key => {
     if (!['Service Provider'].includes(key)) {
       const value = data.entity[key];
-      // Ensure we have clean, serializable values
-      editFormData.value[key] = value === null || value === undefined ? '' : String(value);
+      // For ID fields, extract the numeric ID from display strings like "98: VENDOR_NAME"
+      if (key.includes('_ID') && value !== null && value !== undefined) {
+        if (typeof value === 'string' && value.includes(':')) {
+          // Extract ID from display format "ID: Name"
+          const idPart = value.split(':')[0].trim();
+          editFormData.value[key] = parseInt(idPart);
+        } else if (!isNaN(value)) {
+          editFormData.value[key] = parseInt(value);
+        } else {
+          editFormData.value[key] = value;
+        }
+      } else {
+        // Ensure we have clean, serializable values
+        editFormData.value[key] = value === null || value === undefined ? '' : String(value);
+      }
     }
   });
   
-  // Set CHANGED_BY_USER_ID with proper default
-  editFormData.value.CHANGED_BY_USER_ID = userProfileId.value || 1;
+  console.log('Form data set:', editFormData.value);
   
-  showEditModal.value = true;
+  // Set CHANGED_DATE and CHANGED_BY_USER_ID with proper defaults
+  if (props.entityConfig?.formFields?.some(f => f.name === 'CHANGED_DATE')) {
+    editFormData.value.CHANGED_DATE = getCurrentDateString();
+  }
+  if (props.entityConfig?.formFields?.some(f => f.name === 'CHANGED_BY_USER_ID')) {
+    editFormData.value.CHANGED_BY_USER_ID = userProfileId.value || 1;
+  }
 };
 
 const closeEditModal = () => {
@@ -1152,10 +1315,10 @@ const addToOther = (record, targetEnvironment) => {
 const hasDifferences = (record) => {
   const recordId = record[props.entityConfig?.idField || 'id'];
   
-  // First check if this is a primary record with differences
+  // Check if this record has actual field differences (not just a match)
   const diffInfo = fieldDifferences.value.get(recordId);
-  if (diffInfo && diffInfo.differentFields.length > 0) {
-    return true;
+  if (diffInfo) {
+    return diffInfo.differentFields.length > 0;
   }
   
   // If not found, check if this is a compare record by finding its matched pair
@@ -1274,25 +1437,117 @@ const confirmCopyDifferences = async () => {
     // Build update data with ALL required fields from the target record
     const updateData = { ...targetRecord };
     
+    // Extract numeric IDs from any display format fields in the base data
+    Object.keys(updateData).forEach(key => {
+      if (key.includes('_ID') && typeof updateData[key] === 'string' && updateData[key].includes(':')) {
+        updateData[key] = parseInt(updateData[key].split(':')[0].trim());
+      }
+    });
+    
     // Override with the different field values from the source record
-    diffInfo.differentFields.forEach(field => {
+    for (const field of diffInfo.differentFields) {
       // Skip fields that should preserve destination values
       const preserveFields = props.entityConfig?.preserveOnCopy || [];
       if (preserveFields.includes(field)) {
-        return;
+        continue;
       }
-      updateData[field] = sourceRecord[field];
-    });
+      
+      let value = sourceRecord[field];
+      
+      // Handle foreign key mapping for cross-environment updates
+      if (field.includes('_ID') && field !== props.entityConfig?.idField && props.entityConfig?.foreignKeys?.[field]) {
+        const foreignKeyConfig = props.entityConfig.foreignKeys[field];
+        const displayField = foreignKeyConfig.displayField;
+        
+        // Extract display value from source record
+        let displayValue = value;
+        
+        // First try to get display value from _DISPLAY field
+        const sourceDisplayField = `${field}_DISPLAY`;
+        if (sourceRecord[sourceDisplayField]) {
+          if (typeof sourceRecord[sourceDisplayField] === 'string' && sourceRecord[sourceDisplayField].includes(':')) {
+            displayValue = sourceRecord[sourceDisplayField].split(':')[1].trim();
+          } else {
+            displayValue = sourceRecord[sourceDisplayField];
+          }
+        } else if (typeof value === 'string' && value.includes(':')) {
+          displayValue = value.split(':')[1].trim();
+        }
+        
+        // Load target environment data for the foreign key table
+        let foundTargetId = null;
+        try {
+          const { loadComparisonData } = await import('../utils/comparisonClient.js');
+          const originalEnv = window.compareEnvironment;
+          window.compareEnvironment = targetEnvironment;
+          const targetResult = await loadComparisonData(foreignKeyConfig.table);
+          window.compareEnvironment = originalEnv;
+          
+          if (targetResult?.data) {
+            const dataKey = Object.keys(targetResult.data)[0];
+            const targetData = targetResult.data[dataKey]?.items || [];
+            
+            // Find matching record by display field
+            const targetRecord = targetData.find(record => record[displayField] === displayValue);
+            if (targetRecord) {
+              foundTargetId = targetRecord[foreignKeyConfig.valueField];
+            }
+          }
+        } catch (error) {
+          console.error(`Failed to load ${foreignKeyConfig.table} data for mapping:`, error);
+        }
+        
+        // If no matching record found, try auto-create if configured
+        if (!foundTargetId && props.entityConfig.autoCreateForeignKeys?.[field]) {
+          const config = props.entityConfig.autoCreateForeignKeys[field];
+          try {
+            foundTargetId = await ensureForeignKeyExists(field, sourceRecord[field], config, targetEnvironment);
+          } catch (error) {
+            console.error(`Failed to auto-create ${field}:`, error);
+          }
+        }
+        
+        // Use found target ID or keep original value
+        value = foundTargetId || value;
+        
+        // If still no value found, keep the original source value
+        if (!value) {
+          value = sourceRecord[field];
+        }
+      } else if (field.includes('_ID') && typeof value === 'string' && value.includes(':')) {
+        // Extract numeric ID from display format for non-foreign key ID fields
+        value = parseInt(value.split(':')[0].trim());
+      }
+      
+      updateData[field] = value;
+    }
     
     // Remove CREATED fields from updates
     delete updateData.CREATED_BY_USER_ID;
     delete updateData.CREATED_DATE;
+    
+    // Always remove CHANGED_BY_USER_ID for FILTER_CRITERIA (not supported in schema)
+    if (props.selectedEntity === 'FILTER_CRITERIA') {
+      delete updateData.CHANGED_BY_USER_ID;
+    }
     
     // Remove fields specified in entity configuration
     const fieldsToRemove = props.entityConfig?.fieldsToRemove || [];
     fieldsToRemove.forEach(field => {
       delete updateData[field];
     });
+    
+    // Remove display fields that shouldn't be sent to GraphQL
+    Object.keys(updateData).forEach(key => {
+      if (key.endsWith('_DISPLAY')) {
+        delete updateData[key];
+      }
+    });
+    
+    // Ensure SEQUENCE_NBR is an integer
+    if (updateData.SEQUENCE_NBR && typeof updateData.SEQUENCE_NBR === 'string') {
+      updateData.SEQUENCE_NBR = parseInt(updateData.SEQUENCE_NBR);
+    }
     
     // Remove PRODUCT_ID for REDIRECT_URL updates (not accepted by schema)
     if (props.selectedEntity === 'REDIRECT_URL') {
@@ -1301,15 +1556,31 @@ const confirmCopyDifferences = async () => {
     
     // Add audit fields
     updateData.CHANGED_DATE = new Date().toISOString().split('T')[0];
-    updateData.CHANGED_BY_USER_ID = userProfileId.value || 1;
+    if (props.entityConfig?.formFields?.some(f => f.name === 'CHANGED_BY_USER_ID')) {
+      updateData.CHANGED_BY_USER_ID = userProfileId.value || 1;
+    }
     
-    console.log('Updating record with differences:', updateData);
+    // Final cleanup - remove fields specified in entity configuration
+    const cleanUpdateData = { ...updateData };
+    const finalFieldsToRemove = props.entityConfig?.fieldsToRemove || [];
+    finalFieldsToRemove.forEach(field => {
+      delete cleanUpdateData[field];
+    });
+    
+    // Also remove any display fields
+    Object.keys(cleanUpdateData).forEach(key => {
+      if (key.endsWith('_DISPLAY')) {
+        delete cleanUpdateData[key];
+      }
+    });
+    
+
     
     // Use comparison client to update the record in target environment
     const { updateComparisonRecord } = await import('../utils/comparisonClient.js');
-    await updateComparisonRecord(targetEnvironment, props.selectedEntity, updateData);
+    await updateComparisonRecord(targetEnvironment, props.selectedEntity, cleanUpdateData);
     
-    console.log(`Successfully copied differences to ${targetEnvironment}`);
+
     
     closeCopyDifferencesModal();
     
@@ -1347,6 +1618,14 @@ const getCurrentDateString = () => {
   return new Date().toISOString().split('T')[0];
 };
 
+const formatDateForDisplay = (date) => {
+  const d = new Date(date);
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${month}/${day}/${year}`;
+};
+
 const confirmAddToOther = async () => {
   if (!addToOtherData.value) return;
   
@@ -1357,7 +1636,12 @@ const confirmAddToOther = async () => {
     const formData = {};
     props.entityConfig.formFields.forEach(field => {
       if (entity[field.name] !== undefined && entity[field.name] !== null) {
-        formData[field.name] = entity[field.name];
+        let value = entity[field.name];
+        // Extract numeric ID from display format "ID: Name"
+        if (field.name.includes('_ID') && typeof value === 'string' && value.includes(':')) {
+          value = parseInt(value.split(':')[0].trim());
+        }
+        formData[field.name] = value;
       }
     });
     
@@ -1418,6 +1702,18 @@ const confirmAddToOther = async () => {
           throw error;
         }
         console.warn('Could not validate service provider:', error);
+      }
+    }
+    
+    // Auto-create missing foreign key records if configured
+    if (props.entityConfig.autoCreateForeignKeys) {
+      for (const [fieldName, config] of Object.entries(props.entityConfig.autoCreateForeignKeys)) {
+        if (formData[fieldName]) {
+          const newId = await ensureForeignKeyExists(fieldName, formData[fieldName], config, targetEnvironment);
+          if (newId) {
+            formData[fieldName] = newId;
+          }
+        }
       }
     }
     
@@ -1581,11 +1877,12 @@ const handleRecordUpdated = async () => {
 
 onMounted(async () => {
   await loadUserProfile();
-  if (props.selectedEntity === 'REDIRECT_URL' && props.compareEnvironment) {
+  if (props.compareEnvironment) {
     await loadCommonProducts();
-  }
-  if (props.selectedEntity === 'SERVICE_PARAM' && props.compareEnvironment) {
     await loadCommonServices();
+    await loadCommonStepTypes();
+  }
+  if (props.selectedEntity === 'SERVICE_PARAM') {
     await checkParameterMappings();
   }
   console.log('Environment comparison mounted', {
@@ -1796,6 +2093,140 @@ const filteredDifferences = computed(() => {
   
   return differences.value.size;
 });
+
+const foreignKeyOptions = ref(new Map());
+
+const getEditFieldOptions = (fieldName) => {
+  console.log(`Getting options for ${fieldName}`);
+  
+  if (fieldName === 'SERVICE_ID') {
+    const services = editingEntity.value?.environment === 'compare' ? compareServices.value : allPrimaryServices.value;
+    console.log(`SERVICE_ID options: environment=${editingEntity.value?.environment}, services count=${services?.length || 0}`);
+    if (services && services.length > 0) {
+      const options = services.map(service => ({
+        value: service.SERVICE_ID,
+        label: `${service.SERVICE_ID}: ${service['Service Provider']} - ${service.URI}`
+      }));
+      console.log('SERVICE_ID options:', options.slice(0, 3));
+      return options;
+    }
+  }
+  
+  if (fieldName === 'ORIGIN_PRODUCT_ID') {
+    const products = editingEntity.value?.environment === 'compare' ? compareProducts.value : allPrimaryProducts.value;
+    console.log(`ORIGIN_PRODUCT_ID options: environment=${editingEntity.value?.environment}, products count=${products?.length || 0}`);
+    if (products && products.length > 0) {
+      const options = products.map(product => ({
+        value: product.ORIGIN_PRODUCT_ID,
+        label: `${product.ORIGIN_PRODUCT_ID}: ${product.VENDOR_NAME} - ${product.PRODUCT_DESC}`
+      }));
+      console.log('ORIGIN_PRODUCT_ID options:', options);
+      console.log('Current form value for ORIGIN_PRODUCT_ID:', editFormData.value?.ORIGIN_PRODUCT_ID, typeof editFormData.value?.ORIGIN_PRODUCT_ID);
+      return options;
+    }
+  }
+  
+  if (fieldName === 'STEP_TYPE_ID') {
+    const stepTypes = editingEntity.value?.environment === 'compare' ? compareStepTypes.value : allPrimaryStepTypes.value;
+    console.log(`STEP_TYPE_ID options: environment=${editingEntity.value?.environment}, stepTypes count=${stepTypes?.length || 0}`);
+    if (stepTypes && stepTypes.length > 0) {
+      const options = stepTypes.map(stepType => ({
+        value: stepType.STEP_TYPE_ID,
+        label: `${stepType.STEP_TYPE_ID}: ${stepType.STEP_TYPE_NAME}`
+      }));
+      console.log('STEP_TYPE_ID options:', options);
+      return options;
+    }
+  }
+  
+  // Check if field has predefined options in entity config
+  const formField = props.entityConfig?.formFields?.find(f => f.name === fieldName);
+  if (formField?.options) {
+    console.log(`${fieldName} predefined options:`, formField.options);
+    return formField.options;
+  }
+  
+  console.log(`No options found for ${fieldName}`);
+  return [];
+};
+
+const loadForeignKeyOptions = async () => {
+  // No longer needed - using existing data
+  return;
+};
+
+const ensureForeignKeyExists = async (fieldName, foreignKeyId, config, targetEnvironment) => {
+  try {
+    // Determine source environment (opposite of target)
+    const sourceEnvironment = targetEnvironment === props.compareEnvironment ? props.primaryEnvironment : props.compareEnvironment;
+    const isSourcePrimary = sourceEnvironment === props.primaryEnvironment;
+    
+    // Find the source record in correct environment data
+    let sourceRecord = null;
+    let actualForeignKeyId = foreignKeyId;
+    
+    // If foreignKeyId is in display format "ID: Name", extract the ID
+    if (typeof foreignKeyId === 'string' && foreignKeyId.includes(':')) {
+      actualForeignKeyId = parseInt(foreignKeyId.split(':')[0].trim());
+    }
+    
+    if (config.entity === 'ORIGIN_PRODUCT') {
+      const products = isSourcePrimary ? allPrimaryProducts.value : compareProducts.value;
+      sourceRecord = products.find(p => p.ORIGIN_PRODUCT_ID === actualForeignKeyId);
+    } else if (config.entity === 'STEP_TYPE') {
+      const stepTypes = isSourcePrimary ? allPrimaryStepTypes.value : compareStepTypes.value;
+      sourceRecord = stepTypes.find(s => s.STEP_TYPE_ID === actualForeignKeyId);
+    }
+    
+    if (!sourceRecord) {
+      console.warn(`Source record not found for ${config.entity} ID ${actualForeignKeyId}`);
+      return;
+    }
+    
+    // Check if record exists in target environment
+    const { loadComparisonData } = await import('../utils/comparisonClient.js');
+    const originalEnv = window.compareEnvironment;
+    window.compareEnvironment = targetEnvironment;
+    const targetData = await loadComparisonData(config.entity);
+    window.compareEnvironment = originalEnv;
+    
+    const targetRecords = targetData?.data ? Object.values(targetData.data)[0]?.items || [] : [];
+    
+    // Check if matching record exists using matchFields
+    const existingRecord = targetRecords.find(record => 
+      config.matchFields.every(field => record[field] === sourceRecord[field])
+    );
+    
+    if (existingRecord) {
+      const idField = config.entity === 'ORIGIN_PRODUCT' ? 'ORIGIN_PRODUCT_ID' : 'STEP_TYPE_ID';
+      return existingRecord[idField];
+    }
+    
+    // Create the missing record
+    const createData = {};
+    config.copyFields.forEach(field => {
+      if (sourceRecord[field] !== undefined) {
+        createData[field] = sourceRecord[field];
+      }
+    });
+    
+    createData.CREATED_DATE = new Date().toISOString().split('T')[0];
+    createData.CREATED_BY_USER_ID = userProfileId.value || 1;
+    
+    const { createComparisonRecord } = await import('../utils/comparisonClient.js');
+    const result = await createComparisonRecord(targetEnvironment, config.entity, createData);
+    
+    // Return the new ID
+    const idField = config.entity === 'ORIGIN_PRODUCT' ? 'ORIGIN_PRODUCT_ID' : 'STEP_TYPE_ID';
+    const createKey = Object.keys(result.data)[0];
+    const createdRecord = result.data[createKey];
+    return createdRecord[idField];
+    
+  } catch (error) {
+    console.error(`Failed to auto-create ${config.entity}:`, error);
+    throw new Error(`Failed to create required ${config.entity} record: ${error.message}`);
+  }
+};
 </script>
 
 <style scoped>
@@ -1848,7 +2279,7 @@ const filteredDifferences = computed(() => {
 .unified-comparison-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
+  table-layout: auto;
 }
 
 .environment-header th {
@@ -1895,6 +2326,9 @@ const filteredDifferences = computed(() => {
   padding: 8px;
   border: 1px solid var(--border-color, #dee2e6);
   vertical-align: top;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 200px;
 }
 
 .actions-cell {

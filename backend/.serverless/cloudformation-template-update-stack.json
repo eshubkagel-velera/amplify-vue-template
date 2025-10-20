@@ -5,7 +5,7 @@
     "EmailDomainValidationFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
-        "FunctionName": "email-domain-validation-dev",
+        "FunctionName": "email-domain-validation-live",
         "Runtime": "nodejs18.x",
         "Handler": "index.handler",
         "Code": {
@@ -22,7 +22,7 @@
     "PostConfirmationFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
-        "FunctionName": "post-confirmation-dev",
+        "FunctionName": "post-confirmation-live",
         "Runtime": "nodejs18.x",
         "Handler": "index.handler",
         "Code": {
@@ -188,7 +188,7 @@
                     "rds-data:*"
                   ],
                   "Resource": [
-                    "arn:aws:rds:us-east-2:*:cluster:hazel-mapping"
+                    "arn:aws:rds:us-east-2:*:cluster:hazel-mapping-live"
                   ]
                 },
                 {
@@ -199,7 +199,7 @@
                     "kms:DescribeKey"
                   ],
                   "Resource": [
-                    "arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-a11d98c5-d647-45a2-9978-f81be7aa3d60-iDsvX3",
+                    "arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-5975818b-f15c-4381-b0ba-1f281f97610d-GlpEdy",
                     "arn:aws:kms:us-east-2:*:key/*"
                   ]
                 },
@@ -223,7 +223,7 @@
     "GraphQlApi": {
       "Type": "AWS::AppSync::GraphQLApi",
       "Properties": {
-        "Name": "vue-appsync-api-dev",
+        "Name": "vue-appsync-api-live",
         "AuthenticationType": "AMAZON_COGNITO_USER_POOLS",
         "AdditionalAuthenticationProviders": [
           {
@@ -248,7 +248,7 @@
           ]
         },
         "Description": "Auto-generated api key",
-        "Expires": 1792011600
+        "Expires": 1792501200
       }
     },
     "GraphQlSchema": {
@@ -295,12 +295,12 @@
                     "Ref": "AWS::AccountId"
                   },
                   "cluster",
-                  "hazel-mapping"
+                  "hazel-mapping-live"
                 ]
               ]
             },
-            "DatabaseName": "hazel_mapping_dev",
-            "AwsSecretStoreArn": "arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-a11d98c5-d647-45a2-9978-f81be7aa3d60-iDsvX3"
+            "DatabaseName": "hazel_mapping_live",
+            "AwsSecretStoreArn": "arn:aws:secretsmanager:us-east-2:794611117044:secret:rds!cluster-5975818b-f15c-4381-b0ba-1f281f97610d-GlpEdy"
           },
           "RelationalDatabaseSourceType": "RDS_HTTP_ENDPOINT"
         }
@@ -1645,7 +1645,7 @@
     "ServerlessDeploymentBucketName": {
       "Value": "hazel-mapping-serverless-deployment-bucket",
       "Export": {
-        "Name": "sls-vue-appsync-api-dev-ServerlessDeploymentBucketName"
+        "Name": "sls-vue-appsync-api-live-ServerlessDeploymentBucketName"
       }
     },
     "GraphQlApiKeyDefault": {

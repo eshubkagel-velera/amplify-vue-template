@@ -533,7 +533,13 @@ const createFormFields = computed(() => {
 });
 
 const editFormFields = computed(() => {
-  return props.formFields.filter(field => field.name !== 'CREATED_DATE' && field.name !== 'CREATED_BY_USER_ID');
+  return props.formFields.filter(field => field.name !== 'CREATED_DATE' && field.name !== 'CREATED_BY_USER_ID')
+    .map(field => {
+      if (field.name === 'CHANGED_DATE') {
+        return { ...field, disabled: true };
+      }
+      return field;
+    });
 });
 
 // Emits
@@ -671,7 +677,9 @@ const editEntity = (entity) => {
   }
   
   // Set current date and user ID for modifications
-  formattedEntity.CHANGED_DATE = getCurrentDateString();
+  if (props.formFields.some(field => field.name === 'CHANGED_DATE')) {
+    formattedEntity.CHANGED_DATE = getCurrentDateString();
+  }
   if (props.formFields.some(field => field.name === 'CHANGED_BY_USER_ID')) {
     formattedEntity.CHANGED_BY_USER_ID = userProfileId.value || 1;
   }

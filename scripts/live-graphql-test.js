@@ -31,8 +31,15 @@ const tableConfigData = require('../config/table_config.json');
 const queries = await import(queriesPath);
 const mutations = await import(mutationsPath);
 
-// Get environment from command line argument or default to dev
-const targetEnvironment = process.argv[2] || 'dev';
+// Parse command line arguments
+const args = process.argv.slice(2);
+const targetEnvironment = args[0] || 'dev';
+const keepRecords = args.includes('--keep');
+const recordCount = parseInt(args.find(arg => arg.startsWith('--count='))?.split('=')[1]) || 1;
+
+console.log(`🎯 Target Environment: ${targetEnvironment}`);
+console.log(`📊 Records to create: ${recordCount}`);
+console.log(`🗂️  Keep records: ${keepRecords ? 'Yes' : 'No (will cleanup)'}`);
 
 // Mock environment for Node.js
 global.localStorage = {
@@ -219,20 +226,31 @@ class LiveGraphQLTester {
         continue;
       }
 
-      try {
-        console.log(`➕ Testing ${mutationName}...`);
-        
-        const envUrls = {
-          dev: process.env.VITE_DEV_GRAPHQL_URL,
-          test: process.env.VITE_TEST_GRAPHQL_URL,
-          uat: process.env.VITE_UAT_GRAPHQL_URL,
-          live: process.env.VITE_LIVE_GRAPHQL_URL
-        };
-        
-        // Resolve foreign keys with created record IDs or fetch from database
-        let inputData = { ...SAMPLE_DATA[tableName] };
-        
-        // Get real IDs from database for foreign keys
+      // Create multiple records based on recordCount
+      for (let i = 0; i < recordCount; i++) {
+        try {
+          console.log(`➕ Testing ${mutationName} (${i + 1}/${recordCount})...`);
+          
+          const envUrls = {
+            dev: process.env.VITE_DEV_GRAPHQL_URL,
+            test: process.env.VITE_TEST_GRAPHQL_URL,
+            uat: process.env.VITE_UAT_GRAPHQL_URL,
+            live: process.env.VITE_LIVE_GRAPHQL_URL
+          };
+          
+          // Resolve foreign keys with created record IDs or fetch from database
+          let inputData = { ...SAMPLE_DATA[tableName] };
+          
+          // Add unique suffix for multiple records
+          if (recordCount > 1) {
+            Object.keys(inputData).forEach(key => {
+              if (typeof inputData[key] === 'string' && inputData[key].includes(timestamp)) {
+                inputData[key] = inputData[key].replace(timestamp, `${timestamp}_${i}`);
+              }
+            });
+          }
+          
+          // Get real IDs from database for foreign keys
         if (tableName === 'REDIRECT_URL') {
           // Get first available ORIGIN_PRODUCT_ID
           const productQuery = await fetch(envUrls[targetEnvironment], {
@@ -377,8 +395,7 @@ class LiveGraphQLTester {
         console.log(`❌ ${mutationName} - Failed: ${error.message}`);
         this.results.mutations.failed++;
         this.results.mutations.details.push({ name: mutationName, status: 'FAIL', error: error.message });
-        this.results.mutations.failed++;
-        this.results.mutations.details.push({ name: mutationName, status: 'FAIL', error: error.message });
+        }
       }
     }
   }
@@ -465,6 +482,15 @@ class LiveGraphQLTester {
   }
 
   async testDeleteMutations() {
+    if (keepRecords) {
+      console.log('\n🗂️  Skipping DELETE mutations (--keep flag specified)\n');
+      console.log(`📝 Created ${this.createdRecords.length} records that will be kept:`);
+      this.createdRecords.forEach(record => {
+        console.log(`   • ${record.tableName}: ID ${record.id}`);
+      });
+      return;
+    }
+    
     console.log('\n🗑️  Testing DELETE mutations (cleanup)...\n');
     
     // Delete in proper dependency order, but skip records that failed to create
@@ -599,7 +625,22 @@ class LiveGraphQLTester {
 async function main() {
   console.log('🚀 Starting Live GraphQL Test Suite');
   console.log(`📍 Environment: ${targetEnvironment}`);
+  console.log(`📊 Creating ${recordCount} record(s) per table`);
+  console.log(`🗂️  Keep records: ${keepRecords ? 'Yes' : 'No (will cleanup)'}`);
   console.log('⚠️  Note: This requires valid AWS Cognito authentication');
+  
+  if (process.argv.includes('--help') || process.argv.includes('-h')) {
+    console.log('\n📝 Usage:');
+    console.log('  node live-graphql-test.js [environment] [options]');
+    console.log('\n🔧 Options:');
+    console.log('  --keep          Keep created records (skip cleanup)');
+    console.log('  --count=N       Create N records per table (default: 1)');
+    console.log('\n🌍 Environments: dev, test, uat, live');
+    console.log('\n📝 Examples:');
+    console.log('  node live-graphql-test.js test --keep --count=5');
+    console.log('  node live-graphql-test.js dev --count=3');
+    return;
+  }
   
   const tester = new LiveGraphQLTester();
   

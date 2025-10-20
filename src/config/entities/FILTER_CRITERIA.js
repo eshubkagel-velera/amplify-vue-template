@@ -10,9 +10,18 @@ export default {
   
   // Environment comparison configuration
   comparisonConfig: {
-    matchingFields: ['ORIGIN_PRODUCT_ID'],
-    stringMatchFields: ['ORIGIN_PRODUCT_ID'],
-    stringMatchThreshold: 0.50
+    matchingFields: ['CRITERIA', 'SEQUENCE_NBR'],
+    comparisonFields: ['ORIGIN_PRODUCT_ID', 'STEP_TYPE_ID', 'CRITERIA', 'SEQUENCE_NBR'],
+    // Use display values for comparison instead of raw foreign key IDs
+    useDisplayValues: {
+      'ORIGIN_PRODUCT_ID': 'PRODUCT_ID',
+      'STEP_TYPE_ID': 'STEP_TYPE_NAME'
+    },
+    // Display only the business values in comparison, not the IDs
+    displayFieldMapping: {
+      'ORIGIN_PRODUCT_ID': 'PRODUCT_ID',
+      'STEP_TYPE_ID': 'STEP_TYPE_NAME'
+    }
   },
   
   // Fields configuration
@@ -25,6 +34,7 @@ export default {
     "CREATED_DATE",
     "CHANGED_DATE"
   ],
+  fieldsToRemove: ["ORIGIN_PRODUCT_ID_DISPLAY", "STEP_TYPE_ID_DISPLAY"],
   
   // Foreign key lookups
   foreignKeys: {
@@ -37,6 +47,20 @@ export default {
       table: 'STEP_TYPE',
       valueField: 'STEP_TYPE_ID',
       displayField: 'STEP_TYPE_NAME'
+    }
+  },
+  
+  // Auto-create missing foreign key records
+  autoCreateForeignKeys: {
+    ORIGIN_PRODUCT_ID: {
+      entity: 'ORIGIN_PRODUCT',
+      matchFields: ['PRODUCT_ID'],
+      copyFields: ['PRODUCT_ID', 'VENDOR_NAME', 'PRODUCT_DESC', 'PSCU_CLIENT_ID', 'PARTNER_CODE']
+    },
+    STEP_TYPE_ID: {
+      entity: 'STEP_TYPE', 
+      matchFields: ['STEP_TYPE_NAME'],
+      copyFields: ['STEP_TYPE_NAME', 'STEP_TYPE_DESC', 'RESOURCE_NAME']
     }
   },
   

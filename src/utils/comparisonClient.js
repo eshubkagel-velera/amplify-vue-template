@@ -73,89 +73,86 @@ export const loadComparisonData = async (entityName) => {
   console.log('Loading', entityName, 'from', environment);
   console.log('Using GraphQL endpoint:', envUrls[environment]);
   
-  if (entityName === 'ORIGIN_PRODUCT') {
-    const items = await fetchAllPages(client, queries.listOriginProducts, {}, 'listORIGIN_PRODUCTS');
-    return { data: { listORIGIN_PRODUCTS: { items } } };
-  } else if (entityName === 'SERVICE_PROVIDER') {
-    console.log('Fetching SERVICE_PROVIDER data from', environment);
-    const items = await fetchAllPages(client, queries.listServiceProviders, {}, 'listSERVICE_PROVIDERS');
-    console.log('Raw SERVICE_PROVIDER items loaded:', items.length);
-    console.log('SERVICE_PROVIDER items:', items);
-    return { data: { listSERVICE_PROVIDERS: { items } } };
-  } else if (entityName === 'SERVICE') {
-    console.log('Fetching services and providers from', environment);
-    const [services, providers] = await Promise.all([
-      fetchAllPages(client, queries.listServices, {}, 'listSERVICES'),
-      fetchAllPages(client, queries.listServiceProviders, {}, 'listSERVICE_PROVIDERS')
-    ]);
+  const queryMap = {
+    'CONFIG_PARAM': { query: queries.listConfigParams, listKey: 'listCONFIG_PARAMS' },
+    'ORIGIN_PRODUCT': { query: queries.listOriginProducts, listKey: 'listORIGIN_PRODUCTS' },
+    'SERVICE_PROVIDER': { query: queries.listServiceProviders, listKey: 'listSERVICE_PROVIDERS' },
+    'SERVICE': { query: queries.listServices, listKey: 'listSERVICES' },
+    'SERVICE_PARAM': { query: queries.listServiceParams, listKey: 'listSERVICE_PARAMS' },
+    'STEP_TYPE': { query: queries.listStepTypes, listKey: 'listSTEP_TYPES' },
+    'REDIRECT_URL': { query: queries.listRedirectUrls, listKey: 'listREDIRECT_URLS' },
+    'SERVICE_PARAM_MAPPING': { query: queries.listServiceParamMappings, listKey: 'listSERVICE_PARAM_MAPPINGS' },
+    'STEP_SERVICE_MAPPING': { query: queries.listStepServiceMappings, listKey: 'listSTEP_SERVICE_MAPPINGS' },
+    'FILTER_CRITERIA': { query: queries.listFilterCriterias, listKey: 'listFILTER_CRITERIAS' },
+    'SORT_CRITERIA': { query: queries.listSortCriterias, listKey: 'listSORT_CRITERIAS' },
+    'SERVICE_DOMAIN': { query: queries.listServiceDomains, listKey: 'listSERVICE_DOMAINS' },
+    'SERVICE_EXPR_MAPPING': { query: queries.listServiceExprMappings, listKey: 'listSERVICE_EXPR_MAPPINGS' },
+    'STEP_TYPE_PARAM_MAP': { query: queries.listStepTypeParamMaps, listKey: 'listSTEP_TYPE_PARAM_MAPS' }
+  };
+  
+  const config = queryMap[entityName];
+  if (!config) return { data: {} };
+  
+  let items = await fetchAllPages(client, config.query, {}, config.listKey);
+  
+  // Apply foreign key enhancements if configured
+  const { getEntityConfig } = await import('../config/entityConfigLoader.js');
+  const entityConfig = getEntityConfig(entityName);
+  
+  if (entityConfig?.foreignKeys) {
+    items = await enhanceWithForeignKeys(items, entityConfig, client);
+  }
+  
+  return { data: { [config.listKey]: { items } } };
+};
+
+const enhanceWithForeignKeys = async (items, config, client) => {
+  if (!config.foreignKeys) return items;
+  
+  try {
+    const foreignKeyLookups = new Map();
     
-    console.log('Raw services loaded:', services.length);
-    console.log('Raw providers loaded:', providers.length);
-    
-    const enhancedServices = services.map(service => {
-      const provider = providers.find(p => p.SERVICE_PROVIDER_ID === service.SERVICE_PROVIDER_ID);
-      return {
-        ...service,
-        'Service Provider': provider ? provider.SERVICE_PROVIDER_NAME : service.SERVICE_PROVIDER_ID
-      };
-    });
-    
-    console.log('Enhanced services:', enhancedServices.length);
-    return { data: { listSERVICES: { items: enhancedServices } } };
-  } else if (entityName === 'SERVICE_PARAM') {
-    console.log('🔍 Starting SERVICE_PARAM fetch from', environment);
-    try {
-      let items = await fetchAllPages(client, queries.listServiceParams, {}, 'listSERVICE_PARAMS');
-      console.log('✅ Raw SERVICE_PARAM items loaded:', items.length);
-      console.log('📋 Sample SERVICE_PARAM items:', items.slice(0, 3));
+    // Load foreign key data for each configured relationship
+    for (const [fieldName, fkConfig] of Object.entries(config.foreignKeys)) {
+      const queryName = `list${fkConfig.table.split('_').map(word => word.charAt(0) + word.slice(1).toLowerCase()).join('')}s`;
+      const listName = `list${fkConfig.table}S`;
       
-      // Don't filter comparison data - we want to see all records for comparison
-      console.log(`Loaded ${items.length} SERVICE_PARAM items from ${environment} (no filtering applied)`);
-      
-      return { data: { listSERVICE_PARAMS: { items } } };
-    } catch (error) {
-      console.error('❌ Error loading SERVICE_PARAM:', error);
-      return { data: { listSERVICE_PARAMS: { items: [] } } };
+      const queries = await import('../graphql/queries.js');
+      if (queries[queryName]) {
+        const result = await client.graphql({ query: queries[queryName] });
+        const foreignItems = result.data[listName]?.items || [];
+        
+        // Create lookup map
+        const lookupMap = new Map();
+        foreignItems.forEach(item => {
+          lookupMap.set(item[fkConfig.valueField], item[fkConfig.displayField]);
+        });
+        
+        foreignKeyLookups.set(fieldName, lookupMap);
+      }
     }
-  } else if (entityName === 'STEP_TYPE') {
-    const items = await fetchAllPages(client, queries.listStepTypes, {}, 'listSTEP_TYPES');
-    return { data: { listSTEP_TYPES: { items } } };
-  } else if (entityName === 'REDIRECT_URL') {
-    const [redirectUrls, products] = await Promise.all([
-      fetchAllPages(client, queries.listRedirectUrls, {}, 'listREDIRECT_URLS'),
-      fetchAllPages(client, queries.listOriginProducts, {}, 'listORIGIN_PRODUCTS')
-    ]);
     
-    const enhancedUrls = redirectUrls.map(url => {
-      const product = products.find(p => p.ORIGIN_PRODUCT_ID === url.ORIGIN_PRODUCT_ID);
-      return {
-        ...url,
-        PRODUCT_ID: product ? product.PRODUCT_ID : ''
-      };
+    // Enhance items with foreign key display values
+    return items.map(item => {
+      const enhancedItem = { ...item };
+      
+      Object.keys(config.foreignKeys).forEach(fieldName => {
+        const fkConfig = config.foreignKeys[fieldName];
+        const lookupMap = foreignKeyLookups.get(fieldName);
+        
+        if (lookupMap && enhancedItem[fieldName]) {
+          const displayValue = lookupMap.get(enhancedItem[fieldName]);
+          if (displayValue) {
+            enhancedItem[`${fieldName}_DISPLAY`] = `${enhancedItem[fieldName]}: ${displayValue}`;
+          }
+        }
+      });
+      
+      return enhancedItem;
     });
-    
-    return { data: { listREDIRECT_URLS: { items: enhancedUrls } } };
-  } else if (entityName === 'SERVICE_PARAM_MAPPING') {
-    const items = await fetchAllPages(client, queries.listServiceParamMappings, {}, 'listSERVICE_PARAM_MAPPINGS');
-    return { data: { listSERVICE_PARAM_MAPPINGS: { items } } };
-  } else if (entityName === 'STEP_SERVICE_MAPPING') {
-    const [mappings, stepTypes, services] = await Promise.all([
-      fetchAllPages(client, queries.listStepServiceMappings, {}, 'listSTEP_SERVICE_MAPPINGS'),
-      fetchAllPages(client, queries.listStepTypes, {}, 'listSTEP_TYPES'),
-      fetchAllPages(client, queries.listServices, {}, 'listSERVICES')
-    ]);
-    
-    const enhancedMappings = mappings.map(mapping => {
-      const stepType = stepTypes.find(st => st.STEP_TYPE_ID === mapping.STEP_TYPE_ID);
-      const service = services.find(s => s.SERVICE_ID === mapping.SERVICE_ID);
-      return {
-        ...mapping,
-        'STEP_TYPE': stepType ? `${stepType.STEP_TYPE_ID}: ${stepType.STEP_TYPE_NAME}` : mapping.STEP_TYPE_ID,
-        'SERVICE': service ? `${service.SERVICE_ID}: ${service.URI}` : mapping.SERVICE_ID
-      };
-    });
-    
-    return { data: { listSTEP_SERVICE_MAPPINGS: { items: enhancedMappings } } };
+  } catch (error) {
+    console.error('Failed to enhance with foreign keys:', error);
+    return items;
   }
   
   return { data: {} };
@@ -193,18 +190,55 @@ export const createComparisonRecord = async (environment, entityName, formData) 
     
     const mutations = await import('../graphql/mutations.js');
     
-    const processedFormData = {
-      ...formData,
-      CREATED_BY_USER_ID: parseInt(formData.CREATED_BY_USER_ID)
-    };
+    // Get entity configuration to determine which fields are valid
+    const { getEntityConfig } = await import('../config/entityConfigLoader.js');
+    const entityConfig = getEntityConfig(entityName);
+    
+    // Remove fields that shouldn't be included in create mutations
+    const cleanFormData = { ...formData };
+    delete cleanFormData.CHANGED_DATE;
+    delete cleanFormData.CHANGED_BY_USER_ID;
+    delete cleanFormData[`${entityName}_ID`]; // Remove primary key
+    
+    // Remove display fields based on config
+    if (entityConfig?.fieldsToRemove) {
+      entityConfig.fieldsToRemove.forEach(field => {
+        delete cleanFormData[field];
+      });
+    }
+    
+    // Only set audit fields if they exist in the entity's formFields
+    const processedFormData = { ...cleanFormData };
+    if (entityConfig?.formFields?.some(field => field.name === 'CREATED_DATE')) {
+      processedFormData.CREATED_DATE = new Date().toISOString().split('T')[0];
+    }
+    if (entityConfig?.formFields?.some(field => field.name === 'CREATED_BY_USER_ID')) {
+      processedFormData.CREATED_BY_USER_ID = parseInt(cleanFormData.CREATED_BY_USER_ID || 1);
+    }
+    
+    // Remove any audit fields that don't exist in this entity's schema
+    if (!entityConfig?.formFields?.some(field => field.name === 'CREATED_BY_USER_ID')) {
+      delete processedFormData.CREATED_BY_USER_ID;
+    }
+    if (!entityConfig?.formFields?.some(field => field.name === 'CHANGED_BY_USER_ID')) {
+      delete processedFormData.CHANGED_BY_USER_ID;
+    }
     
     const mutationMap = {
+      'CONFIG_PARAM': mutations.createConfigParam,
       'ORIGIN_PRODUCT': mutations.createOriginProduct,
-      'REDIRECT_URL': mutations.createRedirectUrl(environment),
+      'REDIRECT_URL': mutations.createRedirectUrl,
       'SERVICE': mutations.createService,
       'SERVICE_PROVIDER': mutations.createServiceProvider,
       'SERVICE_PARAM': mutations.createServiceParam,
-      'STEP_TYPE': mutations.createStepType
+      'SERVICE_DOMAIN': mutations.createServiceDomain,
+      'STEP_TYPE': mutations.createStepType,
+      'FILTER_CRITERIA': mutations.createFilterCriteria,
+      'SORT_CRITERIA': mutations.createSortCriteria,
+      'SERVICE_PARAM_MAPPING': mutations.createServiceParamMapping,
+      'SERVICE_EXPR_MAPPING': mutations.createServiceExprMapping,
+      'STEP_SERVICE_MAPPING': mutations.createStepServiceMapping,
+      'STEP_TYPE_PARAM_MAP': mutations.createStepTypeParamMap
     };
     
     const mutation = mutationMap[entityName];
@@ -252,12 +286,20 @@ export const updateComparisonRecord = async (environment, entityName, updateData
     console.log('Clean update data:', cleanUpdateData);
     
     const mutationMap = {
+      'CONFIG_PARAM': mutations.updateConfigParam,
       'ORIGIN_PRODUCT': mutations.updateOriginProduct,
-      'REDIRECT_URL': mutations.updateRedirectUrl(environment),
+      'REDIRECT_URL': mutations.updateRedirectUrl,
       'SERVICE': mutations.updateService,
       'SERVICE_PROVIDER': mutations.updateServiceProvider,
       'SERVICE_PARAM': mutations.updateServiceParam,
-      'STEP_TYPE': mutations.updateStepType
+      'SERVICE_DOMAIN': mutations.updateServiceDomain,
+      'STEP_TYPE': mutations.updateStepType,
+      'FILTER_CRITERIA': mutations.updateFilterCriteria,
+      'SORT_CRITERIA': mutations.updateSortCriteria,
+      'SERVICE_PARAM_MAPPING': mutations.updateServiceParamMapping,
+      'SERVICE_EXPR_MAPPING': mutations.updateServiceExprMapping,
+      'STEP_SERVICE_MAPPING': mutations.updateStepServiceMapping,
+      'STEP_TYPE_PARAM_MAP': mutations.updateStepTypeParamMap
     };
     
     console.log('Available mutations:', Object.keys(mutationMap));
