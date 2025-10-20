@@ -22,8 +22,8 @@ export default {
     // Environment comparison configuration
   comparisonConfig: {
     matchingFields: ['ORIGIN_PRODUCT_ID'],
-    stringMatchFields: ['ORIGIN_PRODUCT_ID', 'URL', 'UTL_TYPE_CODE', 'RESPONSE_TEXT'],
-    comparisonFields: ['ORIGIN_PRODUCT_ID', 'URL', 'UTL_TYPE_CODE', 'RESPONSE_TEXT'],
+    stringMatchFields: ['ORIGIN_PRODUCT_ID', 'URL', 'URL_TYPE_CODE', 'RESPONSE_TEXT'],
+    comparisonFields: ['ORIGIN_PRODUCT_ID', 'URL_TYPE_CODE', 'URL', 'RESPONSE_TEXT'],
     // Use display values for comparison instead of raw foreign key IDs
     useDisplayValues: {
       'ORIGIN_PRODUCT_ID': 'PRODUCT_ID'
@@ -50,6 +50,13 @@ export default {
       foreignKey: 'ORIGIN_PRODUCT_ID',
       displayField: 'PRODUCT_ID',
       displayFormat: '{ORIGIN_PRODUCT_ID}: {PRODUCT_ID}'
+    },
+    URL_TYPE_CODE: {
+      lookupTable: 'static',
+      options: {
+        'N': 'N: New',
+        'E': 'E: Existing'
+      }
     }
   },
   

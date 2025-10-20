@@ -20,8 +20,22 @@ const createCrudFunctions = (entityName, client, fieldLookups = {}) => {
       
       // Load lookup data for all configured lookups
       const lookupPromises = Object.values(fieldLookups).map(lookup => {
-        const lookupQueryName = `list${lookup.lookupTable.split('_').map(word => word.charAt(0) + word.slice(1).toLowerCase()).join('')}s`;
-        const lookupListName = `list${lookup.lookupTable}S`;
+        let lookupQueryName;
+        let lookupListName;
+        
+        // Handle specific table name mappings
+        if (lookup.lookupTable === 'ORIGIN_PRODUCT') {
+          lookupQueryName = 'listOriginProducts';
+          lookupListName = 'listORIGIN_PRODUCTS';
+        } else if (lookup.lookupTable === 'STEP_TYPE') {
+          lookupQueryName = 'listStepTypes';
+          lookupListName = 'listSTEP_TYPES';
+        } else {
+          // Default conversion for other tables
+          lookupQueryName = `list${lookup.lookupTable.split('_').map(word => word.charAt(0) + word.slice(1).toLowerCase()).join('')}s`;
+          lookupListName = `list${lookup.lookupTable}S`;
+        }
+        
         return fetchAllPages(client, queries[lookupQueryName], {}, lookupListName);
       });
       
@@ -119,13 +133,13 @@ export const getEntityConfigs = (client) => {
         }
       },
       createFunction: async (input) => {
-        return await client.graphql({ query: mutations.createRedirectUrl(), variables: { input } });
+        return await client.graphql({ query: mutations.createRedirectUrl, variables: { input } });
       },
       updateFunction: async (input) => {
-        return await client.graphql({ query: mutations.updateRedirectUrl(), variables: { input } });
+        return await client.graphql({ query: mutations.updateRedirectUrl, variables: { input } });
       },
       deleteFunction: async (input) => {
-        return await client.graphql({ query: mutations.deleteRedirectUrl(), variables: { input } });
+        return await client.graphql({ query: mutations.deleteRedirectUrl, variables: { input } });
       }
     }
   };

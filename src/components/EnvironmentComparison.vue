@@ -288,9 +288,7 @@ const paramMappings = ref(new Map());
 
 // Watch compareData changes
 watch(compareData, (newVal) => {
-  console.log('EnvironmentComparison: compareData changed, length =', newVal.length);
   if (newVal.length > 0 && primaryData.value.length > 0) {
-    console.log('Both datasets available, analyzing differences');
     analyzeDifferences();
   }
 }, { deep: true });
@@ -307,11 +305,7 @@ const getCompareLoadFunction = computed(() => {
       window.compareEnvironment = props.compareEnvironment;
       localStorage.setItem('compareEnvironment', props.compareEnvironment);
       
-      console.log('Loading comparison data for', props.selectedEntity, 'from', props.compareEnvironment);
-      
       const result = await loadComparisonData(props.selectedEntity);
-      
-      console.log('Comparison loaded:', result?.data ? Object.values(result.data)[0]?.items?.length || 0 : 0, 'items from', props.compareEnvironment);
       
       // Store comparison data for difference analysis
       if (result?.data) {
@@ -360,9 +354,6 @@ const filteredFields = computed(() => {
 });
 
 const analyzeDifferences = () => {
-  console.log('=== ANALYZE DIFFERENCES START ===');
-  console.log('Primary data length:', primaryData.value.length);
-  console.log('Compare data length:', compareData.value.length);
   
   // Global fields to exclude from all comparisons
   const baseExcludeFields = ['CREATED_BY_USER_ID', 'CREATED_DATE', 'CHANGED_BY_USER_ID', 'CHANGED_DATE'];
@@ -443,7 +434,6 @@ const analyzeDifferences = () => {
           return { matchPercentage: Math.round(highestSimilarity * 100), differentFields: comparisonFields, totalFields: comparisonFields.length };
         }
         
-        console.log(`${config.matchingFields.join(' + ')} match found (${Math.round(highestSimilarity * 100)}%) - checking field differences`);
       } else {
         // Check if all matching fields are identical
         const matchingFieldsMatch = config.matchingFields.every(field => record1[field] === record2[field]);
@@ -483,15 +473,12 @@ const analyzeDifferences = () => {
           const matchPercentage = Math.round((matches / comparisonFields.length) * 100);
           return { matchPercentage, differentFields, totalFields: comparisonFields.length };
         }
-        
-        console.log(`${config.matchingFields.join(' + ')} exact match found - checking field differences`);
       }
     } else {
       // Default PRODUCT_ID matching for entities without specific matching fields
       if (record1.PRODUCT_ID !== record2.PRODUCT_ID) {
         return { matchPercentage: 0, differentFields: comparisonFields, totalFields: comparisonFields.length };
       }
-      console.log('PRODUCT_ID exact match found - checking field differences');
     }
     
     // Compare all fields to find differences
@@ -521,11 +508,6 @@ const analyzeDifferences = () => {
         val2 = displayVal2;
       }
       
-      if (field === 'ORIGIN_PRODUCT_ID' || field === 'STEP_TYPE_ID') {
-        console.log(`  ${field}: raw='${record1[field]}' vs '${record2[field]}', display='${record1[`${field}_DISPLAY`]}' vs '${record2[`${field}_DISPLAY`]}', final='${val1}' vs '${val2}' - ${val1 === val2 ? 'MATCH' : 'DIFFERENT'}`);
-      } else {
-        console.log(`  ${field}: '${val1}' vs '${val2}' - ${val1 === val2 ? 'MATCH' : 'DIFFERENT'}`);
-      }
       if (val1 === val2) {
         matches++;
       } else {
@@ -561,8 +543,6 @@ const analyzeDifferences = () => {
     });
   });
   
-  console.log(`Found ${allPossibleMatches.length} potential matches above 50% threshold`);
-  
   // Sort by match percentage - 100% matches first, then by highest percentage
   allPossibleMatches.sort((a, b) => {
     if (a.matchPercentage === 100 && b.matchPercentage !== 100) return -1;
@@ -570,16 +550,9 @@ const analyzeDifferences = () => {
     return b.matchPercentage - a.matchPercentage;
   });
   
-  console.log('Top 5 potential matches:', allPossibleMatches.slice(0, 5).map(m => 
-    `${m.primaryId}->${m.compareId} (${m.matchPercentage}%)`
-  ));
-  
   // Separate perfect matches (100%) from partial matches
   const perfectMatches = allPossibleMatches.filter(m => m.matchPercentage === 100);
   const partialMatches = allPossibleMatches.filter(m => m.matchPercentage < 100);
-  
-  console.log(`Perfect matches (100%): ${perfectMatches.length}`);
-  console.log(`Partial matches: ${partialMatches.length}`);
   
   // For perfect matches, prioritize those with no field differences (truly identical)
   perfectMatches.sort((a, b) => {
@@ -598,7 +571,6 @@ const analyzeDifferences = () => {
       selectedMatches.push(match);
       usedPrimaryIds.add(match.primaryId);
       usedCompareIds.add(match.compareId);
-      console.log(`✅ PERFECT MATCH: Record ${match.primaryId} matches Record ${match.compareId} (identical)`);
     }
   }
   
@@ -608,7 +580,6 @@ const analyzeDifferences = () => {
       selectedMatches.push(match);
       usedPrimaryIds.add(match.primaryId);
       usedCompareIds.add(match.compareId);
-      console.log(`✅ SELECTED: Record ${match.primaryId} matches Record ${match.compareId} at 100%`);
     }
   }
   
@@ -618,7 +589,6 @@ const analyzeDifferences = () => {
       selectedMatches.push(match);
       usedPrimaryIds.add(match.primaryId);
       usedCompareIds.add(match.compareId);
-      console.log(`✅ SELECTED: Record ${match.primaryId} matches Record ${match.compareId} at ${match.matchPercentage}%`);
     }
   }
   
@@ -633,12 +603,6 @@ const analyzeDifferences = () => {
     
     if (match.differentFields.length > 0) {
       diffs.set(match.primaryId, match.differentFields);
-      console.log(`  Different fields:`);
-      match.differentFields.forEach(field => {
-        console.log(`    ${field}: ${props.primaryEnvironment}='${match.primaryRecord[field]}' vs ${props.compareEnvironment}='${match.compareRecord[field]}'`);
-      });
-    } else {
-      console.log(`  No differences found`);
     }
   });
   
@@ -647,12 +611,8 @@ const analyzeDifferences = () => {
     const primaryId = primaryRecord[props.entityConfig?.idField || 'id'];
     if (!usedPrimaryIds.has(primaryId)) {
       diffs.set(primaryId, ['NO_MATCH_FOUND']);
-      // console.log(`❌ Record ${primaryId}: No match found in ${props.compareEnvironment}`);
     }
   });
-  
-  // console.log('Used primary IDs:', Array.from(usedPrimaryIds));
-  // console.log('Used compare IDs:', Array.from(usedCompareIds));
   
   // Create matched pairs and unmatched lists
   const pairs = [];
@@ -669,10 +629,8 @@ const analyzeDifferences = () => {
         compare: diffInfo.compareRecord,
         differentFields: diffInfo.differentFields
       });
-      // console.log(`Added to matched pairs: primary ${primaryId}`);
     } else {
       unmatched1.push(primaryRecord);
-      // console.log(`Added to unmatched primary: ${primaryId}`);
     }
   });
   
@@ -683,7 +641,6 @@ const analyzeDifferences = () => {
     const compareId = compareRecord[props.entityConfig?.idField || 'id'];
     if (!matchedCompareIds.has(compareId)) {
       unmatched2.push(compareRecord);
-      console.log(`Added to unmatched compare: ${compareId}`);
     }
   });
   
@@ -692,28 +649,9 @@ const analyzeDifferences = () => {
   unmatchedCompare.value = unmatched2;
   differences.value = diffs;
   fieldDifferences.value = fieldDiffs;
-  
-  console.log('Updated reactive data:');
-  console.log('- matchedPairs.value length:', matchedPairs.value.length);
-  console.log('- unmatchedPrimary.value length:', unmatchedPrimary.value.length);
-  console.log('- unmatchedCompare.value length:', unmatchedCompare.value.length);
-  
-  console.log('\n=== ANALYZE DIFFERENCES RESULTS ===');
-  console.log('Matched pairs:', pairs.length);
-  console.log('Unmatched primary:', unmatched1.length);
-  console.log('Unmatched compare:', unmatched2.length);
-  console.log('Total differences:', differences.value.size);
-  console.log('Matched pairs details:', pairs.map(p => ({
-    primaryId: p.primary[props.entityConfig?.idField || 'id'],
-    compareId: p.compare[props.entityConfig?.idField || 'id'],
-    primaryVendor: p.primary.VENDOR_NAME,
-    compareVendor: p.compare.VENDOR_NAME
-  })));
-  console.log('=== ANALYZE DIFFERENCES END ===\n');
 };
 
 const loadCommonProducts = async () => {
-  
   try {
     // Load products from primary environment
     const primaryResult = await props.entityConfig.loadFunction ? 
@@ -734,8 +672,7 @@ const loadCommonProducts = async () => {
       compareProducts.value = compareResult.data.listORIGIN_PRODUCTS?.items || [];
     }
     
-    console.log('Primary products loaded:', allPrimaryProducts.value.length);
-    console.log('Compare products loaded:', compareProducts.value.length);
+
   } catch (error) {
     console.error('Error loading products:', error);
     allPrimaryProducts.value = [];
@@ -744,7 +681,6 @@ const loadCommonProducts = async () => {
 };
 
 const loadCommonServices = async () => {
-  
   try {
     // Load services from primary environment
     const primaryResult = await callPrimaryServicesApi();
@@ -764,8 +700,7 @@ const loadCommonServices = async () => {
       compareServices.value = compareResult.data.listSERVICES?.items || [];
     }
     
-    console.log('Primary services loaded:', allPrimaryServices.value.length);
-    console.log('Compare services loaded:', compareServices.value.length);
+
   } catch (error) {
     console.error('Error loading services:', error);
     allPrimaryServices.value = [];
@@ -797,8 +732,7 @@ const loadCommonStepTypes = async () => {
       compareStepTypes.value = compareResult.data.listSTEP_TYPES?.items || [];
     }
     
-    console.log('Primary step types loaded:', allPrimaryStepTypes.value.length);
-    console.log('Compare step types loaded:', compareStepTypes.value.length);
+
   } catch (error) {
     console.error('Error loading step types:', error);
     allPrimaryStepTypes.value = [];
@@ -930,18 +864,13 @@ const loadComparisonData = () => {
 
 // Watch for primary data changes
 watch(() => props.entityConfig?.loadFunction, async () => {
-  console.log('=== PRIMARY DATA WATCH TRIGGERED ===');
   if (props.entityConfig?.loadFunction) {
     try {
-      console.log('Loading primary data...');
       const result = await props.entityConfig.loadFunction();
-      console.log('Primary load result:', result);
       if (result?.data) {
         const dataKey = Object.keys(result.data)[0];
         const items = result.data[dataKey]?.items || [];
-        console.log('Primary data loaded:', items.length, 'items');
         primaryData.value = items;
-        console.log('Both primary and compare data available, analyzing differences');
         analyzeDifferences();
       }
     } catch (error) {
@@ -961,9 +890,6 @@ watch(() => props.compareEnvironment, async () => {
   fieldDifferences.value = new Map();
   
   if (props.compareEnvironment) {
-    console.log('=== COMPARE ENVIRONMENT CHANGED ===');
-    console.log('Loading compare data for', props.selectedEntity, 'from', props.compareEnvironment);
-    
     try {
       const { loadComparisonData } = await import('../utils/comparisonClient.js');
       window.compareEnvironment = props.compareEnvironment;
@@ -974,11 +900,9 @@ watch(() => props.compareEnvironment, async () => {
       if (result?.data) {
         const dataKey = Object.keys(result.data)[0];
         const items = result.data[dataKey]?.items || [];
-        console.log('Compare data loaded:', items.length, 'items');
         compareData.value = items;
         
         if (primaryData.value.length > 0) {
-          console.log('Both primary and compare data available, analyzing differences');
           analyzeDifferences();
         }
       }
@@ -1080,6 +1004,15 @@ const unifiedRows = computed(() => {
 const formatFieldValue = (record, field) => {
   if (!record) return '';
   
+  // Handle static lookup options (like URL_TYPE_CODE) - applies to all environments
+  if (props.entityConfig?.fieldLookups?.[field]?.options) {
+    const options = props.entityConfig.fieldLookups[field].options;
+    const value = record[field];
+    if (options.hasOwnProperty(value)) {
+      return options[value];
+    }
+  }
+  
   // Use comparison display field mapping for both environments in comparison mode (highest priority)
   if (props.compareEnvironment && props.entityConfig?.comparisonConfig?.displayFieldMapping?.[field]) {
     const displayField = `${field}_DISPLAY`;
@@ -1162,11 +1095,6 @@ const editRecord = (record, environment) => {
 };
 
 const handleEditRecord = async (data) => {
-  console.log('Edit record:', data);
-  console.log('Original ORIGIN_PRODUCT_ID:', data.entity.ORIGIN_PRODUCT_ID, typeof data.entity.ORIGIN_PRODUCT_ID);
-  console.log('ORIGIN_PRODUCT_ID_DISPLAY:', data.entity.ORIGIN_PRODUCT_ID_DISPLAY);
-  console.log('All entity keys:', Object.keys(data.entity));
-  console.log('Raw entity data:', data.entity);
   editingEntity.value = { ...data.entity, environment: data.environment };
   
   showEditModal.value = true;
@@ -1196,8 +1124,6 @@ const handleEditRecord = async (data) => {
   
   // Wait for next tick to ensure template is rendered and options are available
   await nextTick();
-  
-  console.log('Form data set:', editFormData.value);
   
   // Set CHANGED_DATE and CHANGED_BY_USER_ID with proper defaults
   if (props.entityConfig?.formFields?.some(f => f.name === 'CHANGED_DATE')) {
@@ -1242,7 +1168,7 @@ const saveEditRecord = async () => {
       if (cleanData.SERVICE_ID) cleanData.SERVICE_ID = parseInt(cleanData.SERVICE_ID);
       if (cleanData.CREATED_BY_USER_ID) cleanData.CREATED_BY_USER_ID = parseInt(cleanData.CREATED_BY_USER_ID);
       
-      console.log(`Creating new ${props.selectedEntity} (has mappings):`, cleanData);
+
       
       const isCompareEnvironment = editingEntity.value.environment === 'compare';
       let result;
@@ -1294,8 +1220,6 @@ const saveEditRecord = async () => {
       cleanData.CHANGED_BY_USER_ID = parseInt(cleanData.CHANGED_BY_USER_ID);
     }
     
-    console.log('Clean data being sent:', JSON.stringify(cleanData, null, 2));
-    
     const isCompareEnvironment = editingEntity.value.environment === 'compare';
     let result;
     
@@ -1305,8 +1229,6 @@ const saveEditRecord = async () => {
     } else {
       result = await props.entityConfig.updateFunction(cleanData);
     }
-    
-    console.log('Edit result:', result);
     
     if (result && !result.errors) {
       closeEditModal();
@@ -1384,15 +1306,12 @@ const showProgressModal = ref(false);
 const progressData = ref({ current: 0, total: 0, operation: '' });
 
 const handleAddToOther = (data) => {
-  console.log('Add to other environment:', data);
   addToOtherData.value = data;
   createdByUserId.value = userProfileId.value || 1;
   showAddToOtherModal.value = true;
 };
 
 const handleCopyDifferences = async (data) => {
-  console.log('Copy differences to other environment:', data);
-  
   try {
     const { entity, targetEnvironment } = data;
     const entityId = entity[props.entityConfig?.idField || 'id'];
@@ -1412,7 +1331,6 @@ const handleCopyDifferences = async (data) => {
     }
     
     if (!diffInfo || diffInfo.differentFields.length === 0) {
-      console.log('No differences to copy');
       successMessage.value = 'No differences found to copy for this record';
       showSuccessModal.value = true;
       return;
@@ -1739,18 +1657,8 @@ const confirmAddToOther = async () => {
     formData.CREATED_DATE = currentDate;
     formData.CREATED_BY_USER_ID = userProfileId.value || 1;
     
-    console.log('Adding record to target environment:', targetEnvironment);
-    console.log('Form data being sent:', formData);
-    
-    // Use createComparisonRecord which handles SERVICE_ID mapping
-    console.log('Creating record in target environment:', targetEnvironment);
-    
     const { createComparisonRecord } = await import('../utils/comparisonClient.js');
     const result = await createComparisonRecord(targetEnvironment, props.selectedEntity, formData);
-    
-    console.log('Create result:', result);
-    console.log('Create result data:', JSON.stringify(result.data, null, 2));
-    console.log('Create result errors:', result.errors);
     
     // Check for errors in the result
     if (result.errors && result.errors.length > 0) {
@@ -1764,7 +1672,6 @@ const confirmAddToOther = async () => {
     // Check if the create operation actually returned the created record
     const createKey = Object.keys(result.data)[0];
     const createdRecord = result.data[createKey];
-    console.log('Created record:', createdRecord);
     
     if (!createdRecord) {
       throw new Error('Create operation failed - no record data returned');
@@ -1784,10 +1691,7 @@ const confirmAddToOther = async () => {
     
     closeAddToOtherModal();
     
-    console.log(`Successfully added record to ${targetEnvironment}`);
-    
     // Immediately refresh data
-    console.log('Reloading data after create operation...');
     await handleRecordUpdated();
     
     // Show success message after refresh
@@ -1804,7 +1708,6 @@ const confirmAddToOther = async () => {
       errorMsg = error.message;
     }
     
-    console.log('Full error object:', JSON.stringify(error, null, 2));
     successMessage.value = `Error: ${errorMsg}`;
     showSuccessModal.value = true;
   }
@@ -1857,8 +1760,6 @@ const checkParameterMappings = async () => {
 };
 
 const handleRecordUpdated = async () => {
-  console.log('Record updated, reloading data and re-analyzing differences');
-  
   // Reload primary data
   if (props.entityConfig?.loadFunction) {
     try {
@@ -1912,8 +1813,7 @@ const loadCommonServiceProviders = async () => {
       compareServiceProviders.value = compareResult.data.listSERVICE_PROVIDERS?.items || [];
     }
     
-    console.log('Primary service providers loaded:', allPrimaryServiceProviders.value.length);
-    console.log('Compare service providers loaded:', compareServiceProviders.value.length);
+
   } catch (error) {
     console.error('Error loading service providers:', error);
     allPrimaryServiceProviders.value = [];
@@ -1941,8 +1841,7 @@ const loadCommonServiceParams = async () => {
       compareServiceParams.value = compareResult.data.listSERVICE_PARAMS?.items || [];
     }
     
-    console.log('Primary service params loaded:', allPrimaryServiceParams.value.length);
-    console.log('Compare service params loaded:', compareServiceParams.value.length);
+
   } catch (error) {
     console.error('Error loading service params:', error);
     allPrimaryServiceParams.value = [];
@@ -1962,18 +1861,9 @@ onMounted(async () => {
   if (props.selectedEntity === 'SERVICE_PARAM') {
     await checkParameterMappings();
   }
-  console.log('Environment comparison mounted', {
-    primary: props.primaryEnvironment,
-    entity: props.selectedEntity,
-    compareDataLength: compareData.value.length
-  });
 });
 
-// Debug computed to check compareData reactivity
-const debugCompareLength = computed(() => {
-  console.log('EnvironmentComparison: computed compareData.length =', compareData.value.length);
-  return compareData.value.length;
-});
+
 
 const allSelected = computed(() => {
   const availableRows = unifiedRows.value.filter(row => row.primary && !row.primary.__isBlank);
@@ -2174,82 +2064,62 @@ const filteredDifferences = computed(() => {
 const foreignKeyOptions = ref(new Map());
 
 const getEditFieldOptions = (fieldName) => {
-  console.log(`Getting options for ${fieldName}`);
-  
   if (fieldName === 'SERVICE_ID') {
     const services = editingEntity.value?.environment === 'compare' ? compareServices.value : allPrimaryServices.value;
-    console.log(`SERVICE_ID options: environment=${editingEntity.value?.environment}, services count=${services?.length || 0}`);
     if (services && services.length > 0) {
-      const options = services.map(service => ({
+      return services.map(service => ({
         value: service.SERVICE_ID,
         label: `${service.SERVICE_ID}: ${service['Service Provider']} - ${service.URI}`
       }));
-      console.log('SERVICE_ID options:', options.slice(0, 3));
-      return options;
     }
   }
   
   if (fieldName === 'ORIGIN_PRODUCT_ID') {
     const products = editingEntity.value?.environment === 'compare' ? compareProducts.value : allPrimaryProducts.value;
-    console.log(`ORIGIN_PRODUCT_ID options: environment=${editingEntity.value?.environment}, products count=${products?.length || 0}`);
     if (products && products.length > 0) {
-      const options = products.map(product => ({
+      return products.map(product => ({
         value: product.ORIGIN_PRODUCT_ID,
-        label: `${product.ORIGIN_PRODUCT_ID}: ${product.VENDOR_NAME} - ${product.PRODUCT_DESC}`
+        label: `${product.ORIGIN_PRODUCT_ID}: ${product.PRODUCT_ID}`
       }));
-      console.log('ORIGIN_PRODUCT_ID options:', options);
-      console.log('Current form value for ORIGIN_PRODUCT_ID:', editFormData.value?.ORIGIN_PRODUCT_ID, typeof editFormData.value?.ORIGIN_PRODUCT_ID);
-      return options;
     }
   }
   
   if (fieldName === 'STEP_TYPE_ID') {
     const stepTypes = editingEntity.value?.environment === 'compare' ? compareStepTypes.value : allPrimaryStepTypes.value;
-    console.log(`STEP_TYPE_ID options: environment=${editingEntity.value?.environment}, stepTypes count=${stepTypes?.length || 0}`);
     if (stepTypes && stepTypes.length > 0) {
-      const options = stepTypes.map(stepType => ({
+      return stepTypes.map(stepType => ({
         value: stepType.STEP_TYPE_ID,
         label: `${stepType.STEP_TYPE_ID}: ${stepType.STEP_TYPE_NAME}`
       }));
-      console.log('STEP_TYPE_ID options:', options);
-      return options;
     }
   }
   
   if (fieldName === 'SERVICE_PROVIDER_ID') {
     const providers = editingEntity.value?.environment === 'compare' ? compareServiceProviders.value : allPrimaryServiceProviders.value;
-    console.log(`SERVICE_PROVIDER_ID options: environment=${editingEntity.value?.environment}, providers count=${providers?.length || 0}`);
     if (providers && providers.length > 0) {
-      const options = providers.map(provider => ({
+      return providers.map(provider => ({
         value: provider.SERVICE_PROVIDER_ID,
         label: `${provider.SERVICE_PROVIDER_ID}: ${provider.SERVICE_PROVIDER_NAME}`
       }));
-      console.log('SERVICE_PROVIDER_ID options:', options);
-      return options;
     }
   }
   
   if (fieldName === 'SOURCE_SERVICE_PARAM_ID' || fieldName === 'TARGET_SERVICE_PARAM_ID') {
     const params = editingEntity.value?.environment === 'compare' ? compareServiceParams.value : allPrimaryServiceParams.value;
-    console.log(`${fieldName} options: environment=${editingEntity.value?.environment}, params count=${params?.length || 0}`);
     if (params && params.length > 0) {
-      const options = params.map(param => ({
+      return params.map(param => ({
         value: param.SERVICE_PARAM_ID,
         label: `${param.SERVICE_PARAM_ID}: ${param.PARAM_NAME}`
       }));
-      console.log(`${fieldName} options:`, options.slice(0, 3));
-      return options;
     }
   }
   
   // Check if field has predefined options in entity config
   const formField = props.entityConfig?.formFields?.find(f => f.name === fieldName);
   if (formField?.options) {
-    console.log(`${fieldName} predefined options:`, formField.options);
     return formField.options;
   }
   
-  console.log(`No options found for ${fieldName}`);
   return [];
 };
 
