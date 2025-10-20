@@ -20,11 +20,39 @@ export default {
   // Fields to remove before GraphQL mutations
   fieldsToRemove: ['SERVICE_PROVIDER_ID_DISPLAY'],
   
+  // Field lookups for display enhancement
+  fieldLookups: {
+    SERVICE_PROVIDER_ID: {
+      lookupTable: 'SERVICE_PROVIDER',
+      foreignKey: 'SERVICE_PROVIDER_ID',
+      displayField: 'SERVICE_PROVIDER_NAME',
+      displayFormat: '{SERVICE_PROVIDER_ID}: {SERVICE_PROVIDER_NAME}'
+    }
+  },
+  
+  // Auto-create missing foreign key records
+  autoCreateForeignKeys: {
+    SERVICE_PROVIDER_ID: {
+      entity: 'SERVICE_PROVIDER',
+      matchFields: ['SERVICE_PROVIDER_NAME'],
+      copyFields: ['SERVICE_PROVIDER_NAME', 'SERVICE_PROVIDER_DESC']
+    }
+  },
+  
   // Environment comparison configuration
   comparisonConfig: {
-    matchingFields: ['SECRET_NAME'],
-    stringMatchFields: ['SECRET_NAME'],
-    stringMatchThreshold: 0.50
+    matchingFields: ['SERVICE_PROVIDER_ID', 'REQUEST_TYPE', 'URI'],
+    stringMatchFields: ['URI'],
+    stringMatchThreshold: 0.75,
+    comparisonFields: ['SERVICE_PROVIDER_ID', 'URI', 'SECRET_NAME', 'REQUEST_TYPE'],
+    // Use display values for comparison instead of raw foreign key IDs
+    useDisplayValues: {
+      'SERVICE_PROVIDER_ID': 'SERVICE_PROVIDER_NAME'
+    },
+    // Display only the business values in comparison, not the IDs
+    displayFieldMapping: {
+      'SERVICE_PROVIDER_ID': 'SERVICE_PROVIDER_NAME'
+    }
   },
   
   // Relationship counting configuration

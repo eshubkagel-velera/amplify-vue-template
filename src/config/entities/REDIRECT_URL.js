@@ -12,11 +12,54 @@ export default {
   // Environment copy configuration
   preserveOnCopy: ['REDIRECT_URL_ID'],
   
-  // Environment comparison configuration
+  // // Environment comparison configuration
+  // comparisonConfig: {
+  //   matchingFields: ['ORIGIN_PRODUCT_ID'],
+  //   stringMatchFields: ['ORIGIN_PRODUCT_ID'],
+  //   stringMatchThreshold: 0.50
+  // },
+
+    // Environment comparison configuration
   comparisonConfig: {
     matchingFields: ['ORIGIN_PRODUCT_ID'],
-    stringMatchFields: ['ORIGIN_PRODUCT_ID'],
-    stringMatchThreshold: 0.50
+    stringMatchFields: ['ORIGIN_PRODUCT_ID', 'URL', 'UTL_TYPE_CODE', 'RESPONSE_TEXT'],
+    comparisonFields: ['ORIGIN_PRODUCT_ID', 'URL', 'UTL_TYPE_CODE', 'RESPONSE_TEXT'],
+    // Use display values for comparison instead of raw foreign key IDs
+    useDisplayValues: {
+      'ORIGIN_PRODUCT_ID': 'PRODUCT_ID'
+    },
+    // Display only the business values in comparison, not the IDs
+    displayFieldMapping: {
+      'ORIGIN_PRODUCT_ID': 'PRODUCT_ID'
+    }
+  },
+
+    // Foreign key lookups (matching FILTER_CRITERIA pattern)
+  foreignKeys: {
+    ORIGIN_PRODUCT_ID: {
+      table: 'ORIGIN_PRODUCT',
+      valueField: 'ORIGIN_PRODUCT_ID',
+      displayField: 'PRODUCT_ID'
+    }
+  },
+  
+  // Field lookups for display enhancement
+  fieldLookups: {
+    ORIGIN_PRODUCT_ID: {
+      lookupTable: 'ORIGIN_PRODUCT',
+      foreignKey: 'ORIGIN_PRODUCT_ID',
+      displayField: 'PRODUCT_ID',
+      displayFormat: '{ORIGIN_PRODUCT_ID}: {PRODUCT_ID}'
+    }
+  },
+  
+  // Foreign key auto-creation configuration
+  autoCreateForeignKeys: {
+    ORIGIN_PRODUCT_ID: {
+      entity: 'ORIGIN_PRODUCT',
+      matchFields: ['PRODUCT_ID'],
+      copyFields: ['PRODUCT_ID', 'VENDOR_NAME', 'PRODUCT_DESC', 'PSCU_CLIENT_ID', 'PARTNER_CODE']
+    }
   },
   
   // Fields configuration
@@ -31,6 +74,10 @@ export default {
     "CHANGED_BY_USER_ID",
     "CHANGED_DATE"
   ],
+  fieldsToRemove: ["ORIGIN_PRODUCT_ID_DISPLAY"],
+  
+  // Data loading configuration to match FILTER_CRITERIA
+  loadProductOptions: true,
   
   // Form fields configuration
   formFields: [

@@ -277,6 +277,10 @@ const compareServices = ref([]);
 const selectedServiceFilter = ref('');
 const allPrimaryStepTypes = ref([]);
 const compareStepTypes = ref([]);
+const allPrimaryServiceProviders = ref([]);
+const compareServiceProviders = ref([]);
+const allPrimaryServiceParams = ref([]);
+const compareServiceParams = ref([]);
 const selectedRows = ref([]);
 const selectedPrimaryRows = ref([]);
 const selectedCompareRows = ref([]);
@@ -991,6 +995,8 @@ watch([() => props.selectedEntity, () => props.compareEnvironment], async () => 
     await loadCommonProducts();
     await loadCommonServices();
     await loadCommonStepTypes();
+    await loadCommonServiceProviders();
+    await loadCommonServiceParams();
   }
 }, { immediate: true });
 
@@ -1143,19 +1149,27 @@ const getCellClass = (row, field, side) => {
 };
 
 const editRecord = (record, environment) => {
-  // Trigger the actual edit modal by emitting to parent or using existing edit logic
-  handleEditRecord({ entity: record, environment, entityType: props.selectedEntity });
+  // Find the enhanced record with display fields from the appropriate data source
+  const isCompareEnv = environment === 'compare';
+  const sourceData = isCompareEnv ? compareData.value : primaryData.value;
+  const entityIdField = props.entityConfig?.idField || 'id';
+  const recordId = record[entityIdField];
+  
+  // Find the enhanced record that should have _DISPLAY fields
+  const enhancedRecord = sourceData.find(r => r[entityIdField] === recordId) || record;
+  
+  handleEditRecord({ entity: enhancedRecord, environment, entityType: props.selectedEntity });
 };
 
 const handleEditRecord = async (data) => {
   console.log('Edit record:', data);
   console.log('Original ORIGIN_PRODUCT_ID:', data.entity.ORIGIN_PRODUCT_ID, typeof data.entity.ORIGIN_PRODUCT_ID);
+  console.log('ORIGIN_PRODUCT_ID_DISPLAY:', data.entity.ORIGIN_PRODUCT_ID_DISPLAY);
+  console.log('All entity keys:', Object.keys(data.entity));
+  console.log('Raw entity data:', data.entity);
   editingEntity.value = { ...data.entity, environment: data.environment };
   
   showEditModal.value = true;
-  
-  // Wait for next tick to ensure template is rendered and options are available
-  await nextTick();
   
   // Create clean form data, excluding computed fields and ensuring proper JSON structure
   editFormData.value = {};
@@ -1179,6 +1193,9 @@ const handleEditRecord = async (data) => {
       }
     }
   });
+  
+  // Wait for next tick to ensure template is rendered and options are available
+  await nextTick();
   
   console.log('Form data set:', editFormData.value);
   
@@ -1875,12 +1892,72 @@ const handleRecordUpdated = async () => {
   }
 }
 
+const loadCommonServiceProviders = async () => {
+  try {
+    const { callExternalApi } = await import('../client.js');
+    const environment = localStorage.getItem('selectedEnvironment') || 'dev';
+    const primaryResult = await callExternalApi(environment, 'listSERVICE_PROVIDERS');
+    
+    const { loadComparisonData } = await import('../utils/comparisonClient.js');
+    const originalEnv = window.compareEnvironment;
+    window.compareEnvironment = props.compareEnvironment;
+    const compareResult = await loadComparisonData('SERVICE_PROVIDER');
+    window.compareEnvironment = originalEnv;
+    
+    if (primaryResult?.data) {
+      allPrimaryServiceProviders.value = primaryResult.data.listSERVICE_PROVIDERS?.items || [];
+    }
+    
+    if (compareResult?.data) {
+      compareServiceProviders.value = compareResult.data.listSERVICE_PROVIDERS?.items || [];
+    }
+    
+    console.log('Primary service providers loaded:', allPrimaryServiceProviders.value.length);
+    console.log('Compare service providers loaded:', compareServiceProviders.value.length);
+  } catch (error) {
+    console.error('Error loading service providers:', error);
+    allPrimaryServiceProviders.value = [];
+    compareServiceProviders.value = [];
+  }
+};
+
+const loadCommonServiceParams = async () => {
+  try {
+    const { callExternalApi } = await import('../client.js');
+    const environment = localStorage.getItem('selectedEnvironment') || 'dev';
+    const primaryResult = await callExternalApi(environment, 'listSERVICE_PARAMS');
+    
+    const { loadComparisonData } = await import('../utils/comparisonClient.js');
+    const originalEnv = window.compareEnvironment;
+    window.compareEnvironment = props.compareEnvironment;
+    const compareResult = await loadComparisonData('SERVICE_PARAM');
+    window.compareEnvironment = originalEnv;
+    
+    if (primaryResult?.data) {
+      allPrimaryServiceParams.value = primaryResult.data.listSERVICE_PARAMS?.items || [];
+    }
+    
+    if (compareResult?.data) {
+      compareServiceParams.value = compareResult.data.listSERVICE_PARAMS?.items || [];
+    }
+    
+    console.log('Primary service params loaded:', allPrimaryServiceParams.value.length);
+    console.log('Compare service params loaded:', compareServiceParams.value.length);
+  } catch (error) {
+    console.error('Error loading service params:', error);
+    allPrimaryServiceParams.value = [];
+    compareServiceParams.value = [];
+  }
+};
+
 onMounted(async () => {
   await loadUserProfile();
   if (props.compareEnvironment) {
     await loadCommonProducts();
     await loadCommonServices();
     await loadCommonStepTypes();
+    await loadCommonServiceProviders();
+    await loadCommonServiceParams();
   }
   if (props.selectedEntity === 'SERVICE_PARAM') {
     await checkParameterMappings();
@@ -2139,6 +2216,32 @@ const getEditFieldOptions = (fieldName) => {
     }
   }
   
+  if (fieldName === 'SERVICE_PROVIDER_ID') {
+    const providers = editingEntity.value?.environment === 'compare' ? compareServiceProviders.value : allPrimaryServiceProviders.value;
+    console.log(`SERVICE_PROVIDER_ID options: environment=${editingEntity.value?.environment}, providers count=${providers?.length || 0}`);
+    if (providers && providers.length > 0) {
+      const options = providers.map(provider => ({
+        value: provider.SERVICE_PROVIDER_ID,
+        label: `${provider.SERVICE_PROVIDER_ID}: ${provider.SERVICE_PROVIDER_NAME}`
+      }));
+      console.log('SERVICE_PROVIDER_ID options:', options);
+      return options;
+    }
+  }
+  
+  if (fieldName === 'SOURCE_SERVICE_PARAM_ID' || fieldName === 'TARGET_SERVICE_PARAM_ID') {
+    const params = editingEntity.value?.environment === 'compare' ? compareServiceParams.value : allPrimaryServiceParams.value;
+    console.log(`${fieldName} options: environment=${editingEntity.value?.environment}, params count=${params?.length || 0}`);
+    if (params && params.length > 0) {
+      const options = params.map(param => ({
+        value: param.SERVICE_PARAM_ID,
+        label: `${param.SERVICE_PARAM_ID}: ${param.PARAM_NAME}`
+      }));
+      console.log(`${fieldName} options:`, options.slice(0, 3));
+      return options;
+    }
+  }
+  
   // Check if field has predefined options in entity config
   const formField = props.entityConfig?.formFields?.find(f => f.name === fieldName);
   if (formField?.options) {
@@ -2176,6 +2279,15 @@ const ensureForeignKeyExists = async (fieldName, foreignKeyId, config, targetEnv
     } else if (config.entity === 'STEP_TYPE') {
       const stepTypes = isSourcePrimary ? allPrimaryStepTypes.value : compareStepTypes.value;
       sourceRecord = stepTypes.find(s => s.STEP_TYPE_ID === actualForeignKeyId);
+    } else if (config.entity === 'SERVICE_PROVIDER') {
+      const providers = isSourcePrimary ? allPrimaryServiceProviders.value : compareServiceProviders.value;
+      sourceRecord = providers.find(p => p.SERVICE_PROVIDER_ID === actualForeignKeyId);
+    } else if (config.entity === 'SERVICE_PARAM') {
+      const params = isSourcePrimary ? allPrimaryServiceParams.value : compareServiceParams.value;
+      sourceRecord = params.find(p => p.SERVICE_PARAM_ID === actualForeignKeyId);
+    } else if (config.entity === 'SERVICE') {
+      const services = isSourcePrimary ? allPrimaryServices.value : compareServices.value;
+      sourceRecord = services.find(s => s.SERVICE_ID === actualForeignKeyId);
     }
     
     if (!sourceRecord) {
@@ -2217,7 +2329,19 @@ const ensureForeignKeyExists = async (fieldName, foreignKeyId, config, targetEnv
     const result = await createComparisonRecord(targetEnvironment, config.entity, createData);
     
     // Return the new ID
-    const idField = config.entity === 'ORIGIN_PRODUCT' ? 'ORIGIN_PRODUCT_ID' : 'STEP_TYPE_ID';
+    let idField;
+    if (config.entity === 'ORIGIN_PRODUCT') {
+      idField = 'ORIGIN_PRODUCT_ID';
+    } else if (config.entity === 'STEP_TYPE') {
+      idField = 'STEP_TYPE_ID';
+    } else if (config.entity === 'SERVICE_PROVIDER') {
+      idField = 'SERVICE_PROVIDER_ID';
+    } else if (config.entity === 'SERVICE_PARAM') {
+      idField = 'SERVICE_PARAM_ID';
+    } else if (config.entity === 'SERVICE') {
+      idField = 'SERVICE_ID';
+    }
+    
     const createKey = Object.keys(result.data)[0];
     const createdRecord = result.data[createKey];
     return createdRecord[idField];

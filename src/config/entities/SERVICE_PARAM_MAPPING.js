@@ -33,6 +33,47 @@ export default {
   // Fields to remove before GraphQL mutations
   fieldsToRemove: ['ORIGIN_PRODUCT_ID_DISPLAY', 'SOURCE_SERVICE_PARAM_ID_DISPLAY', 'TARGET_SERVICE_PARAM_ID_DISPLAY'],
   
+  // Field lookups for display enhancement
+  fieldLookups: {
+    ORIGIN_PRODUCT_ID: {
+      lookupTable: 'ORIGIN_PRODUCT',
+      foreignKey: 'ORIGIN_PRODUCT_ID',
+      displayField: 'PRODUCT_ID',
+      displayFormat: '{ORIGIN_PRODUCT_ID}: {PRODUCT_ID}'
+    },
+    SOURCE_SERVICE_PARAM_ID: {
+      lookupTable: 'SERVICE_PARAM',
+      foreignKey: 'SERVICE_PARAM_ID',
+      displayField: 'PARAM_NAME',
+      displayFormat: '{SERVICE_PARAM_ID}: {PARAM_NAME}'
+    },
+    TARGET_SERVICE_PARAM_ID: {
+      lookupTable: 'SERVICE_PARAM',
+      foreignKey: 'SERVICE_PARAM_ID',
+      displayField: 'PARAM_NAME',
+      displayFormat: '{SERVICE_PARAM_ID}: {PARAM_NAME}'
+    }
+  },
+  
+  // Auto-create missing foreign key records
+  autoCreateForeignKeys: {
+    ORIGIN_PRODUCT_ID: {
+      entity: 'ORIGIN_PRODUCT',
+      matchFields: ['PRODUCT_ID'],
+      copyFields: ['PRODUCT_ID', 'VENDOR_NAME', 'PRODUCT_DESC', 'PSCU_CLIENT_ID', 'PARTNER_CODE']
+    },
+    SOURCE_SERVICE_PARAM_ID: {
+      entity: 'SERVICE_PARAM',
+      matchFields: ['PARAM_NAME'],
+      copyFields: ['SERVICE_ID', 'PARAM_NAME']
+    },
+    TARGET_SERVICE_PARAM_ID: {
+      entity: 'SERVICE_PARAM',
+      matchFields: ['PARAM_NAME'],
+      copyFields: ['SERVICE_ID', 'PARAM_NAME']
+    }
+  },
+  
   // Integrated service selection for parameter filtering
   integratedFilters: {
     SOURCE_SERVICE_PARAM_ID: {
@@ -54,8 +95,17 @@ export default {
   // Environment comparison configuration
   comparisonConfig: {
     matchingFields: ['ORIGIN_PRODUCT_ID'],
-    stringMatchFields: ['ORIGIN_PRODUCT_ID'],
-    stringMatchThreshold: 0.50
+    comparisonFields: ['ORIGIN_PRODUCT_ID', 'SOURCE_SERVICE_PARAM_ID', 'TARGET_SERVICE_PARAM_ID'],
+    useDisplayValues: {
+      'ORIGIN_PRODUCT_ID': 'PRODUCT_ID',
+      'SOURCE_SERVICE_PARAM_ID': 'PARAM_NAME',
+      'TARGET_SERVICE_PARAM_ID': 'PARAM_NAME'
+    },
+    displayFieldMapping: {
+      'ORIGIN_PRODUCT_ID': 'PRODUCT_ID',
+      'SOURCE_SERVICE_PARAM_ID': 'PARAM_NAME',
+      'TARGET_SERVICE_PARAM_ID': 'PARAM_NAME'
+    }
   },
   
   // Fields configuration

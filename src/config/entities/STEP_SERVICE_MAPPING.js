@@ -26,11 +26,48 @@ export default {
   // Fields to remove before GraphQL mutations
   fieldsToRemove: ['STEP_TYPE_ID_DISPLAY', 'SERVICE_ID_DISPLAY'],
   
+  // Field lookups for display enhancement
+  fieldLookups: {
+    STEP_TYPE_ID: {
+      lookupTable: 'STEP_TYPE',
+      foreignKey: 'STEP_TYPE_ID',
+      displayField: 'STEP_TYPE_NAME',
+      displayFormat: '{STEP_TYPE_ID}: {STEP_TYPE_NAME}'
+    },
+    SERVICE_ID: {
+      lookupTable: 'SERVICE',
+      foreignKey: 'SERVICE_ID',
+      displayField: 'URI',
+      displayFormat: '{SERVICE_ID}: {URI}'
+    }
+  },
+  
+  // Auto-create missing foreign key records
+  autoCreateForeignKeys: {
+    STEP_TYPE_ID: {
+      entity: 'STEP_TYPE',
+      matchFields: ['STEP_TYPE_NAME'],
+      copyFields: ['STEP_TYPE_NAME', 'STEP_TYPE_DESC', 'RESOURCE_NAME']
+    },
+    SERVICE_ID: {
+      entity: 'SERVICE',
+      matchFields: ['URI'],
+      copyFields: ['SERVICE_PROVIDER_ID', 'URI', 'SECRET_NAME', 'REQUEST_TYPE']
+    }
+  },
+  
   // Environment comparison configuration
   comparisonConfig: {
-    matchingFields: ['STEP_TYPE_ID'],
-    stringMatchFields: ['STEP_TYPE_ID'],
-    stringMatchThreshold: 0.50
+    matchingFields: ['STEP_TYPE_ID', 'SERVICE_ID'],
+    comparisonFields: ['STEP_TYPE_ID', 'SERVICE_ID', 'SEQUENCE_NBR'],
+    useDisplayValues: {
+      'STEP_TYPE_ID': 'STEP_TYPE_NAME',
+      'SERVICE_ID': 'URI'
+    },
+    displayFieldMapping: {
+      'STEP_TYPE_ID': 'STEP_TYPE_NAME',
+      'SERVICE_ID': 'URI'
+    }
   },
   
   // Fields configuration
